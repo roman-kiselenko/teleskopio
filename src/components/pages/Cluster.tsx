@@ -1,4 +1,7 @@
+import { useVersionState } from '../../store/version.ts'
+
 export function ClusterPage() {
+  const clusterVersion = useVersionState()
   return (
       <div className="flex flex-col flex-grow">
         <div className="flex items-center flex-shrink-0 h-12 border-b border-gray-300">
@@ -9,6 +12,7 @@ export function ClusterPage() {
                     </span>
                 </div>
             </button> */}
+            {clusterVersion.version.get()}
         </div>
         <div className="flex-grow overflow-auto">
             <div className="grid grid-cols-3">

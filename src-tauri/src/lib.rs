@@ -6,6 +6,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            k8s::client::get_version,
             k8s::client::get_namespaces,
         ])
         .run(tauri::generate_context!())

@@ -1,13 +1,15 @@
 pub mod client {
     use kube::config::{ Kubeconfig, KubeconfigError };
-    use kube::{api::Api, Client, Config, Error};
+    use kube::{api::Api, Client, Config, Error, };
     use k8s_openapi::api::core::v1::{
         Namespace,
     };
+    use tauri::http::Request;
     use kube::api::{ListParams};
     use std::fmt;
     use std::io;
     use std::fs;
+    use serde_json::Value;
     use serde::Serialize;
     use dirs::home_dir;
 
@@ -88,6 +90,18 @@ pub mod client {
 
         let client = Client::try_from(config)?;
         Ok(client)
+    }
+
+    #[tauri::command]
+    pub async fn get_version() -> Result<Value, SerializableKubeError> {
+        let client = get_client().await?;
+        let req = Request::builder()
+          .uri("/version")
+          .body(vec![])
+          .unwrap();
+
+        let version_info: Value = client.request(req).await?;
+        Ok(version_info)
     }
 
     #[tauri::command]
