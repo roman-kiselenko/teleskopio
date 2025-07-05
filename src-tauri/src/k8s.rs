@@ -15,6 +15,12 @@ pub mod client {
     use walkdir::{DirEntry, WalkDir};
 
     #[derive(Debug, Serialize)]
+    pub struct Cluster {
+        name: String,
+        path: String,
+    }
+
+    #[derive(Debug, Serialize)]
     pub struct GenericError {
         message: String,
         code: Option<u16>,
@@ -89,8 +95,8 @@ pub mod client {
     }
     }
 
-    async fn get_client() -> Result<Client, GenericError> {
-        let kube_config_path = home_dir().expect("Could not determine home directory").join(".kube/config");
+    async fn get_client(path: String) -> Result<Client, GenericError> {
+        let kube_config_path = home_dir().expect("Could not determine home directory").join(path);
         let config = fs::read_to_string(kube_config_path).map_err(|e| {
             println!("error {:?}", e);
             GenericError::from(e)
@@ -109,37 +115,55 @@ pub mod client {
     }
 
     #[tauri::command]
-    pub fn lookup_configs() -> Result<Vec<String>, GenericError> {
+    pub async fn lookup_configs() -> Result<Vec<Cluster>, GenericError> {
         let kube_config_path = home_dir().expect("Could not determine home directory").join(".kube/");
         if !kube_config_path.exists() {
             return Err(GenericError::new(format!("No such directory: {}", kube_config_path.display())));
         }
-        let files: Vec<String> = WalkDir::new(kube_config_path)
+        let clusters: Vec<Cluster> = WalkDir::new(kube_config_path)
             .into_iter()
             .filter_entry(|e| !is_excluded(e))
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
-            .filter_map(|e| e.path().to_str().map(|s| s.to_string()))
+            .flat_map(|e| {
+                let kube_config = e.path().to_str().map(|s| s.to_string()).unwrap();
+                let kube_config_clone = kube_config.clone();
+                let config = fs::read_to_string(kube_config).map_err(|e| {
+                    println!("error {:?}", e);
+                    GenericError::from(e)
+                });
+                let kube_config_yaml = Kubeconfig::from_yaml(config.unwrap().as_str()).expect("cant parse kube_config");
+                Some(
+                    kube_config_yaml.clusters
+                    .into_iter()
+                    .map(move |c| Cluster {
+                         name: c.name.clone(),
+                         path: kube_config_clone.clone(),
+                    }),
+                )
+            })
+            .flatten()
             .collect();
 
-        Ok(files)
+        Ok(clusters)
     }
 
     #[tauri::command]
-    pub async fn get_version() -> Result<Value, GenericError> {
-        let client = get_client().await?;
+    pub async fn get_version(path: String) -> Result<Value, GenericError> {
+        let client = get_client(path).await?;
         let req = Request::builder()
           .uri("/version")
           .body(vec![])
           .unwrap();
+
 
         let version_info: Value = client.request(req).await?;
         Ok(version_info)
     }
 
     #[tauri::command]
-    pub async fn get_namespaces() -> Result<Vec<Namespace>, GenericError> {
-        let client = get_client().await?;
+    pub async fn get_namespaces(path: String) -> Result<Vec<Namespace>, GenericError> {
+        let client = get_client(path).await?;
         let namespace_api: Api<Namespace> = Api::all(client);
 
         let namespaces = namespace_api.list(&ListParams::default()).await.map_err(|err| {
