@@ -19,6 +19,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
+walkdir = "2"
 dirs = "5"
 kube = { version = "1.1.0", features = [ "socks5", "http-proxy", "client", "config" ] }
 k8s-openapi = { version = "0.25.0", features = [ "latest" ] }

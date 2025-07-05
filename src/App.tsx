@@ -2,20 +2,18 @@ import { suspend } from '@hookstate/core'
 import React from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router.tsx'
-// import { useVersionState } from './store/version.ts'
+import { useConfigsState } from './store/configs.ts'
 // import { useNamespaceState } from './store/namespaces.ts'
 import "./App.css";
 import { Toaster } from 'sonner';
 
 function App() {
-  // const versionState = useVersionState()
+  const configsState = useConfigsState()
   // const namespacesState = useNamespaceState()
 
   return (
     <React.Suspense>
-        {<RouterProvider router={router} />}
-        {/* {suspend(namespacesState) ||
-        suspend(versionState) || <RouterProvider router={router} />} */}
+        {suspend(configsState) || <RouterProvider router={router} />}
         <Toaster />
       </React.Suspense>
   );

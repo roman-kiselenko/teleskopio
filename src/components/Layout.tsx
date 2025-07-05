@@ -8,6 +8,7 @@ import { Storage } from './resources/Storage.tsx'
 import { Access } from './resources/Access.tsx'
 import { Settings } from './resources/Settings.tsx'
 import { useMemo } from 'react'
+import { Toaster } from 'react-hot-toast';
 
 export function Layout() {
     const currentPath = useLocation()
@@ -61,6 +62,16 @@ export function Layout() {
             )}
             <Outlet />
            </div>
+           <Toaster
+            toastOptions={{ className: "!font-medium !text-xs" }}
+            containerStyle={{
+                top: 20,
+                left: 20,
+                bottom: 20,
+                right: 20,
+            }}
+            position="bottom-right"
+            reverseOrder={false} />
         </div>
     )
 }
