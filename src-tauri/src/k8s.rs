@@ -1,8 +1,9 @@
 pub mod client {
-    use kube::config::{ Kubeconfig, KubeconfigError };
+    use kube::config::{ Kubeconfig, KubeconfigError, KubeConfigOptions };
     use kube::{api::Api, Client, Config, Error, };
     use k8s_openapi::api::core::v1::{
         Namespace,
+        Node,
     };
     use tauri::http::Request;
     use kube::api::{ListParams};
@@ -95,7 +96,7 @@ pub mod client {
     }
     }
 
-    async fn get_client(path: String) -> Result<Client, GenericError> {
+    async fn get_client(path: &str, context: &str) -> Result<Client, GenericError> {
         let kube_config_path = home_dir().expect("Could not determine home directory").join(path);
         let config = fs::read_to_string(kube_config_path).map_err(|e| {
             println!("error {:?}", e);
@@ -103,8 +104,11 @@ pub mod client {
         })?;
         let kube_config_yaml = Kubeconfig::from_yaml(config.as_str()).expect("cant parse kube_config");
         println!("Config loaded, size: {} bytes", config.len());
-        let default = &Default::default();
-        let config = Config::from_custom_kubeconfig(kube_config_yaml, default).await?;
+        let options = KubeConfigOptions {
+            context: Some(context.to_string()),
+            ..Default::default()
+        };
+        let config = Config::from_custom_kubeconfig(kube_config_yaml, &options).await?;
 
         let client = Client::try_from(config)?;
         Ok(client)
@@ -149,8 +153,8 @@ pub mod client {
     }
 
     #[tauri::command]
-    pub async fn get_version(path: String) -> Result<Value, GenericError> {
-        let client = get_client(path).await?;
+    pub async fn get_version(path: &str, context: &str) -> Result<Value, GenericError> {
+        let client = get_client(&path, context).await?;
         let req = Request::builder()
           .uri("/version")
           .body(vec![])
@@ -162,8 +166,8 @@ pub mod client {
     }
 
     #[tauri::command]
-    pub async fn get_namespaces(path: String) -> Result<Vec<Namespace>, GenericError> {
-        let client = get_client(path).await?;
+    pub async fn get_namespaces(path: &str, context: &str) -> Result<Vec<Namespace>, GenericError> {
+        let client = get_client(&path, context).await?;
         let namespace_api: Api<Namespace> = Api::all(client);
 
         let namespaces = namespace_api.list(&ListParams::default()).await.map_err(|err| {
@@ -172,5 +176,18 @@ pub mod client {
         })?;
 
         Ok(namespaces.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_nodes(path: &str, context: &str) -> Result<Vec<Node>, GenericError> {
+        let client = get_client(&path, context).await?;
+        let node_api: Api<Node> = Api::all(client);
+
+        let nodes = node_api.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(nodes.items)
     }
 }
