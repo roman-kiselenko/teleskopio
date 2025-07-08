@@ -1,13 +1,13 @@
-import { hookstate, useHookstate } from '@hookstate/core'
-import { invoke } from '@tauri-apps/api/core'
+import { hookstate, useHookstate } from '@hookstate/core';
+import { invoke } from '@tauri-apps/api/core';
 
 export const namespacesState = hookstate(async () => {
-  const namespaces = await invoke('get_namespaces')
+  const namespaces = await invoke('get_namespaces');
   return {
-    namespaces: namespaces
-  }
-})
+    namespaces: namespaces,
+  };
+});
 
 export function useNamespaceState() {
-  return useHookstate(namespacesState)
+  return useHookstate(namespacesState);
 }

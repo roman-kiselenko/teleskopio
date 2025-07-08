@@ -21,7 +21,9 @@
     "@tauri-apps/plugin-fs": "~2.4.0",
     "@tauri-apps/plugin-opener": "^2",
     "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.525.0",
     "postcss": "^8.5.6",
     "radix-ui": "^1.4.2",
     "react": "^18.3.1",
@@ -32,14 +34,27 @@
     "react-svg": "^16.3.0",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "tw-animate-css": "^1.3.5"
   },
   "devDependencies": {
     "@react-router/dev": "^7.6.3",
     "@tauri-apps/cli": "^2",
+    "@types/node": "^24.0.10",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^17.21.0",
+    "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-react": "^7.37.5",
+    "prettier": "^3.6.2",
     "typescript": "~5.6.2",
     "vite": "^6.0.3"
   }

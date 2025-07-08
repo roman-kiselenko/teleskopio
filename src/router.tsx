@@ -1,16 +1,16 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { StartPage } from './components/pages/Start'
-import { ClusterPage } from './components/pages/Cluster'
-import { WorkloadsPage } from './components/pages/Workloads'
-import { ConfigPage } from './components/pages/Config'
-import { NetworkPage } from './components/pages/Network'
-import { SettingsPage } from './components/pages/Settings'
-import { StoragePage } from './components/pages/Storage'
-import { AccessPage } from './components/pages/Access'
-import { Layout } from './components/Layout'
+import { createBrowserRouter } from 'react-router-dom';
+import { StartPage } from './components/pages/Start';
+import { ClusterPage } from './components/pages/Cluster';
+import { WorkloadsPage } from './components/pages/Workloads';
+import { ConfigPage } from './components/pages/Config';
+import { NetworkPage } from './components/pages/Network';
+import { SettingsPage } from './components/pages/Settings';
+import { StoragePage } from './components/pages/Storage';
+import { AccessPage } from './components/pages/Access';
+import { Layout } from './components/Layout';
 
-export const router  = createBrowserRouter([
- {
+export const router = createBrowserRouter([
+  {
     path: '/',
     element: <Layout />,
     children: [
@@ -46,6 +46,6 @@ export const router  = createBrowserRouter([
         path: '/settings',
         element: <SettingsPage />,
       },
-    ]
+    ],
   },
 ]);
