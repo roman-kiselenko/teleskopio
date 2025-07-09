@@ -2,7 +2,7 @@ import k8sLogo from './icons/k8s.svg';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
 
 import { NavLink } from 'react-router-dom';
-import { getCurrentCluster } from '../store/currentCluster';
+import { getCurrentCluster } from '../store/cluster';
 
 import { ClusterLink } from './links/Cluster';
 import { WorkloadsLink } from './links/Workloads';
@@ -20,7 +20,6 @@ export function Sidebar() {
       <NavLink
         to="/"
         className="flex items-center justify-center flex-shrink-0 w-full h-12 bg-blue-300"
-        // onClick={(e) => setCurrentCluster('', '')}
       >
         <img src={k8sLogo} className="w-7 h-7" alt="Kubernetes" />
       </NavLink>

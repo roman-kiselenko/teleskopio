@@ -1,6 +1,9 @@
-import KubeConnect from '../KubeConnect';
+import KubeConnect from '~/components/KubeConnect';
+import { useLoaderData } from 'react-router';
 
 export function StartPage() {
+  const { configs } = useLoaderData();
+
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex items-center flex-shrink-0 h-12 border-b border-gray-300">
@@ -21,7 +24,7 @@ export function StartPage() {
           <div className="h-24 col-span-2 bg-white"></div>
           <div className="h-24 col-span-1 bg-white"></div>
           <div className="h-24 col-span-1 bg-white">
-            <KubeConnect />
+            <KubeConnect configs={configs} />
           </div>
           <div className="h-24 col-span-2 bg-white"></div>
           <div className="h-24 col-span-3 bg-white"></div>

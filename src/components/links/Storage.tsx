@@ -18,7 +18,7 @@ export function StorageLink({ disabled = false }) {
       {disabled ? (
         <a className="text-gray-400 cursor-not-allowed opacity-50">{children}</a>
       ) : (
-        <NavLink to="/cluster" className="cursor-pointer rounded flex flex-col items-center">
+        <NavLink to="/storage" className="cursor-pointer rounded flex flex-col items-center">
           {children}
         </NavLink>
       )}

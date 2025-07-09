@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Namespaces } from './Namespaces';
-import { Workloads } from './resources/Workloads';
+import { Workloads } from './resources/Workloads/Workloads';
 import { Config } from './resources/Config';
 import { Network } from './resources/Network';
 import { Storage } from './resources/Storage';

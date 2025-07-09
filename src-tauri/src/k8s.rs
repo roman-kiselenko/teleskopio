@@ -4,6 +4,7 @@ pub mod client {
     use k8s_openapi::api::core::v1::{
         Namespace,
         Node,
+        Pod,
     };
     use tauri::http::Request;
     use kube::api::{ListParams};
@@ -120,6 +121,7 @@ pub mod client {
 
     #[tauri::command]
     pub async fn lookup_configs() -> Result<Vec<Cluster>, GenericError> {
+         log::info!("lookup_configs");
         let kube_config_path = home_dir().expect("Could not determine home directory").join(".kube/");
         if !kube_config_path.exists() {
             return Err(GenericError::new(format!("No such directory: {}", kube_config_path.display())));
@@ -154,6 +156,7 @@ pub mod client {
 
     #[tauri::command]
     pub async fn get_version(path: &str, context: &str) -> Result<Value, GenericError> {
+        log::info!("get_version {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
         let req = Request::builder()
           .uri("/version")
@@ -180,6 +183,7 @@ pub mod client {
 
     #[tauri::command]
     pub async fn get_nodes(path: &str, context: &str) -> Result<Vec<Node>, GenericError> {
+        log::info!("get_nodes {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
         let node_api: Api<Node> = Api::all(client);
 
@@ -189,5 +193,19 @@ pub mod client {
         })?;
 
         Ok(nodes.items)
+    }
+
+   #[tauri::command]
+    pub async fn get_pods(path: &str, context: &str) -> Result<Vec<Pod>, GenericError> {
+        log::info!("get_pods {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let pod_api: Api<Pod> = Api::all(client);
+
+        let pods = pod_api.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(pods.items)
     }
 }

@@ -2,7 +2,7 @@ import { hookstate, useHookstate } from '@hookstate/core';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
 
-export const nodesState = hookstate<{ nodes: Node[] }>({
+export const nodesState = hookstate<{ nodes: Object[] }>({
   nodes: [],
 });
 

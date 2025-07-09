@@ -1,7 +1,6 @@
 import toast from 'react-hot-toast';
 import { setVersion } from '../store/version';
-import { getConfigFolder } from '../store/configs';
-import { setCurrentCluster } from '../store/currentCluster';
+import { setCurrentCluster } from '../store/cluster';
 import { invoke } from '@tauri-apps/api/core';
 import { useNavigate } from 'react-router';
 
@@ -9,7 +8,7 @@ interface KubeVersion {
   gitVersion: string;
 }
 
-const KubeConnect = () => {
+const KubeConnect = ({ configs = [] }) => {
   const navigate = useNavigate();
   const get_version = async (cluster: string, path: any) => {
     toast.promise(invoke<KubeVersion>('get_version', { path: path, context: cluster }), {
@@ -35,10 +34,10 @@ const KubeConnect = () => {
   };
   return (
     <div className="grid items-baseline-last">
-      {getConfigFolder() === undefined ? (
-        <></>
+      {configs.length === 0 ? (
+        <h2>No configs found</h2>
       ) : (
-        (getConfigFolder() || []).map((cluster: any, index) => (
+        configs.map((cluster: any, index) => (
           <div key={index} className="mb-2">
             <button
               onClick={async () => await get_version(cluster.name, cluster.path)}
