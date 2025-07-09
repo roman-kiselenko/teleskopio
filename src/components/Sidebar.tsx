@@ -2,6 +2,7 @@ import k8sLogo from './icons/k8s.svg';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
 
 import { NavLink } from 'react-router-dom';
+import { getCurrentCluster } from '../store/currentCluster';
 
 import { ClusterLink } from './links/Cluster';
 import { WorkloadsLink } from './links/Workloads';
@@ -19,15 +20,16 @@ export function Sidebar() {
       <NavLink
         to="/"
         className="flex items-center justify-center flex-shrink-0 w-full h-12 bg-blue-300"
+        // onClick={(e) => setCurrentCluster('', '')}
       >
         <img src={k8sLogo} className="w-7 h-7" alt="Kubernetes" />
       </NavLink>
-      <ClusterLink />
-      <WorkloadsLink />
-      <ConfigLink />
-      <NetworkLink />
-      <StorageLink />
-      <AccessLink />
+      <ClusterLink disabled={getCurrentCluster()} />
+      <WorkloadsLink disabled={getCurrentCluster()} />
+      <ConfigLink disabled={getCurrentCluster()} />
+      <NetworkLink disabled={getCurrentCluster()} />
+      <StorageLink disabled={getCurrentCluster()} />
+      <AccessLink disabled={getCurrentCluster()} />
       <NavLink
         to="/settings"
         className="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-3 mt-auto rounded hover:bg-blue-300"
@@ -37,7 +39,7 @@ export function Sidebar() {
             <TooltipTrigger asChild>
               <div
                 className="rounded-lg px-4 h-8 relative
-                  flex items-center justify-center text-sm cursor-pointer text-foreground gap-2 hover:bg-muted/50 transition-colors"
+                  flex items-center justify-center text-sm cursor-pointer text-foreground gap-2 transition-colors"
               >
                 <FontAwesomeIcon icon={faGear} size="lg" className="" />
               </div>

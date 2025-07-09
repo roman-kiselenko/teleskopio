@@ -1,9 +1,6 @@
 import KubeConnect from '../KubeConnect';
-// import { useConfigsState } from '../../store/configs.ts'
 
 export function StartPage() {
-  //   const configsState = useConfigsState()
-
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex items-center flex-shrink-0 h-12 border-b border-gray-300">

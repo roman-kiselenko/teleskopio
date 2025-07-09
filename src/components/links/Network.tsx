@@ -1,30 +1,27 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NavLink } from 'react-router-dom';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Tooltip';
 import { faNetworkWired } from '@fortawesome/free-solid-svg-icons';
 
-export function NetworkLink() {
+export function NetworkLink({ disabled = false }) {
   const children = (
     <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-3 rounded hover:bg-blue-300">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              className="rounded-lg px-4 h-8 relative
-              flex items-center justify-center text-sm cursor-pointer text-foreground gap-2 hover:bg-muted/50 transition-colors"
-            >
-              <FontAwesomeIcon icon={faNetworkWired} size="lg" className="" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={0}>network</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div
+        className="rounded-lg px-4 h-8 relative
+              flex items-center justify-center text-sm cursor-pointer text-foreground gap-2 transition-colors"
+      >
+        <FontAwesomeIcon icon={faNetworkWired} size="lg" className="" />
+      </div>
     </div>
   );
-
   return (
-    <NavLink to="/network" className="cursor-pointer rounded flex flex-col items-center">
-      {children}
-    </NavLink>
+    <>
+      {disabled ? (
+        <a className="text-gray-400 cursor-not-allowed opacity-50">{children}</a>
+      ) : (
+        <NavLink to="/network" className="cursor-pointer rounded flex flex-col items-center">
+          {children}
+        </NavLink>
+      )}
+    </>
   );
 }
