@@ -1,7 +1,6 @@
 import { useCurrentClusterState } from '@/store/cluster';
-import { usePodsState, getPods } from '~/store/pods';
+import { useDeploymentsState, getDeployments } from '@/store/deployments';
 import { useEffect } from 'react';
-import moment from 'moment';
 import {
   Table,
   TableBody,
@@ -10,13 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import moment from 'moment';
 
-const Pods = () => {
+const Deployments = () => {
   const cc = useCurrentClusterState();
-  const podsState = usePodsState();
+  const deploymentsState = useDeploymentsState();
 
   useEffect(() => {
-    getPods(cc.kube_config.get(), cc.cluster.get());
+    getDeployments(cc.kube_config.get(), cc.cluster.get());
   }, [cc.kube_config.get(), cc.cluster.get()]);
 
   return (
@@ -25,23 +25,21 @@ const Pods = () => {
         <TableHeader>
           <TableRow className="text-xs">
             <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Containers</TableHead>
-            <TableHead>Node</TableHead>
+            <TableHead>Replicas</TableHead>
             <TableHead>Age</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="font-medium text-xs">
-          {podsState.pods.get().map((pod: any, index) => (
+          {deploymentsState.deployments.get().map((deployment: any, index) => (
             <TableRow key={index}>
               <TableCell>
-                <span className="font-bold">{pod.metadata.namespace}</span>/{pod.metadata.name}
+                <span className="font-bold">{deployment.metadata.namespace}</span>/
+                {deployment.metadata.name}
               </TableCell>
               <TableCell>
-                {pod.spec.containers.length}/
-                {pod.status.containerStatuses.filter((c) => c.started).length}
+                {deployment.spec.replicas}/{deployment.status.replicas}
               </TableCell>
-              <TableCell>{pod.spec.nodeName}</TableCell>
-              <TableCell>{moment(pod.metadata.creationTimestamp).fromNow()}</TableCell>
+              <TableCell>{moment(deployment.metadata.creationTimestamp).fromNow()}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -50,4 +48,4 @@ const Pods = () => {
   );
 };
 
-export default Pods;
+export default Deployments;

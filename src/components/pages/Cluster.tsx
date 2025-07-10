@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import moment from 'moment';
 
 export function ClusterPage() {
   const cv = useVersionState();
@@ -41,7 +42,7 @@ export function ClusterPage() {
                   <TableHead>IP</TableHead>
                   <TableHead>Kubelet</TableHead>
                   <TableHead>Container Runtime</TableHead>
-                  <TableHead>Operations</TableHead>
+                  <TableHead>Age</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="font-medium text-xs">
@@ -69,7 +70,7 @@ export function ClusterPage() {
                     <TableCell>{node.spec.podCIDR}</TableCell>
                     <TableCell>{node.status.nodeInfo.kubeletVersion}</TableCell>
                     <TableCell>{node.status.nodeInfo.containerRuntimeVersion}</TableCell>
-                    <TableCell className="flex"></TableCell>
+                    <TableCell>{moment(node.metadata.creationTimestamp).fromNow()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

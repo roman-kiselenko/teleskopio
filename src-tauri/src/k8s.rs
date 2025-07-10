@@ -6,6 +6,9 @@ pub mod client {
         Node,
         Pod,
     };
+    use k8s_openapi::api::apps::v1::{
+        Deployment,
+    };
     use tauri::http::Request;
     use kube::api::{ListParams};
     use std::fmt;
@@ -195,7 +198,7 @@ pub mod client {
         Ok(nodes.items)
     }
 
-   #[tauri::command]
+    #[tauri::command]
     pub async fn get_pods(path: &str, context: &str) -> Result<Vec<Pod>, GenericError> {
         log::info!("get_pods {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -207,5 +210,19 @@ pub mod client {
         })?;
 
         Ok(pods.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_deployments(path: &str, context: &str) -> Result<Vec<Deployment>, GenericError> {
+        log::info!("get_deployments {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let deployment_api: Api<Deployment> = Api::all(client);
+
+        let deployments = deployment_api.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(deployments.items)
     }
 }

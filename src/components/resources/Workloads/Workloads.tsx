@@ -1,4 +1,8 @@
+import { usePageState } from '@/store/page';
+
 export function Workloads() {
+  const currentPage = usePageState();
+
   return (
     <div className="flex flex-col w-45 border-r border-gray-300">
       <button className="relative text-sm focus:outline-none group">
@@ -10,12 +14,14 @@ export function Workloads() {
         <a
           className="flex items-center flex-shrink-0 h-7 px-1 text-sm font-medium rounded hover:bg-blue-300"
           href="#"
+          onClick={() => currentPage.currentPage.set('pods')}
         >
           <span className="leading-none">Pods</span>
         </a>
         <a
           className="flex items-center flex-shrink-0 h-7 px-1 text-sm font-medium rounded hover:bg-blue-300"
           href="#"
+          onClick={() => currentPage.currentPage.set('deployments')}
         >
           <span className="leading-none">Deployments</span>
         </a>

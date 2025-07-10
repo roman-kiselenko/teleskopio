@@ -56,6 +56,7 @@ pub fn run() {
             k8s::client::get_namespaces,
             k8s::client::get_nodes,
             k8s::client::get_pods,
+            k8s::client::get_deployments,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

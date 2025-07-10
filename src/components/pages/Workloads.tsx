@@ -1,10 +1,18 @@
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
+import { usePageState, setPage } from '@/store/page';
 import Pods from '~/components/resources/Workloads/Pods';
+import Deployments from '~/components/resources/Workloads/Deployments';
+import { useEffect } from 'react';
 
 export function WorkloadsPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
+  const currentPage = usePageState();
+
+  useEffect(() => {
+    setPage('pods');
+  }, ['pods']);
 
   return (
     <div className="flex flex-col flex-grow">
@@ -19,7 +27,8 @@ export function WorkloadsPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          <Pods />
+          {currentPage.currentPage.get() === 'pods' ? <Pods /> : <></>}
+          {currentPage.currentPage.get() === 'deployments' ? <Deployments /> : <></>}
         </div>
       </div>
     </div>
