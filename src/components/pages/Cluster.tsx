@@ -32,7 +32,7 @@ export function ClusterPage() {
         </div>
       </div>
       <div className="flex-grow overflow-auto">
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-1">
           <div className="h-24 col-span-2">
             <Table>
               <TableHeader>

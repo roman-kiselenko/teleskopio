@@ -12,19 +12,19 @@ export function StoragePage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-3">
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-2 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-2 bg-white"></div>
-          <div className="h-24 col-span-3 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
-          <div className="h-24 col-span-2 bg-white"></div>
-          <div className="h-24 col-span-1 bg-white"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-2 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-2 bg-background"></div>
+          <div className="h-24 col-span-3 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
+          <div className="h-24 col-span-2 bg-background"></div>
+          <div className="h-24 col-span-1 bg-background"></div>
         </div>
       </div>
     </div>

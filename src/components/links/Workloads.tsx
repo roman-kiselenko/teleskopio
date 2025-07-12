@@ -16,7 +16,7 @@ export function WorkloadsLink({ disabled = false }) {
   return (
     <>
       {disabled ? (
-        <a className="text-gray-400 cursor-not-allowed opacity-50">{children}</a>
+        <a className="text-foreground-400 cursor-not-allowed opacity-50">{children}</a>
       ) : (
         <NavLink to="/workloads" className="cursor-pointer rounded flex flex-col items-center">
           {children}

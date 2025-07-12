@@ -34,7 +34,7 @@ const Pods = () => {
           {podsState.pods.get().map((pod: any, index) => (
             <TableRow key={index}>
               <TableCell>
-                <span className="font-bold">{pod.metadata.namespace}</span>/{pod.metadata.name}
+                {pod.metadata.name}
               </TableCell>
               <TableCell>
                 {pod.spec.containers.length}/
