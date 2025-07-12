@@ -11,13 +11,13 @@ export function Storage() {
           className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
         >
-          <span className="leading-none">PersistentVolumeClaims</span>
+          <span className="leading-none">PVC</span>
         </a>
         <a
           className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
         >
-          <span className="leading-none">PersistentVolumes</span>
+          <span className="leading-none">PV</span>
         </a>
         <a
           className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
