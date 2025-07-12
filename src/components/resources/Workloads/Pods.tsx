@@ -11,6 +11,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
 const Pods = () => {
   const cc = useCurrentClusterState();
   const podsState = usePodsState();
@@ -34,7 +36,15 @@ const Pods = () => {
           {podsState.pods.get().map((pod: any, index) => (
             <TableRow key={index}>
               <TableCell>
-                {pod.metadata.name}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-pointer">
+                      <span className="font-bold">{pod.metadata.namespace}</span>/
+                      {pod.metadata.name}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{pod.metadata.name}</TooltipContent>
+                </Tooltip>
               </TableCell>
               <TableCell>
                 {pod.spec.containers.length}/

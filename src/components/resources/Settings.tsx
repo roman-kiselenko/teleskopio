@@ -8,19 +8,19 @@ export function Settings() {
       </button>
       <div className="flex flex-col flex-grow p-2 overflow-auto">
         <a
-          className="flex items-center flex-shrink-0 h-7 px-1 text-sm font-medium rounded hover:bg-blue-300"
+          className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
         >
           <span className="leading-none">General</span>
         </a>
         <a
-          className="flex items-center flex-shrink-0 h-7 px-1 text-sm font-medium rounded hover:bg-blue-300"
+          className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
         >
           <span className="leading-none">Tools</span>
         </a>
         <a
-          className="flex items-center flex-shrink-0 h-7 px-1 text-sm font-medium rounded hover:bg-blue-300"
+          className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
         >
           <span className="leading-none">Appearance</span>

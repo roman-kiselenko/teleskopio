@@ -8,6 +8,8 @@ pub mod client {
     };
     use k8s_openapi::api::apps::v1::{
         Deployment,
+        DaemonSet,
+        ReplicaSet,
     };
     use tauri::http::Request;
     use kube::api::{ListParams};
@@ -224,5 +226,33 @@ pub mod client {
         })?;
 
         Ok(deployments.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_daemonset(path: &str, context: &str) -> Result<Vec<DaemonSet>, GenericError> {
+        log::info!("get_daemonset {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let daemonset: Api<DaemonSet> = Api::all(client);
+
+        let daemonset = daemonset.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(daemonset.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_replicaset(path: &str, context: &str) -> Result<Vec<ReplicaSet>, GenericError> {
+        log::info!("get_replicaset {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let replicaset: Api<ReplicaSet> = Api::all(client);
+
+        let replicaset = replicaset.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(replicaset.items)
     }
 }

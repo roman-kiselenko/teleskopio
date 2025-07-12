@@ -28,12 +28,14 @@ export function Workloads() {
         <a
           className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
+          onClick={() => currentPage.currentPage.set('daemonsets')}
         >
           <span className="leading-none">DaemonSets</span>
         </a>
         <a
           className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
           href="#"
+          onClick={() => currentPage.currentPage.set('replicasets')}
         >
           <span className="leading-none">ReplicaSets</span>
         </a>

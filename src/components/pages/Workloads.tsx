@@ -3,6 +3,8 @@ import { useCurrentClusterState } from '@/store/cluster';
 import { usePageState, setPage } from '@/store/page';
 import Pods from '~/components/resources/Workloads/Pods';
 import Deployments from '~/components/resources/Workloads/Deployments';
+import DaemonSets from '~/components/resources/Workloads/DaemonSets';
+import ReplicaSets from '~/components/resources/Workloads/ReplicaSets';
 import { useEffect } from 'react';
 
 export function WorkloadsPage() {
@@ -29,6 +31,8 @@ export function WorkloadsPage() {
         <div className="grid grid-cols-1">
           {currentPage.currentPage.get() === 'pods' ? <Pods /> : <></>}
           {currentPage.currentPage.get() === 'deployments' ? <Deployments /> : <></>}
+          {currentPage.currentPage.get() === 'daemonsets' ? <DaemonSets /> : <></>}
+          {currentPage.currentPage.get() === 'replicasets' ? <ReplicaSets /> : <></>}
         </div>
       </div>
     </div>
