@@ -1,6 +1,6 @@
 export function Config() {
   return (
-    <div className="flex flex-col w-45 border-r border-gray-300">
+    <div className="flex flex-col w-35 border-r border-gray-300">
       <button className="relative text-sm focus:outline-none group">
         <div className="flex items-center justify-between w-full h-12 px-3 border-b border-gray-300 hover:bg-blue-300">
           <span className="font-medium">Config</span>

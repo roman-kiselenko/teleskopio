@@ -5,6 +5,9 @@ import Pods from '~/components/resources/Workloads/Pods';
 import Deployments from '~/components/resources/Workloads/Deployments';
 import DaemonSets from '~/components/resources/Workloads/DaemonSets';
 import ReplicaSets from '~/components/resources/Workloads/ReplicaSets';
+import StatefulSets from '~/components/resources/Workloads/StatefulSets';
+import Jobs from '~/components/resources/Workloads/Jobs';
+import CronJobs from '~/components/resources/Workloads/CronJobs';
 import { useEffect } from 'react';
 
 export function WorkloadsPage() {
@@ -33,6 +36,9 @@ export function WorkloadsPage() {
           {currentPage.currentPage.get() === 'deployments' ? <Deployments /> : <></>}
           {currentPage.currentPage.get() === 'daemonsets' ? <DaemonSets /> : <></>}
           {currentPage.currentPage.get() === 'replicasets' ? <ReplicaSets /> : <></>}
+          {currentPage.currentPage.get() === 'statefulsets' ? <StatefulSets /> : <></>}
+          {currentPage.currentPage.get() === 'jobs' ? <Jobs /> : <></>}
+          {currentPage.currentPage.get() === 'cronjobs' ? <CronJobs /> : <></>}
         </div>
       </div>
     </div>

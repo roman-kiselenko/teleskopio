@@ -1,10 +1,18 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NavLink } from 'react-router-dom';
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
+import { useLocation } from 'react-router-dom';
+import { useMemo } from 'react';
 
 export function WorkloadsLink({ disabled = false }) {
+  const currentPath = useLocation();
+  const isWorkloadPage = useMemo(() => currentPath.pathname === '/workloads', [currentPath]);
   const children = (
-    <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-3 rounded hover:bg-blue-300">
+    <div
+      className={`flex items-center justify-center flex-shrink-0 w-10 h-10 mt-3 rounded hover:bg-blue-300 ${
+        isWorkloadPage ? 'bg-blue-100' : ''
+      }`}
+    >
       <div
         className="rounded-lg px-4 h-8 relative
               flex items-center justify-center text-sm cursor-pointer text-foreground gap-2 transition-colors"

@@ -10,6 +10,11 @@ pub mod client {
         Deployment,
         DaemonSet,
         ReplicaSet,
+        StatefulSet,
+    };
+   use k8s_openapi::api::batch::v1::{
+        Job,
+        CronJob,
     };
     use tauri::http::Request;
     use kube::api::{ListParams};
@@ -254,5 +259,47 @@ pub mod client {
         })?;
 
         Ok(replicaset.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_statefulset(path: &str, context: &str) -> Result<Vec<StatefulSet>, GenericError> {
+        log::info!("get_statefulset {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let statefulset: Api<StatefulSet> = Api::all(client);
+
+        let statefulset = statefulset.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(statefulset.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_jobs(path: &str, context: &str) -> Result<Vec<Job>, GenericError> {
+        log::info!("get_jobs {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let jobs: Api<Job> = Api::all(client);
+
+        let jobs = jobs.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(jobs.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_cronjobs(path: &str, context: &str) -> Result<Vec<CronJob>, GenericError> {
+        log::info!("get_cronjobs {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let cronjobs: Api<CronJob> = Api::all(client);
+
+        let cronjobs = cronjobs.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(cronjobs.items)
     }
 }

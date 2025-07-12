@@ -1,6 +1,7 @@
 import k8sLogo from './icons/k8s.svg';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
-
+import { useLocation } from 'react-router-dom';
+import { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { getCurrentCluster } from '../store/cluster';
 
@@ -15,6 +16,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 
 export function Sidebar() {
+  const currentPath = useLocation();
+  const isSettingsPage = useMemo(() => currentPath.pathname === '/settings', [currentPath]);
   return (
     <div className="flex flex-col items-center w-16 pb-4 overflow-auto border-r border-gray-300">
       <NavLink
@@ -31,7 +34,9 @@ export function Sidebar() {
       <AccessLink disabled={getCurrentCluster()} />
       <NavLink
         to="/settings"
-        className="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-3 mt-auto rounded hover:bg-blue-300"
+        className={`flex items-center justify-center flex-shrink-0 w-10 h-10 mt-3 mt-auto rounded hover:bg-blue-300 ${
+          isSettingsPage ? 'bg-blue-100' : ''
+        }`}
       >
         <TooltipProvider>
           <Tooltip>
