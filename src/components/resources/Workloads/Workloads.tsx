@@ -21,6 +21,7 @@ export function Workloads() {
       <div className="flex flex-col flex-grow p-2 overflow-auto">
         {sections.map((s: any, index: number) => (
           <a
+            key={index}
             className={`flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300 ${
               currentPage.currentPage.get() === s.section ? 'bg-blue-100' : ''
             }`}

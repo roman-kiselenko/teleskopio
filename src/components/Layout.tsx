@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
-import { Namespaces } from './Namespaces';
 import { Workloads } from './resources/Workloads/Workloads';
 import { Config } from './resources/Config';
 import { Network } from './resources/Network';
@@ -19,7 +18,6 @@ export function Layout() {
   const isNetwork = useMemo(() => currentPath.pathname === '/network', [currentPath]);
   const isStorage = useMemo(() => currentPath.pathname === '/storage', [currentPath]);
   const isAccess = useMemo(() => currentPath.pathname === '/access', [currentPath]);
-  const isCluster = useMemo(() => currentPath.pathname === '/cluster', [currentPath]);
   const isSettings = useMemo(() => currentPath.pathname === '/settings', [currentPath]);
 
   return (
@@ -32,7 +30,6 @@ export function Layout() {
           {!isStartPage && isNetwork ? <Network /> : <></>}
           {!isStartPage && isStorage ? <Storage /> : <></>}
           {!isStartPage && isAccess ? <Access /> : <></>}
-          {!isStartPage && !isCluster && !isSettings ? <Namespaces /> : <></>}
           {!isStartPage && isSettings ? <Settings /> : <></>}
           <Outlet />
         </div>

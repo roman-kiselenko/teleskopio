@@ -1,8 +1,25 @@
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
+import { useState } from 'react';
 import { useCurrentClusterState } from '@/store/cluster';
 import { useNamespacesState, getNamespaces } from '@/store/namespaces';
 import { useEffect } from 'react';
 
+import { cn } from '@/util';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
 export function Namespaces() {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+
   const cc = useCurrentClusterState();
   const ns = useNamespacesState();
 
@@ -11,23 +28,52 @@ export function Namespaces() {
   }, [cc.kube_config.get(), cc.cluster.get()]);
 
   return (
-    <div className="flex flex-col w-35 border-r border-gray-300">
-      <button className="relative text-sm focus:outline-none group">
-        <div className="flex items-center justify-between w-full h-12 px-3 border-b border-gray-300 hover:bg-blue-300">
-          <span className="font-medium">Namespaces</span>
-        </div>
-      </button>
-      <div className="flex flex-col flex-grow p-2 overflow-auto">
-        {ns.namespaces.get().map((namespace: any, index) => (
-          <a
-            className="flex items-center flex-shrink-0 h-7 px-1 text-xs font-medium rounded hover:bg-blue-300"
-            key={index}
-            href="#"
-          >
-            <span className="leading-none">{namespace.metadata.name}</span>
-          </a>
-        ))}
-      </div>
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="text-xs w-[200px] justify-between"
+        >
+          {value
+            ? ns.namespaces
+                .get()
+                .slice()
+                .find((ns: any) => ns.metadata.name === value)?.metadata.name
+            : 'Namespace...'}
+          <ChevronsUpDownIcon className="ml-2 h-2 w-2 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="text-xs w-[200px] p-0">
+        <Command>
+          <CommandInput className="text-xs" placeholder="Search namespace..." />
+          <CommandList>
+            <CommandEmpty>No namespace found.</CommandEmpty>
+            <CommandGroup>
+              {ns.namespaces.get().map((ns: any, index: number) => (
+                <CommandItem
+                  className="text-xs"
+                  key={index}
+                  value={ns.metadata.name}
+                  onSelect={(currentValue) => {
+                    setValue(currentValue === value ? '' : currentValue);
+                    setOpen(false);
+                  }}
+                >
+                  <CheckIcon
+                    className={cn(
+                      'mr-2 h-2 w-2',
+                      value === ns.metadata.name ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                  {ns.metadata.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
