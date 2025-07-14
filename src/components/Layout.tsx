@@ -1,8 +1,8 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Workloads } from './resources/Workloads/Workloads';
-import { Config } from './resources/Config';
-import { Network } from './resources/Network';
+import { Configs } from './resources/Configs/Configs';
+import { Network } from './resources/Network/Network';
 import { Storage } from './resources/Storage';
 import { Access } from './resources/Access';
 import { Settings } from './resources/Settings';
@@ -26,7 +26,7 @@ export function Layout() {
         <div className="flex w-screen h-screen text-foreground-700">
           <Sidebar />
           {!isStartPage && isWorkloads ? <Workloads /> : <></>}
-          {!isStartPage && isConfig ? <Config /> : <></>}
+          {!isStartPage && isConfig ? <Configs /> : <></>}
           {!isStartPage && isNetwork ? <Network /> : <></>}
           {!isStartPage && isStorage ? <Storage /> : <></>}
           {!isStartPage && isAccess ? <Access /> : <></>}

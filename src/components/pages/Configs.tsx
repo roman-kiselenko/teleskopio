@@ -1,18 +1,19 @@
 import { usePageState, setPage } from '@/store/page';
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
+import Configmaps from '~/components/resources/Configs/Configmaps';
+import Secrets from '~/components/resources/Configs/Secrets';
 import { Namespaces } from '~/components/Namespaces';
-import Services from '~/components/resources/Network/Services';
 import { useEffect } from 'react';
 
-export function NetworkPage() {
+export function ConfigsPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
 
   useEffect(() => {
-    setPage('services');
-  }, ['services']);
+    setPage('configmaps');
+  }, ['configmaps']);
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex items-center justify-between flex-shrink-0 h-12 border-b border-gray-300">
@@ -31,7 +32,8 @@ export function NetworkPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'services' ? <Services /> : <></>}
+          {currentPage.currentPage.get() === 'configmaps' ? <Configmaps /> : <></>}
+          {currentPage.currentPage.get() === 'secrets' ? <Secrets /> : <></>}
         </div>
       </div>
     </div>

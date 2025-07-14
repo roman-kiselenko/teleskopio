@@ -62,6 +62,9 @@ pub fn run() {
             k8s::client::get_statefulset,
             k8s::client::get_jobs,
             k8s::client::get_cronjobs,
+            k8s::client::get_configmaps,
+            k8s::client::get_secrets,
+            k8s::client::get_services,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

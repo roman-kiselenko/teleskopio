@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { ClusterPage } from './components/pages/Cluster';
 import { WorkloadsPage } from './components/pages/Workloads';
 import { StartPage } from './components/pages/Start';
-import { ConfigPage } from './components/pages/Config';
+import { ConfigsPage } from './components/pages/Configs';
 import { NetworkPage } from './components/pages/Network';
 import { SettingsPage } from './components/pages/Settings';
 import { StoragePage } from './components/pages/Storage';
@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/config',
-        element: <ConfigPage />,
+        element: <ConfigsPage />,
       },
       {
         path: '/network',

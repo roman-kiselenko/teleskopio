@@ -5,6 +5,9 @@ pub mod client {
         Namespace,
         Node,
         Pod,
+        Service,
+        ConfigMap,
+        Secret,
     };
     use k8s_openapi::api::apps::v1::{
         Deployment,
@@ -301,5 +304,47 @@ pub mod client {
         })?;
 
         Ok(cronjobs.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_configmaps(path: &str, context: &str) -> Result<Vec<ConfigMap>, GenericError> {
+        log::info!("get_configmaps {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let configmaps: Api<ConfigMap> = Api::all(client);
+
+        let configmaps = configmaps.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(configmaps.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_secrets(path: &str, context: &str) -> Result<Vec<Secret>, GenericError> {
+        log::info!("get_secrets {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let secrets: Api<Secret> = Api::all(client);
+
+        let secrets = secrets.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(secrets.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_services(path: &str, context: &str) -> Result<Vec<Service>, GenericError> {
+        log::info!("get_services {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let services: Api<Service> = Api::all(client);
+
+        let services = services.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(services.items)
     }
 }

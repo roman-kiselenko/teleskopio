@@ -1,21 +1,17 @@
 import { usePageState } from '@/store/page';
 
-export function Workloads() {
+export function Network() {
   const currentPage = usePageState();
   const sections = [
-    { section: 'pods', title: 'Pods' },
-    { section: 'deployments', title: 'Deployemnts' },
-    { section: 'daemonsets', title: 'DaemonSets' },
-    { section: 'replicasets', title: 'ReplicaSets' },
-    { section: 'statefulsets', title: 'StatefulSets' },
-    { section: 'jobs', title: 'Jobs' },
-    { section: 'cronjobs', title: 'CronJobs' },
+    { section: 'services', title: 'Services' },
+    { section: 'ingresses', title: 'Ingresses' },
+    { section: 'networkpolicies', title: 'NetworkPolicy' },
   ];
   return (
     <div className="flex flex-col w-35 border-r border-gray-300">
       <div className="relative text-sm focus:outline-none group">
         <div className="flex items-center justify-between w-full h-12 px-3 border-b border-gray-300">
-          <span className="font-medium">Workloads</span>
+          <span className="font-medium">Networks</span>
         </div>
       </div>
       <div className="flex flex-col flex-grow p-2 overflow-auto">
