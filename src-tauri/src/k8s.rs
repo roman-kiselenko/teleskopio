@@ -8,6 +8,7 @@ pub mod client {
         Service,
         ConfigMap,
         Secret,
+        ServiceAccount,
     };
     use k8s_openapi::api::apps::v1::{
         Deployment,
@@ -18,6 +19,13 @@ pub mod client {
    use k8s_openapi::api::batch::v1::{
         Job,
         CronJob,
+    };
+    use k8s_openapi::api::networking::v1::{
+        Ingress,
+        NetworkPolicy,
+    };
+    use k8s_openapi::api::rbac::v1::{
+        Role,
     };
     use tauri::http::Request;
     use kube::api::{ListParams};
@@ -134,7 +142,7 @@ pub mod client {
 
     #[tauri::command]
     pub async fn lookup_configs() -> Result<Vec<Cluster>, GenericError> {
-         log::info!("lookup_configs");
+        log::info!("lookup_configs");
         let kube_config_path = home_dir().expect("Could not determine home directory").join(".kube/");
         if !kube_config_path.exists() {
             return Err(GenericError::new(format!("No such directory: {}", kube_config_path.display())));
@@ -346,5 +354,61 @@ pub mod client {
         })?;
 
         Ok(services.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_ingresses(path: &str, context: &str) -> Result<Vec<Ingress>, GenericError> {
+        log::info!("get_ingresses {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let ingresses: Api<Ingress> = Api::all(client);
+
+        let ingresses = ingresses.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(ingresses.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_networkpolicies(path: &str, context: &str) -> Result<Vec<NetworkPolicy>, GenericError> {
+        log::info!("get_networkpolicies {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let networkpolicies: Api<NetworkPolicy> = Api::all(client);
+
+        let networkpolicies = networkpolicies.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(networkpolicies.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_serviceaccounts(path: &str, context: &str) -> Result<Vec<ServiceAccount>, GenericError> {
+        log::info!("get_serviceaccounts {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let serviceaccounts: Api<ServiceAccount> = Api::all(client);
+
+        let serviceaccounts = serviceaccounts.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(serviceaccounts.items)
+    }
+
+    #[tauri::command]
+    pub async fn get_roles(path: &str, context: &str) -> Result<Vec<Role>, GenericError> {
+        log::info!("get_roles {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let roles: Api<Role> = Api::all(client);
+
+        let roles = roles.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(roles.items)
     }
 }

@@ -3,6 +3,8 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import Services from '~/components/resources/Network/Services';
+import Ingresses from '~/components/resources/Network/Ingresses';
+import NetworkPolicies from '~/components/resources/Network/NetworkPolicies';
 import { useEffect } from 'react';
 
 export function NetworkPage() {
@@ -32,6 +34,8 @@ export function NetworkPage() {
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
           {currentPage.currentPage.get() === 'services' ? <Services /> : <></>}
+          {currentPage.currentPage.get() === 'ingresses' ? <Ingresses /> : <></>}
+          {currentPage.currentPage.get() === 'networkpolicies' ? <NetworkPolicies /> : <></>}
         </div>
       </div>
     </div>
