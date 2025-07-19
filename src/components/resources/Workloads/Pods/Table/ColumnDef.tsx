@@ -1,6 +1,7 @@
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/resources/Workloads/Pods/Table/BlinkingCell';
+import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-// import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -80,15 +80,31 @@ const columns: ColumnDef<Pod>[] = [
       );
     },
     cell: ({ row }) => {
-      //   const containers = `${row.original.spec.containers.length}/${row.original.status.containerStatuses.filter((c) => c.started).length}`;
       const name = row.original.metadata.name;
       return <div className={`font-medium`}>{name}</div>;
     },
   },
   {
     accessorKey: 'metadata.namespace',
-    header: 'Namespace',
-    id: 'namespace',
+    header: 'Containers',
+    id: 'containers',
+    cell: ({ row }) => {
+      const pod = row.original;
+      return (
+        <div className="flex flex-wrap w-24">
+          {pod.status.containerStatuses.map((c: any, index: number) => {
+            return (
+              <ContainerIcon
+                containerstate={c.state}
+                name={c.name}
+                key={index}
+                ready={c.ready && c.started}
+              />
+            );
+          })}
+        </div>
+      );
+    },
   },
   {
     accessorKey: 'spec.nodeName',
@@ -125,11 +141,11 @@ const columns: ColumnDef<Pod>[] = [
     },
     cell: ({ getValue }) => {
       const phase = getValue<string>();
-      let color = 'text-green-300';
+      let color = 'text-green-500';
       if (phase === 'Failed') {
-        color = 'text-red-300';
+        color = 'text-red-500';
       } else if (phase === 'Pending') {
-        color = 'text-orange-300';
+        color = 'text-gray-500';
       }
       return <div className={`font-medium ${color}`}>{phase}</div>;
     },

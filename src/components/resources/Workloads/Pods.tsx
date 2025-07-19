@@ -27,11 +27,7 @@ const Pods = () => {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  return (
-    <div>
-      <DataTable columns={columns} data={podsState.pods.get()} />
-    </div>
-  );
+  return <DataTable columns={columns} data={podsState.pods.get()} />;
 };
 
 export default Pods;
