@@ -6,9 +6,16 @@ export const nodesState = hookstate<{ nodes: Object[] }>({
   nodes: [],
 });
 
-export async function getNodes(path: string, context: string) {
+export async function getNodes(path: string, context: string, q: string) {
   try {
-    const nodes = await invoke<any>('get_nodes', { path: path, context: context });
+    let nodes = await invoke<any>('get_nodes', { path: path, context: context });
+    if (q !== '') {
+      nodes = nodes.filter((n) => {
+        return String(n.metadata.name || '')
+          .toLowerCase()
+          .includes(q.toLowerCase());
+      });
+    }
     console.log('found nodes', nodes);
     nodesState.nodes.set(nodes);
   } catch (error: any) {

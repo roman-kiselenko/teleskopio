@@ -7,12 +7,19 @@ export const podsState = hookstate<{ pods: Object[] }>({
   pods: [],
 });
 
-export async function getPods(path: string, context: string) {
+export async function getPods(path: string, context: string, query: string) {
   try {
-    const pods = await invoke<any>('get_pods', { path: path, context: context });
+    let pods = await invoke<any>('get_pods', { path: path, context: context });
     pods.sort(function (a, b) {
       return moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp));
     });
+    if (query !== '') {
+      pods = pods.filter((p) => {
+        return String(p.metadata.name || '')
+          .toLowerCase()
+          .includes(query.toLowerCase());
+      });
+    }
     console.log('found pods', pods);
     podsState.pods.set(pods);
   } catch (error: any) {

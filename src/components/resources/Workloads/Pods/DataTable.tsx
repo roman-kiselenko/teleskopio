@@ -7,7 +7,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -16,19 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-function getNestedValue(obj: any, path: string): any {
-  return path.split('.').reduce((acc, part) => acc?.[part], obj);
-}
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
   const table = useReactTable({
     data,
     columns,
@@ -38,47 +33,12 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
-      globalFilter,
-    },
-    globalFilterFn: (row, columnId, filterValue) => {
-      const searchableFields = [
-        'metadata.name',
-        'metadata.namespace',
-        'spec.nodeName',
-        'status.phase',
-      ];
-      return searchableFields.some((field) => {
-        const value = getNestedValue(row.original, field);
-        return String(value).toLowerCase().includes(filterValue.toLowerCase());
-      });
     },
   });
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
-        event.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   return (
-    <div className="">
-      <div className="flex items-center py-2">
-        <Input
-          ref={inputRef}
-          placeholder="Filter by name, namespace, node, phase..."
-          value={globalFilter}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-xs"
-        />
-      </div>
-      <Table className="">
+    <div>
+      <Table>
         <TableHeader className="text-xs">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

@@ -1,5 +1,4 @@
-import { MoreHorizontal } from 'lucide-react';
-import { ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/resources/Workloads/Pods/Table/BlinkingCell';
 import {
@@ -120,7 +119,7 @@ const columns: ColumnDef<Pod>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Phase
-          <ArrowUpDown className="h-2 w-2" />
+          <ArrowUpDown size={32} className="h-12 w-12" />
         </Button>
       );
     },

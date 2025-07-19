@@ -2,6 +2,7 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { usePageState, setPage } from '@/store/page';
 import Pods from '~/components/resources/Workloads/Pods';
+import { SearchField } from '~/components/SearchField';
 import Deployments from '~/components/resources/Workloads/Deployments';
 import DaemonSets from '~/components/resources/Workloads/DaemonSets';
 import ReplicaSets from '~/components/resources/Workloads/ReplicaSets';
@@ -23,14 +24,15 @@ export function WorkloadsPage() {
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex items-center justify-between flex-shrink-0 h-12 border-b border-gray-300">
-        <button className="relative text-sm focus:outline-none group">
-          <div className="flex items-center justify-between w-full h-12 px-2">
-            <span className="font-medium">
-              {cc.cluster.get()}:{cv.version.get()}
-            </span>
-          </div>
+        <button className="relative focus:outline-none group">
+          <SearchField />
         </button>
-        <div className="relative text-sm focus:outline-none group">
+        <div className="flex items-center justify-between w-full h-12 px-2">
+          <span className="hidden md:block text-muted-foreground text-xs font-bold">
+            {cc.cluster.get()} {cv.version.get()}
+          </span>
+        </div>
+        <div className="relative focus:outline-none group">
           <div className="flex items-center w-full h-12 px-4">
             <Namespaces />
           </div>
