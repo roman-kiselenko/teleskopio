@@ -1,6 +1,7 @@
 @import '@fontsource/geist-mono';
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'tailwindcss-animated';
 
 @custom-variant dark (&:is(.dark *));
 

@@ -1,6 +1,7 @@
 import { hookstate, useHookstate } from '@hookstate/core';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
+import moment from 'moment';
 
 export const podsState = hookstate<{ pods: Object[] }>({
   pods: [],
@@ -9,6 +10,9 @@ export const podsState = hookstate<{ pods: Object[] }>({
 export async function getPods(path: string, context: string) {
   try {
     const pods = await invoke<any>('get_pods', { path: path, context: context });
+    pods.sort(function (a, b) {
+      return moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp));
+    });
     console.log('found pods', pods);
     podsState.pods.set(pods);
   } catch (error: any) {

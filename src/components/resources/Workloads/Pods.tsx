@@ -1,61 +1,32 @@
 import { useCurrentClusterState } from '@/store/cluster';
 import { usePodsState, getPods } from '~/store/pods';
-import { useEffect } from 'react';
-import moment from 'moment';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
+import { useEffect, useCallback } from 'react';
+import { DataTable } from '@/components/resources/Workloads/Pods/DataTable';
+import columns from '@/components/resources/Workloads/Pods/Table/ColumnDef';
 const Pods = () => {
   const cc = useCurrentClusterState();
   const podsState = usePodsState();
 
+  const kubeConfig = cc.kube_config.get();
+  const cluster = cc.cluster.get();
+
+  const fetchData = useCallback(async () => {
+    await getPods(kubeConfig, cluster);
+  }, [kubeConfig, cluster]);
+
   useEffect(() => {
-    getPods(cc.kube_config.get(), cc.cluster.get());
-  }, [cc.kube_config.get(), cc.cluster.get()]);
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   return (
-    <div className="h-24 col-span-1">
-      <Table>
-        <TableHeader>
-          <TableRow className="text-xs">
-            <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Containers</TableHead>
-            <TableHead>Node</TableHead>
-            <TableHead>Age</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="font-medium text-xs">
-          {podsState.pods.get().map((pod: any, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer">
-                      <span className="font-bold">{pod.metadata.namespace}</span>/
-                      {pod.metadata.name}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{pod.metadata.name}</TooltipContent>
-                </Tooltip>
-              </TableCell>
-              <TableCell>
-                {pod.spec.containers.length}/
-                {pod.status.containerStatuses.filter((c) => c.started).length}
-              </TableCell>
-              <TableCell>{pod.spec.nodeName}</TableCell>
-              <TableCell>{moment(pod.metadata.creationTimestamp).fromNow()}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div>
+      <DataTable columns={columns} data={podsState.pods.get()} />
     </div>
   );
 };

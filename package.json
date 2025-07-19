@@ -25,6 +25,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/react-table": "^8.21.3",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-fs": "~2.4.0",
     "@tauri-apps/plugin-opener": "^2",
@@ -64,6 +65,7 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-react": "^7.37.5",
     "prettier": "^3.6.2",
+    "tailwindcss-animated": "^2.0.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.3"
   }

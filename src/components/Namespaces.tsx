@@ -34,7 +34,7 @@ export function Namespaces() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="text-xs w-[200px] justify-between"
+          className="h-7 text-sm px-2 py-1 border-none shadow-none focus:ring-0 focus:outline-none bg-transparent text-xs w-[200px] justify-between"
         >
           {value
             ? ns.namespaces
