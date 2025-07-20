@@ -14,36 +14,45 @@ function ContainerIcon({
   ready: Boolean;
 }) {
   let output;
+  let color;
   if (containerstate && containerstate.running && containerstate.running.startedAt) {
-    output = `age: ${moment(containerstate.running.startedAt).fromNow()}`;
+    output = moment(containerstate.running.startedAt).fromNow();
+    color = 'text-green-300';
   }
   if (containerstate && containerstate.waiting && containerstate.waiting.reason) {
-    output = `waiting: ${containerstate.waiting.reason}`;
+    output = containerstate.waiting.reason;
+    color = 'text-orange-300';
   }
   if (containerstate && containerstate.terminated && containerstate.terminated.exitCode) {
-    output = `exit with code: ${containerstate.terminated.exitCode}`;
+    output = containerstate.terminated.exitCode;
+    color = 'text-gray-300';
   }
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Container
-          color={ready ? '#1dbe5bff' : '#ff4013'}
           size={15}
           className={cn(
             !ready
               ? 'animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
               : '',
-            'mr-2 mb-1',
+            `mr-2 mb-1 ${color}`,
           )}
         />
       </TooltipTrigger>
       <TooltipContent>
         "{name}"
-        <span className="font-bold">
+        <span>
           {' '}
-          {containerstate.waiting ? output : ''}
-          {containerstate.running ? output : ''}
-          {containerstate.terminated ? output : ''}
+          {containerstate.waiting ? <span className="font-bold">{output}</span> : ''}
+          {containerstate.running ? <span className="font-bold">{output}</span> : ''}
+          {containerstate.terminated ? (
+            <span>
+              exited:<span className="font-bold">{output}</span>
+            </span>
+          ) : (
+            ''
+          )}
         </span>
       </TooltipContent>
     </Tooltip>

@@ -51,6 +51,7 @@ type Pod = {
     namespace: string;
     uid: string;
     creationTimestamp: string;
+    deletionTimestamp: string;
   };
   spec: {
     containers: Container[];
@@ -58,6 +59,7 @@ type Pod = {
   status: {
     containerStatuses: ContainerStatus[];
     hostIP: string;
+    podIP: string;
     phase: string;
   };
 };
@@ -122,7 +124,23 @@ const columns: ColumnDef<Pod>[] = [
       );
     },
   },
-
+  {
+    accessorFn: (row) => row.status?.podIP ?? '',
+    id: 'podIP',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          podIP
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
   {
     accessorKey: 'status.phase',
     id: 'phase',
@@ -134,14 +152,19 @@ const columns: ColumnDef<Pod>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Phase
+          Status
           <ArrowUpDown size={32} className="h-12 w-12" />
         </Button>
       );
     },
-    cell: ({ getValue }) => {
-      const phase = getValue<string>();
+    cell: ({ row }) => {
+      const pod = row.original;
+      let phase = pod.status.phase;
       let color = 'text-green-500';
+      if (pod.metadata?.deletionTimestamp) {
+        phase = 'Terminating';
+        color = 'text-gray-300';
+      }
       if (phase === 'Failed') {
         color = 'text-red-500';
       } else if (phase === 'Pending') {
