@@ -3,7 +3,7 @@ import { useCurrentClusterState } from '@/store/cluster';
 import { usePageState, setPage } from '@/store/page';
 import Pods from '~/components/resources/Workloads/Pods';
 import { SearchField } from '~/components/SearchField';
-import Deployments from '~/components/resources/Workloads/Deployments';
+import Deployments from '@/components/resources/Workloads/Deployments';
 import DaemonSets from '~/components/resources/Workloads/DaemonSets';
 import ReplicaSets from '~/components/resources/Workloads/ReplicaSets';
 import StatefulSets from '~/components/resources/Workloads/StatefulSets';

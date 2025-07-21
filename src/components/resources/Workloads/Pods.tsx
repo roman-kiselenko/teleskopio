@@ -2,8 +2,9 @@ import { useCurrentClusterState } from '@/store/cluster';
 import { usePodsState, getPods } from '~/store/pods';
 import { useSearchState } from '@/store/search';
 import { useEffect, useCallback } from 'react';
-import { DataTable } from '@/components/resources/Workloads/Pods/DataTable';
+import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/resources/Workloads/Pods/Table/ColumnDef';
+
 const Pods = () => {
   const cc = useCurrentClusterState();
   const searchQuery = useSearchState();

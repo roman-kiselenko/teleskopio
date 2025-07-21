@@ -1,6 +1,6 @@
 import { MoreHorizontal, ArrowUpDown, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BlinkingCell from '@/components/resources/Workloads/Pods/Table/BlinkingCell';
+import BlinkingCell from '@/components/ui/BlinkingCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
 import PodName from '@/components/resources/Workloads/Pods/Table/PodName';
 import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
@@ -8,12 +8,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  //   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
+import { Pod } from '@/components/resources/Workloads/Pods/types';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -35,39 +35,6 @@ moment.updateLocale('en', {
     yy: '%dy',
   },
 });
-
-type Container = {
-  name: string;
-  image: string;
-};
-
-type ContainerStatus = {
-  name: string;
-  image: string;
-  started: Boolean;
-};
-
-type Pod = {
-  metadata: {
-    name: string;
-    namespace: string;
-    uid: string;
-    creationTimestamp: string;
-    deletionTimestamp: string;
-  };
-  spec: {
-    containers: Container[];
-    initContainers: Container[];
-    nodeName: string;
-  };
-  status: {
-    containerStatuses: ContainerStatus[];
-    initContainerStatuses: ContainerStatus[];
-    hostIP: string;
-    podIP: string;
-    phase: string;
-  };
-};
 
 const columns: ColumnDef<Pod>[] = [
   {
@@ -93,6 +60,27 @@ const columns: ColumnDef<Pod>[] = [
   },
   {
     accessorKey: 'metadata.namespace',
+    id: 'namespace',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Namespace
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const name = row.original.metadata.namespace;
+      return <div>{name}</div>;
+    },
+  },
+  {
+    accessorKey: 'spec.containers',
     header: 'Containers',
     id: 'containers',
     cell: ({ row }) => {

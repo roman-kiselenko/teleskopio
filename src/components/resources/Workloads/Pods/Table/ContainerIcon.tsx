@@ -1,13 +1,10 @@
-import { Container } from 'lucide-react';
+import { Container as Icon } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import moment from 'moment';
+import { Pod, Container } from '@/components/resources/Workloads/Pods/types';
 
-const status = {
-  running: { color: 'text-green-400', blink: false },
-};
-
-function ContainerIcon({ container, pod }: { container: any; pod: any }) {
+function ContainerIcon({ container, pod }: { container: Container; pod: Pod }) {
   let output = 'Unknown';
   let color = 'text-gray-400';
   let initcontainer = false;
@@ -36,7 +33,7 @@ function ContainerIcon({ container, pod }: { container: any; pod: any }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Container
+        <Icon
           size={15}
           className={cn(
             blink
