@@ -5,6 +5,12 @@ import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
 import { StatefulSet } from '@/components/resources/Workloads/StatefulSets/types';
 import SsName from '@/components/resources/Workloads/ResourceName';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -95,6 +101,32 @@ const columns: ColumnDef<StatefulSet>[] = [
       const age = moment(getValue<string>()).fromNow();
       const ageSeconds = moment().diff(getValue<string>(), 'seconds');
       return <BlinkingCell value={age} isNew={ageSeconds < 60} />;
+    },
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => {
+      const pod = row.original;
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="text-xs sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-xs"
+              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+            >
+              Copy name
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">Edit</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">Delete</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
     },
   },
 ];

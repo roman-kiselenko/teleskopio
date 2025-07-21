@@ -6,8 +6,13 @@ type Job = {
     creationTimestamp: string;
     deletionTimestamp: string;
   };
-  spec: {};
-  status: {};
+  spec: {
+    backoffLimit: number;
+  };
+  status: {
+    ready: number;
+    succeeded: number;
+  };
 };
 
 export type { Job };

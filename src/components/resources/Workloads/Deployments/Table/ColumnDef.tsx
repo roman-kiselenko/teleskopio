@@ -104,6 +104,34 @@ const columns: ColumnDef<Deployment>[] = [
       return <BlinkingCell value={age} isNew={ageSeconds < 60} />;
     },
   },
+  {
+    id: 'actions',
+    cell: ({ row }) => {
+      const pod = row.original;
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="text-xs sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-xs"
+              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+            >
+              Copy name
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">Edit</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">Delete</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-xs">Logs</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
 ];
 
 export default columns;
