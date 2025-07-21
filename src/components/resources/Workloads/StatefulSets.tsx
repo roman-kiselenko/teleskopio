@@ -1,48 +1,33 @@
 import { useCurrentClusterState } from '@/store/cluster';
 import { useStatefulSetsState, getStatefulSets } from '@/store/statefulsets';
-import { useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import moment from 'moment';
+import { useSearchState } from '@/store/search';
+import { DataTable } from '@/components/ui/DataTable';
+import { useEffect, useCallback } from 'react';
+import columns from '@/components/resources/Workloads/StatefulSets/Table/ColumnDef';
 
 const StatefulSets = () => {
   const cc = useCurrentClusterState();
+  const searchQuery = useSearchState();
   const statefulSetsState = useStatefulSetsState();
 
-  useEffect(() => {
-    getStatefulSets(cc.kube_config.get(), cc.cluster.get());
-  }, [cc.kube_config.get(), cc.cluster.get()]);
+  const kubeConfig = cc.kube_config.get();
+  const cluster = cc.cluster.get();
+  const query = searchQuery.q.get();
 
-  return (
-    <div className="h-24 col-span-1">
-      <Table>
-        <TableHeader>
-          <TableRow className="text-xs">
-            <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Replicas</TableHead>
-            <TableHead>Age</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="font-medium text-xs">
-          {statefulSetsState.statefulsets.get().map((ss: any, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <span className="font-bold">{ss.metadata.namespace}</span>/{ss.metadata.name}
-              </TableCell>
-              <TableCell>{ss.status.replicas}</TableCell>
-              <TableCell>{moment(ss.metadata.creationTimestamp).fromNow()}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  const fetchData = useCallback(async () => {
+    await getStatefulSets(kubeConfig, cluster, query);
+  }, [kubeConfig, cluster, query]);
+
+  useEffect(() => {
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
+  return <DataTable columns={columns} data={statefulSetsState.statefulsets.get()} />;
 };
 
 export default StatefulSets;

@@ -1,17 +1,10 @@
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { Deployment } from '@/components/resources/Workloads/Deployments/types';
-import DsName from '@/components/resources/Workloads/ResourceName';
+import { CronJob } from '@/components/resources/Workloads/CronJobs/types';
+import JobName from '@/components/resources/Workloads/ResourceName';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -34,7 +27,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<Deployment>[] = [
+const columns: ColumnDef<CronJob>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -53,7 +46,7 @@ const columns: ColumnDef<Deployment>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <DsName name={name} content={row.original.metadata.namespace} />;
+      return <JobName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -73,13 +66,7 @@ const columns: ColumnDef<Deployment>[] = [
       );
     },
     cell: ({ row }) => {
-      const replicas = row.original.spec.replicas;
-      const availableReplicas = row.original.status.availableReplicas;
-      return (
-        <div>
-          {replicas}/{availableReplicas}
-        </div>
-      );
+      return <div>None</div>;
     },
   },
   {

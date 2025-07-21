@@ -1,46 +1,33 @@
 import { useCurrentClusterState } from '@/store/cluster';
 import { useJobsState, getJobs } from '@/store/jobs';
-import { useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import moment from 'moment';
+import { useSearchState } from '@/store/search';
+import { DataTable } from '@/components/ui/DataTable';
+import { useEffect, useCallback } from 'react';
+import columns from '@/components/resources/Workloads/Jobs/Table/ColumnDef';
 
 const Jobs = () => {
   const cc = useCurrentClusterState();
+  const searchQuery = useSearchState();
   const jobsState = useJobsState();
 
-  useEffect(() => {
-    getJobs(cc.kube_config.get(), cc.cluster.get());
-  }, [cc.kube_config.get(), cc.cluster.get()]);
+  const kubeConfig = cc.kube_config.get();
+  const cluster = cc.cluster.get();
+  const query = searchQuery.q.get();
 
-  return (
-    <div className="h-24 col-span-1">
-      <Table>
-        <TableHeader>
-          <TableRow className="text-xs">
-            <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Age</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="font-medium text-xs">
-          {jobsState.jobs.get().map((j: any, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <span className="font-bold">{j.metadata.namespace}</span>/{j.metadata.name}
-              </TableCell>
-              <TableCell>{moment(j.metadata.creationTimestamp).fromNow()}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  const fetchData = useCallback(async () => {
+    await getJobs(kubeConfig, cluster, query);
+  }, [kubeConfig, cluster, query]);
+
+  useEffect(() => {
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
+  return <DataTable columns={columns} data={jobsState.jobs.get()} />;
 };
 
 export default Jobs;

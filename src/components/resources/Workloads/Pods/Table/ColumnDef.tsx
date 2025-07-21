@@ -2,7 +2,7 @@ import { MoreHorizontal, ArrowUpDown, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
-import PodName from '@/components/resources/Workloads/Pods/Table/PodName';
+import PodName from '@/components/resources/Workloads/ResourceName';
 import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
 import {
   DropdownMenu,
@@ -55,7 +55,7 @@ const columns: ColumnDef<Pod>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <PodName name={name} nodeName={row.original.spec.nodeName} />;
+      return <PodName name={name} content={row.original.spec.nodeName} />;
     },
   },
   {
