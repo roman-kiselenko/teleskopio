@@ -1,31 +1,37 @@
-import { useState } from 'react';
 import { Container } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import moment from 'moment';
 
-function ContainerIcon({
-  name,
-  ready,
-  containerstate,
-}: {
-  containerstate: any;
-  name: String;
-  ready: Boolean;
-}) {
-  let output;
-  let color;
-  if (containerstate && containerstate.running && containerstate.running.startedAt) {
-    output = moment(containerstate.running.startedAt).fromNow();
-    color = 'text-green-300';
+const status = {
+  running: { color: 'text-green-400', blink: false },
+};
+
+function ContainerIcon({ container, pod }: { container: any; pod: any }) {
+  let output = 'Unknown';
+  let color = 'text-gray-400';
+  let initcontainer = false;
+  let blink = true;
+  if (pod.spec?.initContainers?.map((c) => c.name).includes(container.name)) {
+    initcontainer = true;
   }
-  if (containerstate && containerstate.waiting && containerstate.waiting.reason) {
-    output = containerstate.waiting.reason;
-    color = 'text-orange-300';
+  if (container.state?.running) {
+    output = moment(container.state.running.startedAt).fromNow();
+    blink = false;
+    color = 'text-green-400';
   }
-  if (containerstate && containerstate.terminated && containerstate.terminated.exitCode) {
-    output = containerstate.terminated.exitCode;
-    color = 'text-gray-300';
+  if (container.state?.terminated) {
+    output = `${container.state?.terminated?.reason} ${container.state?.terminated?.exitCode === 0 ? '' : container.state?.terminated?.exitCode}`;
+    blink = false;
+    color = 'text-red-400';
+    if (container.state?.terminated?.exitCode === 0) {
+      color = 'text-green-400';
+    }
+  }
+  if (container.state?.waiting) {
+    output = container.state?.waiting?.reason;
+    blink = true;
+    color = 'text-orange-400';
   }
   return (
     <Tooltip>
@@ -33,7 +39,7 @@ function ContainerIcon({
         <Container
           size={15}
           className={cn(
-            !ready
+            blink
               ? 'animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
               : '',
             `mr-2 mb-1 ${color}`,
@@ -41,19 +47,22 @@ function ContainerIcon({
         />
       </TooltipTrigger>
       <TooltipContent>
-        "{name}"
-        <span>
-          {' '}
-          {containerstate.waiting ? <span className="font-bold">{output}</span> : ''}
-          {containerstate.running ? <span className="font-bold">{output}</span> : ''}
-          {containerstate.terminated ? (
-            <span>
-              exited:<span className="font-bold">{output}</span>
-            </span>
-          ) : (
-            ''
-          )}
-        </span>
+        {initcontainer ? (
+          <></>
+        ) : (
+          <div className="flex flex-col items-center">
+            <div className="font-medium">{container.name}</div>
+            <div className="font-bold">{output}</div>
+          </div>
+        )}
+        {initcontainer ? (
+          <div className="flex flex-col items-center">
+            <div className="font-medium">Init: {container.name}</div>
+            <div className="font-bold">{output}</div>
+          </div>
+        ) : (
+          <></>
+        )}
       </TooltipContent>
     </Tooltip>
   );

@@ -2,6 +2,8 @@ import { MoreHorizontal, ArrowUpDown, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/resources/Workloads/Pods/Table/BlinkingCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
+import PodName from '@/components/resources/Workloads/Pods/Table/PodName';
+import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,9 +57,12 @@ type Pod = {
   };
   spec: {
     containers: Container[];
+    initContainers: Container[];
+    nodeName: string;
   };
   status: {
     containerStatuses: ContainerStatus[];
+    initContainerStatuses: ContainerStatus[];
     hostIP: string;
     podIP: string;
     phase: string;
@@ -83,7 +88,7 @@ const columns: ColumnDef<Pod>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <div className={`font-medium`}>{name}</div>;
+      return <PodName name={name} nodeName={row.original.spec.nodeName} />;
     },
   },
   {
@@ -92,38 +97,20 @@ const columns: ColumnDef<Pod>[] = [
     id: 'containers',
     cell: ({ row }) => {
       const pod = row.original;
+      const allContainers = [
+        ...(pod.status?.initContainerStatuses || []),
+        ...pod.status.containerStatuses,
+      ];
       return (
-        <div className="flex flex-wrap w-24">
-          {pod.status.containerStatuses.map((c: any, index: number) => {
-            return (
-              <ContainerIcon
-                containerstate={c.state}
-                name={c.name}
-                key={index}
-                ready={c.ready && c.started}
-              />
-            );
+        <div className="flex flex-wrap w-30">
+          {allContainers.map((c: any) => {
+            return <ContainerIcon key={c.name} container={c} pod={pod} />;
           })}
         </div>
       );
     },
   },
-  {
-    accessorKey: 'spec.nodeName',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Node
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-  },
+
   {
     accessorFn: (row) => row.status?.podIP ?? '',
     id: 'podIP',
@@ -158,19 +145,7 @@ const columns: ColumnDef<Pod>[] = [
       );
     },
     cell: ({ row }) => {
-      const pod = row.original;
-      let phase = pod.status.phase;
-      let color = 'text-green-500';
-      if (pod.metadata?.deletionTimestamp) {
-        phase = 'Terminating';
-        color = 'text-gray-300';
-      }
-      if (phase === 'Failed') {
-        color = 'text-red-500';
-      } else if (phase === 'Pending') {
-        color = 'text-gray-500';
-      }
-      return <div className={`font-medium ${color}`}>{phase}</div>;
+      return <PodStatus pod={row.original} />;
     },
   },
   {
