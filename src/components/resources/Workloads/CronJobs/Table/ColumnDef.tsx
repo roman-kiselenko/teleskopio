@@ -1,17 +1,21 @@
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, ClipboardCopy, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
-import moment from 'moment';
-import { ColumnDef } from '@tanstack/react-table';
-import { CronJob } from '@/components/resources/Workloads/CronJobs/types';
-import JobName from '@/components/resources/Workloads/ResourceName';
+import { invoke } from '@tauri-apps/api/core';
+import { getKubeconfig, getCluster } from '@/store/cluster';
+import toast from 'react-hot-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import moment from 'moment';
+import { ColumnDef } from '@tanstack/react-table';
+import { CronJob } from '@/components/resources/Workloads/CronJobs/types';
+import JobName from '@/components/resources/Workloads/ResourceName';
+import cronstrue from 'cronstrue';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -57,6 +61,23 @@ const columns: ColumnDef<CronJob>[] = [
     },
   },
   {
+    accessorKey: 'spec.schedule',
+    id: 'schedule',
+    header: 'Schedule',
+    cell: ({ row }) => {
+      return (
+        <div className="flex flex-row items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="font-bold">{row.original.spec.schedule}</div>
+            </TooltipTrigger>
+            <TooltipContent>{cronstrue.toString(row.original.spec.schedule)}</TooltipContent>
+          </Tooltip>
+        </div>
+      );
+    },
+  },
+  {
     id: 'creationTimestamp',
     accessorFn: (row) => row.metadata?.creationTimestamp,
     header: ({ column }) => {
@@ -81,7 +102,7 @@ const columns: ColumnDef<CronJob>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const pod = row.original;
+      const cronjob = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -93,12 +114,49 @@ const columns: ColumnDef<CronJob>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(cronjob.metadata.name)}
             >
+              <ClipboardCopy size={8} />
               Copy name
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Delete</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">
+              <Pencil size={8} />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={cronjob.metadata?.deletionTimestamp !== undefined}
+              className="text-xs"
+              onClick={async () => {
+                toast.promise(
+                  invoke<CronJob>('delete_cronjob', {
+                    path: getKubeconfig(),
+                    context: getCluster(),
+                    cronjobNamespace: cronjob.metadata.namespace,
+                    cronjobName: cronjob.metadata.name,
+                  }),
+                  {
+                    loading: 'Deleting...',
+                    success: () => {
+                      return (
+                        <span>
+                          CronJob <b>{cronjob.metadata.name}</b> deleted
+                        </span>
+                      );
+                    },
+                    error: (err) => (
+                      <span>
+                        Cant delete cronjob <b>{cronjob.metadata.name}</b>
+                        <br />
+                        {err.message}
+                      </span>
+                    ),
+                  },
+                );
+              }}
+            >
+              {' '}
+              <Trash size={8} /> Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

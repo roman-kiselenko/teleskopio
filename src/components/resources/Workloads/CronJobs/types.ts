@@ -6,7 +6,9 @@ type CronJob = {
     creationTimestamp: string;
     deletionTimestamp: string;
   };
-  spec: {};
+  spec: {
+    schedule: string;
+  };
   status: {};
 };
 

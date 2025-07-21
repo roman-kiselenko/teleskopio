@@ -9,7 +9,6 @@ const Pods = () => {
   const cc = useCurrentClusterState();
   const searchQuery = useSearchState();
   const podsState = usePodsState();
-
   const kubeConfig = cc.kube_config.get();
   const cluster = cc.cluster.get();
   const query = searchQuery.q.get();

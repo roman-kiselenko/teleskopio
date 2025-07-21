@@ -1,6 +1,16 @@
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import {
+  MoreHorizontal,
+  ArrowUpDown,
+  ClipboardCopy,
+  Pencil,
+  Trash,
+  ScrollText,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
+import { invoke } from '@tauri-apps/api/core';
+import { getKubeconfig, getCluster } from '@/store/cluster';
+import toast from 'react-hot-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,7 +117,7 @@ const columns: ColumnDef<Deployment>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const pod = row.original;
+      const dp = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -119,14 +129,54 @@ const columns: ColumnDef<Deployment>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(dp.metadata.name)}
             >
+              <ClipboardCopy size={8} />
               Copy name
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Delete</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">
+              <Pencil size={8} />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={dp.metadata?.deletionTimestamp !== undefined}
+              className="text-xs"
+              onClick={async () => {
+                toast.promise(
+                  invoke<Deployment>('delete_deployment', {
+                    path: getKubeconfig(),
+                    context: getCluster(),
+                    dpNamespace: dp.metadata.namespace,
+                    dpName: dp.metadata.name,
+                  }),
+                  {
+                    loading: 'Deleting...',
+                    success: () => {
+                      return (
+                        <span>
+                          Deployment <b>{dp.metadata.name}</b> deleted
+                        </span>
+                      );
+                    },
+                    error: (err) => (
+                      <span>
+                        Cant delete deployment <b>{dp.metadata.name}</b>
+                        <br />
+                        {err.message}
+                      </span>
+                    ),
+                  },
+                );
+              }}
+            >
+              {' '}
+              <Trash size={8} /> Delete
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-xs">Logs</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">
+              <ScrollText />
+              Logs
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

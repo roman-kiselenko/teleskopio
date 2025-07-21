@@ -7,7 +7,10 @@ type StatefulSet = {
     deletionTimestamp: string;
   };
   spec: {};
-  status: {};
+  status: {
+    currentReplicas: number;
+    availableReplicas: number;
+  };
 };
 
 export type { StatefulSet };

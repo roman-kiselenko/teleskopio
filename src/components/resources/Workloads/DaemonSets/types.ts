@@ -9,7 +9,7 @@ type DaemonSet = {
   spec: {};
   status: {
     desiredNumberScheduled: number;
-    numberAvailable: number;
+    numberReady: number;
   };
 };
 

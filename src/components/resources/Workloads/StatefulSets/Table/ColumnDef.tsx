@@ -1,16 +1,19 @@
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, ClipboardCopy, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
-import moment from 'moment';
-import { ColumnDef } from '@tanstack/react-table';
-import { StatefulSet } from '@/components/resources/Workloads/StatefulSets/types';
-import SsName from '@/components/resources/Workloads/ResourceName';
+import { invoke } from '@tauri-apps/api/core';
+import { getKubeconfig, getCluster } from '@/store/cluster';
+import toast from 'react-hot-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import moment from 'moment';
+import { ColumnDef } from '@tanstack/react-table';
+import { StatefulSet } from '@/components/resources/Workloads/StatefulSets/types';
+import SsName from '@/components/resources/Workloads/ResourceName';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -72,11 +75,11 @@ const columns: ColumnDef<StatefulSet>[] = [
       );
     },
     cell: ({ row }) => {
-      const desiredNumberScheduled = row.original.status.desiredNumberScheduled;
-      const numberAvailable = row.original.status.numberAvailable;
+      const currentReplicas = row.original.status.currentReplicas;
+      const availableReplicas = row.original.status.availableReplicas;
       return (
         <div>
-          {desiredNumberScheduled}/{numberAvailable}
+          {currentReplicas}/{availableReplicas}
         </div>
       );
     },
@@ -106,7 +109,7 @@ const columns: ColumnDef<StatefulSet>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const pod = row.original;
+      const ss = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -118,12 +121,49 @@ const columns: ColumnDef<StatefulSet>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(ss.metadata.name)}
             >
+              <ClipboardCopy size={8} />
               Copy name
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Delete</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">
+              <Pencil size={8} />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={ss.metadata?.deletionTimestamp !== undefined}
+              className="text-xs"
+              onClick={async () => {
+                toast.promise(
+                  invoke<StatefulSet>('delete_statefulset', {
+                    path: getKubeconfig(),
+                    context: getCluster(),
+                    ssNamespace: ss.metadata.namespace,
+                    ssName: ss.metadata.name,
+                  }),
+                  {
+                    loading: 'Deleting...',
+                    success: () => {
+                      return (
+                        <span>
+                          StatefulSet <b>{ss.metadata.name}</b> deleted
+                        </span>
+                      );
+                    },
+                    error: (err) => (
+                      <span>
+                        Cant delete statefulset <b>{ss.metadata.name}</b>
+                        <br />
+                        {err.message}
+                      </span>
+                    ),
+                  },
+                );
+              }}
+            >
+              {' '}
+              <Trash size={8} /> Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

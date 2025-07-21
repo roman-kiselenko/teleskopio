@@ -266,6 +266,27 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn delete_deployment(path: &str, context: &str, dp_namespace: &str, dp_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_deployment {:?} {:?} {:?} {:?}", path, context, dp_namespace, dp_name);
+        let client = get_client(&path, context).await?;
+        let dp_api: Api<Deployment> = Api::namespaced(client, dp_namespace);
+        let dp = DeleteParams::default();
+        let dp = dp_api.delete(dp_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match dp {
+            Either::Left(dp) => {
+                log::info!("deleted deployment: {}", dp.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_daemonset(path: &str, context: &str) -> Result<Vec<DaemonSet>, GenericError> {
         log::info!("get_daemonset {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -277,6 +298,27 @@ pub mod client {
         })?;
 
         Ok(daemonset.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_daemonset(path: &str, context: &str, ds_namespace: &str, ds_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_daemonset {:?} {:?} {:?} {:?}", path, context, ds_namespace, ds_name);
+        let client = get_client(&path, context).await?;
+        let ds_api: Api<DaemonSet> = Api::namespaced(client, ds_namespace);
+        let dp = DeleteParams::default();
+        let ds = ds_api.delete(ds_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match ds {
+            Either::Left(ds) => {
+                log::info!("deleted daemonset: {}", ds.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 
     #[tauri::command]
@@ -294,6 +336,27 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn delete_replicaset(path: &str, context: &str, rs_namespace: &str, rs_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_replicaset {:?} {:?} {:?} {:?}", path, context, rs_namespace, rs_name);
+        let client = get_client(&path, context).await?;
+        let rs_api: Api<ReplicaSet> = Api::namespaced(client, rs_namespace);
+        let dp = DeleteParams::default();
+        let rs = rs_api.delete(rs_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match rs {
+            Either::Left(rs) => {
+                log::info!("deleted replicaset: {}", rs.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_statefulset(path: &str, context: &str) -> Result<Vec<StatefulSet>, GenericError> {
         log::info!("get_statefulset {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -305,6 +368,27 @@ pub mod client {
         })?;
 
         Ok(statefulset.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_statefulset(path: &str, context: &str, ss_namespace: &str, ss_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_statefulset {:?} {:?} {:?} {:?}", path, context, ss_namespace, ss_name);
+        let client = get_client(&path, context).await?;
+        let ss_api: Api<StatefulSet> = Api::namespaced(client, ss_namespace);
+        let dp = DeleteParams::default();
+        let ss = ss_api.delete(ss_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match ss {
+            Either::Left(ss) => {
+                log::info!("deleted statefulset: {}", ss.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 
     #[tauri::command]
@@ -322,6 +406,27 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn delete_job(path: &str, context: &str, job_namespace: &str, job_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_job {:?} {:?} {:?} {:?}", path, context, job_namespace, job_name);
+        let client = get_client(&path, context).await?;
+        let job_api: Api<Job> = Api::namespaced(client, job_namespace);
+        let dp = DeleteParams::default();
+        let job = job_api.delete(job_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match job {
+            Either::Left(job) => {
+                log::info!("deleted job: {}", job.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_cronjobs(path: &str, context: &str) -> Result<Vec<CronJob>, GenericError> {
         log::info!("get_cronjobs {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -333,6 +438,27 @@ pub mod client {
         })?;
 
         Ok(cronjobs.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_cronjob(path: &str, context: &str, cronjob_namespace: &str, cronjob_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_cronjob {:?} {:?} {:?} {:?}", path, context, cronjob_namespace, cronjob_name);
+        let client = get_client(&path, context).await?;
+        let cronjob_api: Api<CronJob> = Api::namespaced(client, cronjob_namespace);
+        let dp = DeleteParams::default();
+        let cronjob = cronjob_api.delete(cronjob_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match cronjob {
+            Either::Left(cronjob) => {
+                log::info!("deleted cronjob: {}", cronjob.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 
     #[tauri::command]

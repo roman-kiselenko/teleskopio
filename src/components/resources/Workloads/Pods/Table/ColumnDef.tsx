@@ -1,4 +1,12 @@
-import { MoreHorizontal, ArrowUpDown, Trash, Pencil, ClipboardCopy } from 'lucide-react';
+import {
+  MoreHorizontal,
+  ArrowUpDown,
+  Trash,
+  Pencil,
+  ClipboardCopy,
+  ScrollText,
+  SquareTerminal,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
@@ -6,6 +14,7 @@ import PodName from '@/components/resources/Workloads/ResourceName';
 import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
 import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
+import toast from 'react-hot-toast';
 
 import {
   DropdownMenu,
@@ -165,6 +174,7 @@ const columns: ColumnDef<Pod>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const pod = row.original;
+      const actionDisabled = pod.metadata?.deletionTimestamp !== undefined;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -181,31 +191,53 @@ const columns: ColumnDef<Pod>[] = [
               <ClipboardCopy size={8} />
               Copy name
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">
+            <DropdownMenuItem disabled={actionDisabled} className="text-xs">
               <Pencil size={8} />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
+              disabled={actionDisabled}
               className="text-xs"
               onClick={async () => {
-                try {
-                  await invoke<any>('delete_pod', {
+                toast.promise(
+                  invoke<Pod>('delete_pod', {
                     path: getKubeconfig(),
                     context: getCluster(),
                     podNamespace: pod.metadata.namespace,
                     podName: pod.metadata.name,
-                  });
-                } catch (error: any) {
-                  console.error('cant delete pod:', error);
-                }
+                  }),
+                  {
+                    loading: 'Deleting...',
+                    success: () => {
+                      return (
+                        <span>
+                          Pod <b>{pod.metadata.name}</b> deleted
+                        </span>
+                      );
+                    },
+                    error: (err) => (
+                      <span>
+                        Cant delete pod <b>{pod.metadata.name}</b>
+                        <br />
+                        {err.message}
+                      </span>
+                    ),
+                  },
+                );
               }}
             >
               {' '}
               <Trash size={8} /> Delete
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-xs">Logs</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Attach</DropdownMenuItem>
+            <DropdownMenuItem disabled={actionDisabled} className="text-xs">
+              <ScrollText />
+              Logs
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={actionDisabled} className="text-xs">
+              <SquareTerminal />
+              Attach
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
