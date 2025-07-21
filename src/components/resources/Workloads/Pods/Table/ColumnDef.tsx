@@ -1,9 +1,12 @@
-import { MoreHorizontal, ArrowUpDown, Box } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Trash, Pencil, ClipboardCopy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
 import PodName from '@/components/resources/Workloads/ResourceName';
 import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
+import { invoke } from '@tauri-apps/api/core';
+import { getKubeconfig, getCluster } from '@/store/cluster';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -175,10 +178,31 @@ const columns: ColumnDef<Pod>[] = [
               className="text-xs"
               onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
             >
+              <ClipboardCopy size={8} />
               Copy name
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-xs">Delete</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs">
+              <Pencil size={8} />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-xs"
+              onClick={async () => {
+                try {
+                  await invoke<any>('delete_pod', {
+                    path: getKubeconfig(),
+                    context: getCluster(),
+                    podNamespace: pod.metadata.namespace,
+                    podName: pod.metadata.name,
+                  });
+                } catch (error: any) {
+                  console.error('cant delete pod:', error);
+                }
+              }}
+            >
+              {' '}
+              <Trash size={8} /> Delete
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-xs">Logs</DropdownMenuItem>
             <DropdownMenuItem className="text-xs">Attach</DropdownMenuItem>

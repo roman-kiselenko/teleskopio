@@ -17,6 +17,14 @@ export function setCurrentCluster(cluster: string, path: string) {
   currentClusterState.kube_config.set(path);
 }
 
+export function getKubeconfig(): any {
+  return currentClusterState.kube_config.get();
+}
+
+export function getCluster(): any {
+  return currentClusterState.cluster.get();
+}
+
 export function getCurrentCluster(): any {
   const cluster = currentClusterState.cluster.get();
   const kube_config = currentClusterState.kube_config.get();

@@ -1,6 +1,7 @@
 pub mod client {
     use kube::config::{ Kubeconfig, KubeconfigError, KubeConfigOptions };
-    use kube::{api::Api, Client, Config, Error, };
+    use kube::{api::Api, Client, Config, Error};
+    use either::{Either};
     use k8s_openapi::api::core::v1::{
         Namespace,
         Node,
@@ -28,7 +29,7 @@ pub mod client {
         Role,
     };
     use tauri::http::Request;
-    use kube::api::{ListParams};
+    use kube::api::{ListParams, DeleteParams};
     use std::fmt;
     use std::io;
     use std::fs;
@@ -125,7 +126,6 @@ pub mod client {
             GenericError::from(e)
         })?;
         let kube_config_yaml = Kubeconfig::from_yaml(config.as_str()).expect("cant parse kube_config");
-        println!("Config loaded, size: {} bytes", config.len());
         let options = KubeConfigOptions {
             context: Some(context.to_string()),
             ..Default::default()
@@ -228,6 +228,27 @@ pub mod client {
         })?;
 
         Ok(pods.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_pod(path: &str, context: &str, pod_namespace: &str, pod_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_pod {:?} {:?} {:?} {:?}", path, context, pod_namespace, pod_name);
+        let client = get_client(&path, context).await?;
+        let pod_api: Api<Pod> = Api::namespaced(client, pod_namespace);
+        let dp = DeleteParams::default();
+        let pod = pod_api.delete(pod_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match pod {
+            Either::Left(pod) => {
+                log::info!("deleted pod: {}", pod.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 
     #[tauri::command]

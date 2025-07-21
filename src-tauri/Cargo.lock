@@ -4471,6 +4471,7 @@ name = "teleskopio"
 version = "0.1.0"
 dependencies = [
  "dirs 5.0.1",
+ "either",
  "env_logger",
  "k8s-openapi",
  "kube",

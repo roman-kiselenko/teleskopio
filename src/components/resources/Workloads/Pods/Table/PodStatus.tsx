@@ -13,6 +13,8 @@ function PodStatus({ pod }: { pod: any }) {
     color = 'text-red-500';
   } else if (phase === 'Pending') {
     color = 'text-gray-500';
+  } else if (phase === 'Evicted') {
+    color = 'text-gray-500';
   }
   const restarts = `${pod.status?.containerStatuses?.length} / ${pod.status?.containerStatuses?.reduce(
     (acc, curr) => {
