@@ -530,6 +530,7 @@ pub mod client {
         };
         Ok(())
     }
+
     #[tauri::command]
     pub async fn get_services(path: &str, context: &str) -> Result<Vec<Service>, GenericError> {
         log::info!("get_services {:?} {:?}", path, context);
@@ -542,6 +543,27 @@ pub mod client {
         })?;
 
         Ok(services.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_service(path: &str, context: &str, service_namespace: &str, service_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_service {:?} {:?} {:?} {:?}", path, context, service_namespace, service_name);
+        let client = get_client(&path, context).await?;
+        let service_api: Api<Service> = Api::namespaced(client, service_namespace);
+        let dp = DeleteParams::default();
+        let service = service_api.delete(service_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match service {
+            Either::Left(service) => {
+                log::info!("deleted service: {}", service.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 
     #[tauri::command]
@@ -559,6 +581,27 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn delete_ingress(path: &str, context: &str, ingress_namespace: &str, ingress_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_ingress {:?} {:?} {:?} {:?}", path, context, ingress_namespace, ingress_name);
+        let client = get_client(&path, context).await?;
+        let ingress_api: Api<Ingress> = Api::namespaced(client, ingress_namespace);
+        let dp = DeleteParams::default();
+        let ingress = ingress_api.delete(ingress_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match ingress {
+            Either::Left(ingress) => {
+                log::info!("deleted ingress: {}", ingress.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_networkpolicies(path: &str, context: &str) -> Result<Vec<NetworkPolicy>, GenericError> {
         log::info!("get_networkpolicies {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -570,6 +613,27 @@ pub mod client {
         })?;
 
         Ok(networkpolicies.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_networkpolicy(path: &str, context: &str, networkpolicy_namespace: &str, networkpolicy_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_networkpolicy {:?} {:?} {:?} {:?}", path, context, networkpolicy_namespace, networkpolicy_name);
+        let client = get_client(&path, context).await?;
+        let networkpolicy_api: Api<NetworkPolicy> = Api::namespaced(client, networkpolicy_namespace);
+        let dp = DeleteParams::default();
+        let networkpolicy = networkpolicy_api.delete(networkpolicy_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match networkpolicy {
+            Either::Left(networkpolicy) => {
+                log::info!("deleted networkpolicy: {}", networkpolicy.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 
     #[tauri::command]
