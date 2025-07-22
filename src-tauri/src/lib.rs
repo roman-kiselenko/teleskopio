@@ -79,6 +79,8 @@ pub fn run() {
             k8s::client::delete_ingress,
             k8s::client::get_networkpolicies,
             k8s::client::delete_networkpolicy,
+            k8s::client::get_storageclasses,
+            k8s::client::delete_storageclass,
             k8s::client::get_serviceaccounts,
             k8s::client::get_roles,
         ])

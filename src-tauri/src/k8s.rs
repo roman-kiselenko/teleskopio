@@ -2,6 +2,9 @@ pub mod client {
     use kube::config::{ Kubeconfig, KubeconfigError, KubeConfigOptions };
     use kube::{api::Api, Client, Config, Error};
     use either::{Either};
+    use k8s_openapi::api::storage::v1::{
+        StorageClass,
+    };
     use k8s_openapi::api::core::v1::{
         Namespace,
         Node,
@@ -628,6 +631,41 @@ pub mod client {
         match networkpolicy {
             Either::Left(networkpolicy) => {
                 log::info!("deleted networkpolicy: {}", networkpolicy.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn get_storageclasses(path: &str, context: &str) -> Result<Vec<StorageClass>, GenericError> {
+        log::info!("get_storageclasses {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let storageclass: Api<StorageClass> = Api::all(client);
+
+        let storageclass = storageclass.list(&ListParams::default()).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(storageclass.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_storageclass(path: &str, context: &str, _storageclass_namespace: &str, storageclass_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_storageclass {:?} {:?} {:?} {:?}", path, context, _storageclass_namespace, storageclass_name);
+        let client = get_client(&path, context).await?;
+        let storageclass_api: Api<StorageClass> = Api::all(client);
+        let dp = DeleteParams::default();
+        let storageclass = storageclass_api.delete(storageclass_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match storageclass {
+            Either::Left(storageclass) => {
+                log::info!("deleted storageclass: {}", storageclass.metadata.name.unwrap_or_default());
             },
             Either::Right(status) => {
                 log::info!("API response: {:?}", status.message);
