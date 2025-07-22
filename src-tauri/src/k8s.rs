@@ -689,6 +689,27 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn delete_serviceaccount(path: &str, context: &str, sa_namespace: &str, sa_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_serviceaccount {:?} {:?} {:?} {:?}", path, context, sa_namespace, sa_name);
+        let client = get_client(&path, context).await?;
+        let serviceaccount_api: Api<ServiceAccount> = Api::namespaced(client, sa_namespace);
+        let dp = DeleteParams::default();
+        let serviceaccount = serviceaccount_api.delete(sa_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match serviceaccount {
+            Either::Left(serviceaccount) => {
+                log::info!("deleted serviceaccount: {}", serviceaccount.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_roles(path: &str, context: &str) -> Result<Vec<Role>, GenericError> {
         log::info!("get_roles {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -700,5 +721,26 @@ pub mod client {
         })?;
 
         Ok(roles.items)
+    }
+
+    #[tauri::command]
+    pub async fn delete_role(path: &str, context: &str, role_namespace: &str, role_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_role {:?} {:?} {:?} {:?}", path, context, role_namespace, role_name);
+        let client = get_client(&path, context).await?;
+        let role_api: Api<Role> = Api::namespaced(client, role_namespace);
+        let dp = DeleteParams::default();
+        let role = role_api.delete(role_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match role {
+            Either::Left(role) => {
+                log::info!("deleted role: {}", role.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
     }
 }

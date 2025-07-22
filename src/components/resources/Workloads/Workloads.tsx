@@ -4,7 +4,7 @@ export function Workloads() {
   const currentPage = usePageState();
   const sections = [
     { section: 'pods', title: 'Pods' },
-    { section: 'deployments', title: 'Deployemnts' },
+    { section: 'deployments', title: 'Deployments' },
     { section: 'daemonsets', title: 'DaemonSets' },
     { section: 'replicasets', title: 'ReplicaSets' },
     { section: 'statefulsets', title: 'StatefulSets' },

@@ -82,7 +82,9 @@ pub fn run() {
             k8s::client::get_storageclasses,
             k8s::client::delete_storageclass,
             k8s::client::get_serviceaccounts,
+            k8s::client::delete_serviceaccount,
             k8s::client::get_roles,
+            k8s::client::delete_role,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

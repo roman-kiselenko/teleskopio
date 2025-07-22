@@ -15,6 +15,7 @@ export function StoragePage() {
   useEffect(() => {
     setPage('storageclasses');
   }, ['storageclasses']);
+
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex items-center justify-between flex-shrink-0 h-12 border-b border-gray-300">

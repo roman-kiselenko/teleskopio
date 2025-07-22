@@ -1,55 +1,33 @@
 import { useCurrentClusterState } from '@/store/cluster';
 import { useServiceAccountsState, getServiceAccounts } from '~/store/serviceaccounts';
-import { useEffect } from 'react';
-import moment from 'moment';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSearchState } from '@/store/search';
+import { DataTable } from '@/components/ui/DataTable';
+import { useEffect, useCallback } from 'react';
+import columns from '@/components/resources/Access/ServiceAccounts/Table/ColumnDef';
 
 const ServiceAccounts = () => {
   const cc = useCurrentClusterState();
   const saState = useServiceAccountsState();
+  const searchQuery = useSearchState();
+
+  const kubeConfig = cc.kube_config.get();
+  const cluster = cc.cluster.get();
+  const query = searchQuery.q.get();
+
+  const fetchData = useCallback(async () => {
+    await getServiceAccounts(kubeConfig, cluster, query);
+  }, [kubeConfig, cluster, query]);
 
   useEffect(() => {
-    getServiceAccounts(cc.kube_config.get(), cc.cluster.get());
-  }, [cc.kube_config.get(), cc.cluster.get()]);
+    fetchData();
 
-  return (
-    <div className="h-24 col-span-1">
-      <Table>
-        <TableHeader>
-          <TableRow className="text-xs">
-            <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Age</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="font-medium text-xs">
-          {saState.serviceaccounts.get().map((sa: any, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer">
-                      <span className="font-bold">{sa.metadata.namespace}</span>/{sa.metadata.name}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{sa.metadata.name}</TooltipContent>
-                </Tooltip>
-              </TableCell>
-              <TableCell>{moment(sa.metadata.creationTimestamp).fromNow()}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+    const interval = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
+  return <DataTable columns={columns} data={saState.serviceaccounts.get()} />;
 };
 
 export default ServiceAccounts;
