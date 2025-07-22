@@ -1,55 +1,33 @@
 import { useCurrentClusterState } from '@/store/cluster';
 import { useConfigmapsState, getConfigmaps } from '~/store/configmaps';
-import { useEffect } from 'react';
-import moment from 'moment';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSearchState } from '@/store/search';
+import { DataTable } from '@/components/ui/DataTable';
+import { useEffect, useCallback } from 'react';
+import columns from '@/components/resources/Configs/ConfigMaps/Table/ColumnDef';
 
 const Configmaps = () => {
   const cc = useCurrentClusterState();
+  const searchQuery = useSearchState();
   const configmapsState = useConfigmapsState();
 
-  useEffect(() => {
-    getConfigmaps(cc.kube_config.get(), cc.cluster.get());
-  }, [cc.kube_config.get(), cc.cluster.get()]);
+  const kubeConfig = cc.kube_config.get();
+  const cluster = cc.cluster.get();
+  const query = searchQuery.q.get();
 
-  return (
-    <div className="h-24 col-span-1">
-      <Table>
-        <TableHeader>
-          <TableRow className="text-xs">
-            <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Age</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="font-medium text-xs">
-          {configmapsState.configmaps.get().map((cm: any, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer">
-                      <span className="font-bold">{cm.metadata.namespace}</span>/{cm.metadata.name}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{cm.metadata.name}</TooltipContent>
-                </Tooltip>
-              </TableCell>
-              <TableCell>{moment(cm.metadata.creationTimestamp).fromNow()}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  const fetchData = useCallback(async () => {
+    await getConfigmaps(kubeConfig, cluster, query);
+  }, [kubeConfig, cluster, query]);
+
+  useEffect(() => {
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
+  return <DataTable columns={columns} data={configmapsState.configmaps.get()} />;
 };
 
 export default Configmaps;

@@ -103,7 +103,7 @@ const columns: ColumnDef<StatefulSet>[] = [
     cell: ({ getValue }) => {
       const age = moment(getValue<string>()).fromNow();
       const ageSeconds = moment().diff(getValue<string>(), 'seconds');
-      return <BlinkingCell value={age} isNew={ageSeconds < 60} />;
+      return <BlinkingCell timestamp={getValue<string>()} value={age} isNew={ageSeconds < 60} />;
     },
   },
   {

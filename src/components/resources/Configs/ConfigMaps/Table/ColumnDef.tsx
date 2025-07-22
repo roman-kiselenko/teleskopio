@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { Job } from '@/components/resources/Workloads/Jobs/types';
+import { ConfigMap } from '@/components/resources/Configs/ConfigMaps/types';
 import JobName from '@/components/resources/Workloads/ResourceName';
 
 moment.updateLocale('en', {
@@ -36,7 +36,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<Job>[] = [
+const columns: ColumnDef<ConfigMap>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -59,8 +59,8 @@ const columns: ColumnDef<Job>[] = [
     },
   },
   {
-    accessorKey: 'status.ready',
-    id: 'replicase',
+    accessorKey: 'metadata.namespace',
+    id: 'namespace',
     header: ({ column }) => {
       return (
         <Button
@@ -69,25 +69,15 @@ const columns: ColumnDef<Job>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Ready
+          Namespace
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const ready = row.original.status.ready;
-      const succeeded = row.original.status.succeeded;
-      return (
-        <div>
-          {ready}/{succeeded}
-        </div>
-      );
+      const name = row.original.metadata.namespace;
+      return <div>{name}</div>;
     },
-  },
-  {
-    accessorKey: 'spec.backoffLimit',
-    id: 'backofflimit',
-    header: 'BackoffLimit',
   },
   {
     id: 'creationTimestamp',
@@ -114,7 +104,7 @@ const columns: ColumnDef<Job>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const job = row.original;
+      const cm = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -126,7 +116,7 @@ const columns: ColumnDef<Job>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(job.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(cm.metadata.name)}
             >
               <ClipboardCopy size={8} />
               Copy name
@@ -136,28 +126,28 @@ const columns: ColumnDef<Job>[] = [
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              disabled={job.metadata?.deletionTimestamp !== undefined}
+              disabled={cm.metadata?.deletionTimestamp !== undefined}
               className="text-xs"
               onClick={async () => {
                 toast.promise(
-                  invoke<Job>('delete_job', {
+                  invoke<ConfigMap>('delete_configmap', {
                     path: getKubeconfig(),
                     context: getCluster(),
-                    jobNamespace: job.metadata.namespace,
-                    jobName: job.metadata.name,
+                    cmNamespace: cm.metadata.namespace,
+                    cmName: cm.metadata.name,
                   }),
                   {
                     loading: 'Deleting...',
                     success: () => {
                       return (
                         <span>
-                          Job <b>{job.metadata.name}</b> deleted
+                          ConfigMap <b>{cm.metadata.name}</b> deleted
                         </span>
                       );
                     },
                     error: (err) => (
                       <span>
-                        Cant delete job <b>{job.metadata.name}</b>
+                        Cant delete configmap <b>{cm.metadata.name}</b>
                         <br />
                         {err.message}
                       </span>
