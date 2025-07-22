@@ -1,10 +1,4 @@
-import {
-  MoreHorizontal,
-  ArrowUpDown,
-  ClipboardCopy,
-  Pencil,
-  Trash,
-} from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, ClipboardCopy, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
 import { invoke } from '@tauri-apps/api/core';
@@ -62,6 +56,27 @@ const columns: ColumnDef<DaemonSet>[] = [
     cell: ({ row }) => {
       const name = row.original.metadata.name;
       return <DsName name={name} content={row.original.metadata.namespace} />;
+    },
+  },
+  {
+    accessorKey: 'metadata.namespace',
+    id: 'namespace',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Namespace
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const name = row.original.metadata.namespace;
+      return <div>{name}</div>;
     },
   },
   {

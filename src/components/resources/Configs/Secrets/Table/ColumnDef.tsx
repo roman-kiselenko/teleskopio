@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { StatefulSet } from '@/components/resources/Workloads/StatefulSets/types';
-import SsName from '@/components/resources/Workloads/ResourceName';
+import { Secret } from '@/components/resources/Configs/Secrets/types';
+import JobName from '@/components/resources/Workloads/ResourceName';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -36,7 +36,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<StatefulSet>[] = [
+const columns: ColumnDef<Secret>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -55,7 +55,7 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <SsName name={name} content={row.original.metadata.namespace} />;
+      return <JobName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -80,8 +80,8 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
   },
   {
-    accessorKey: 'spec.replicas',
-    id: 'replicase',
+    accessorKey: 'type',
+    id: 'type',
     header: ({ column }) => {
       return (
         <Button
@@ -90,19 +90,14 @@ const columns: ColumnDef<StatefulSet>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Replicas
+          Type
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const currentReplicas = row.original.status.currentReplicas;
-      const availableReplicas = row.original.status.availableReplicas;
-      return (
-        <div>
-          {currentReplicas}/{availableReplicas}
-        </div>
-      );
+      const t = row.original.type;
+      return <div>{t}</div>;
     },
   },
   {
@@ -130,7 +125,7 @@ const columns: ColumnDef<StatefulSet>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ss = row.original;
+      const secret = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -142,7 +137,7 @@ const columns: ColumnDef<StatefulSet>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(ss.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(secret.metadata.name)}
             >
               <ClipboardCopy size={8} />
               Copy name
@@ -152,28 +147,28 @@ const columns: ColumnDef<StatefulSet>[] = [
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              disabled={ss.metadata?.deletionTimestamp !== undefined}
+              disabled={secret.metadata?.deletionTimestamp !== undefined}
               className="text-xs"
               onClick={async () => {
                 toast.promise(
-                  invoke<StatefulSet>('delete_statefulset', {
+                  invoke<Secret>('delete_secret', {
                     path: getKubeconfig(),
                     context: getCluster(),
-                    ssNamespace: ss.metadata.namespace,
-                    ssName: ss.metadata.name,
+                    secretNamespace: secret.metadata.namespace,
+                    secretName: secret.metadata.name,
                   }),
                   {
                     loading: 'Deleting...',
                     success: () => {
                       return (
                         <span>
-                          StatefulSet <b>{ss.metadata.name}</b> deleted
+                          Secret <b>{secret.metadata.name}</b> deleted
                         </span>
                       );
                     },
                     error: (err) => (
                       <span>
-                        Cant delete statefulset <b>{ss.metadata.name}</b>
+                        Cant delete secret <b>{secret.metadata.name}</b>
                         <br />
                         {err.message}
                       </span>

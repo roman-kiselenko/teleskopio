@@ -476,6 +476,27 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn delete_configmap(path: &str, context: &str, cm_namespace: &str, cm_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_configmap {:?} {:?} {:?} {:?}", path, context, cm_namespace, cm_name);
+        let client = get_client(&path, context).await?;
+        let configmap_api: Api<ConfigMap> = Api::namespaced(client, cm_namespace);
+        let dp = DeleteParams::default();
+        let cronjob = configmap_api.delete(cm_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match cronjob {
+            Either::Left(configmap) => {
+                log::info!("deleted configmap: {}", configmap.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_secrets(path: &str, context: &str) -> Result<Vec<Secret>, GenericError> {
         log::info!("get_secrets {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;
@@ -489,6 +510,26 @@ pub mod client {
         Ok(secrets.items)
     }
 
+    #[tauri::command]
+    pub async fn delete_secret(path: &str, context: &str, secret_namespace: &str, secret_name: &str) -> Result<(), GenericError> {
+        log::info!("delete_secret {:?} {:?} {:?} {:?}", path, context, secret_namespace, secret_name);
+        let client = get_client(&path, context).await?;
+        let secret_api: Api<Secret> = Api::namespaced(client, secret_namespace);
+        let dp = DeleteParams::default();
+        let secret = secret_api.delete(secret_name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+        match secret {
+            Either::Left(secret) => {
+                log::info!("deleted secret: {}", secret.metadata.name.unwrap_or_default());
+            },
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
     #[tauri::command]
     pub async fn get_services(path: &str, context: &str) -> Result<Vec<Service>, GenericError> {
         log::info!("get_services {:?} {:?}", path, context);

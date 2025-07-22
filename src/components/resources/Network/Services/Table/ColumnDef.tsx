@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { StatefulSet } from '@/components/resources/Workloads/StatefulSets/types';
-import SsName from '@/components/resources/Workloads/ResourceName';
+import { Service } from '@/components/resources/Network/Services/types';
+import JobName from '@/components/resources/Workloads/ResourceName';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -36,7 +36,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<StatefulSet>[] = [
+const columns: ColumnDef<Service>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -55,7 +55,7 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <SsName name={name} content={row.original.metadata.namespace} />;
+      return <JobName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -80,8 +80,8 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
   },
   {
-    accessorKey: 'spec.replicas',
-    id: 'replicase',
+    accessorKey: 'spec.type',
+    id: 'type',
     header: ({ column }) => {
       return (
         <Button
@@ -90,21 +90,59 @@ const columns: ColumnDef<StatefulSet>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Replicas
+          Type
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const currentReplicas = row.original.status.currentReplicas;
-      const availableReplicas = row.original.status.availableReplicas;
-      return (
-        <div>
-          {currentReplicas}/{availableReplicas}
-        </div>
-      );
+      const t = row.original.spec.type;
+      return <div>{t}</div>;
     },
   },
+  {
+    accessorKey: 'spec.clusterIP',
+    id: 'clusterIP',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          ClusterIP
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const t = row.original.spec.clusterIP;
+      return <div>{t}</div>;
+    },
+  },
+  {
+    accessorKey: 'spec.internalTrafficPolicy',
+    id: 'internalTrafficPolicy',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          InternalTrafficPolicy
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const t = row.original.spec.internalTrafficPolicy;
+      return <div>{t}</div>;
+    },
+  },
+
   {
     id: 'creationTimestamp',
     accessorFn: (row) => row.metadata?.creationTimestamp,
@@ -130,7 +168,7 @@ const columns: ColumnDef<StatefulSet>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ss = row.original;
+      const service = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -142,7 +180,7 @@ const columns: ColumnDef<StatefulSet>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(ss.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(service.metadata.name)}
             >
               <ClipboardCopy size={8} />
               Copy name
@@ -152,28 +190,28 @@ const columns: ColumnDef<StatefulSet>[] = [
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              disabled={ss.metadata?.deletionTimestamp !== undefined}
+              disabled={service.metadata?.deletionTimestamp !== undefined}
               className="text-xs"
               onClick={async () => {
                 toast.promise(
-                  invoke<StatefulSet>('delete_statefulset', {
+                  invoke<Service>('delete_service', {
                     path: getKubeconfig(),
                     context: getCluster(),
-                    ssNamespace: ss.metadata.namespace,
-                    ssName: ss.metadata.name,
+                    serviceNamespace: service.metadata.namespace,
+                    serviceName: service.metadata.name,
                   }),
                   {
                     loading: 'Deleting...',
                     success: () => {
                       return (
                         <span>
-                          StatefulSet <b>{ss.metadata.name}</b> deleted
+                          Service <b>{service.metadata.name}</b> deleted
                         </span>
                       );
                     },
                     error: (err) => (
                       <span>
-                        Cant delete statefulset <b>{ss.metadata.name}</b>
+                        Cant delete service <b>{service.metadata.name}</b>
                         <br />
                         {err.message}
                       </span>

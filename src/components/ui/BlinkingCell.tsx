@@ -33,13 +33,13 @@ function BlinkingCell({
             blink
               ? 'animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
               : '',
-            'flex flex-col items-center',
+            'flex flex-col',
           )}
         >
-          <div>{value}</div>
+          <div className="w-full">{value}</div>
         </div>
       </TooltipTrigger>
-      <TooltipContent>{tm}</TooltipContent>
+      <TooltipContent side="right">{tm}</TooltipContent>
     </Tooltip>
   );
 }

@@ -61,6 +61,27 @@ const columns: ColumnDef<CronJob>[] = [
     },
   },
   {
+    accessorKey: 'metadata.namespace',
+    id: 'namespace',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Namespace
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const name = row.original.metadata.namespace;
+      return <div>{name}</div>;
+    },
+  },
+  {
     accessorKey: 'spec.schedule',
     id: 'schedule',
     header: 'Schedule',
