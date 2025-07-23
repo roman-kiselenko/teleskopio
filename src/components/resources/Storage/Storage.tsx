@@ -2,11 +2,7 @@ import { usePageState } from '@/store/page';
 
 export function Storage() {
   const currentPage = usePageState();
-  const sections = [
-    { section: 'storageclasses', title: 'StorageClass' },
-    { section: 'pvs', title: 'PV' },
-    { section: 'pvcs', title: 'PVC' },
-  ];
+  const sections = [{ section: 'storageclasses', title: 'StorageClass' }];
   return (
     <div className="flex flex-col w-35 border-r border-gray-300">
       <div className="relative text-sm focus:outline-none group">
