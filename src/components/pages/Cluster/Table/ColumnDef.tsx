@@ -158,7 +158,7 @@ const columns: ColumnDef<Node>[] = [
         <div
           className={cn(
             ready?.status !== 'True'
-              ? 'text-red-300 animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
+              ? 'text-red-400 animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
               : 'text-green-400',
             'flex flex-col',
           )}

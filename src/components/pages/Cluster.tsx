@@ -2,8 +2,7 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { useNodesState, getNodes } from '~/store/nodes';
 import { useSearchState } from '@/store/search';
-import { useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useCallback } from 'react';
 import { SearchField } from '~/components/SearchField';
 import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Cluster/Table/ColumnDef';
@@ -13,11 +12,24 @@ export function ClusterPage() {
   const cc = useCurrentClusterState();
   const nodesState = useNodesState();
   const searchQuery = useSearchState();
+
+  const kubeConfig = cc.kube_config.get();
+  const cluster = cc.cluster.get();
   const query = searchQuery.q.get();
 
+  const fetchData = useCallback(async () => {
+    await getNodes(kubeConfig, cluster, query);
+  }, [kubeConfig, cluster, query]);
+
   useEffect(() => {
-    getNodes(cc.kube_config.get(), cc.cluster.get(), query);
-  }, [cc.kube_config.get(), cc.cluster.get(), query]);
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   return (
     <div className="flex flex-col flex-grow">
