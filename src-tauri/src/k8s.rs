@@ -32,10 +32,11 @@ pub mod client {
         Role,
     };
     use tauri::http::Request;
-    use kube::api::{ListParams, DeleteParams};
+    use kube::api::{ListParams, Patch, PatchParams, DeleteParams};
     use std::fmt;
     use std::io;
     use std::fs;
+    use serde_json::json;
     use serde_json::Value;
     use serde::Serialize;
     use dirs::home_dir;
@@ -176,6 +177,34 @@ pub mod client {
             .collect();
 
         Ok(clusters)
+    }
+
+    #[tauri::command]
+    pub async fn cordon_node(path: &str, context: &str, node_name: &str) -> Result<(), GenericError> {
+        let client = get_client(&path, context).await?;
+        let nodes: Api<Node> = Api::all(client);
+        let patch = json!({
+            "spec": {
+                "unschedulable": true
+            }
+        });
+
+        nodes.patch(node_name, &PatchParams::apply("teleskopio-cordon"), &Patch::Merge(&patch)).await?;
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn uncordon_node(path: &str, context: &str, node_name: &str) -> Result<(), GenericError> {
+        let client = get_client(&path, context).await?;
+        let nodes: Api<Node> = Api::all(client);
+        let patch = json!({
+            "spec": {
+                "unschedulable": false
+            }
+        });
+
+        nodes.patch(node_name, &PatchParams::apply("teleskopio-cordon"), &Patch::Merge(&patch)).await?;
+        Ok(())
     }
 
     #[tauri::command]

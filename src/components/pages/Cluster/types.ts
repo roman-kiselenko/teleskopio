@@ -9,6 +9,7 @@ type Node = {
   };
   spec: {
     podCIDR: string;
+    taints: Taint[];
   };
   status: {
     nodeInfo: {
@@ -18,6 +19,11 @@ type Node = {
     addresses: Address[];
     conditions: Condition[];
   };
+};
+
+type Taint = {
+  effect: string;
+  key: string;
 };
 
 type Address = {

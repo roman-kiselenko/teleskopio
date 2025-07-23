@@ -54,6 +54,8 @@ pub fn run() {
             k8s::client::get_version,
             k8s::client::get_namespaces,
             k8s::client::get_nodes,
+            k8s::client::cordon_node,
+            k8s::client::uncordon_node,
             k8s::client::get_pods,
             k8s::client::delete_pod,
             k8s::client::get_deployments,

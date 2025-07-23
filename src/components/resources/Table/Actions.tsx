@@ -4,6 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
@@ -14,11 +15,13 @@ function Actions({
   name,
   action,
   payload,
+  children,
 }: {
   resource: any;
   name: string;
   action: string;
   payload: any;
+  children?: any;
 }) {
   return (
     <DropdownMenu>
@@ -66,6 +69,14 @@ function Actions({
           {' '}
           <Trash size={8} /> Delete
         </DropdownMenuItem>
+        {children ? (
+          <div>
+            <DropdownMenuSeparator />
+            {children}
+          </div>
+        ) : (
+          <></>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
