@@ -219,6 +219,7 @@ const columns: ColumnDef<Node>[] = [
       };
       const additional = [
         <DropdownMenuItem
+          key={node.metadata.uid}
           className="text-xs"
           onClick={async () => {
             toast.promise(
@@ -263,7 +264,7 @@ const columns: ColumnDef<Node>[] = [
             </div>
           )}
         </DropdownMenuItem>,
-        <DropdownMenuItem className="text-xs">
+        <DropdownMenuItem key={node.metadata.uid} className="text-xs">
           <BrushCleaning />
           Drain
         </DropdownMenuItem>,

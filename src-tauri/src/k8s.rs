@@ -46,6 +46,7 @@ pub mod client {
     pub struct Cluster {
         name: String,
         path: String,
+        server: Option<String>,
     }
 
     #[derive(Debug, Serialize)]
@@ -146,8 +147,8 @@ pub mod client {
 
     #[tauri::command]
     pub async fn lookup_configs() -> Result<Vec<Cluster>, GenericError> {
-        log::info!("lookup_configs");
         let kube_config_path = home_dir().expect("Could not determine home directory").join(".kube/");
+        log::info!("lookup_configs {:?}", kube_config_path);
         if !kube_config_path.exists() {
             return Err(GenericError::new(format!("No such directory: {}", kube_config_path.display())));
         }
@@ -169,6 +170,7 @@ pub mod client {
                     .into_iter()
                     .map(move |c| Cluster {
                          name: c.name.clone(),
+                         server: Some(c.cluster.unwrap().server.unwrap()),
                          path: kube_config_clone.clone(),
                     }),
                 )

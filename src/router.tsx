@@ -8,6 +8,7 @@ import { SettingsPage } from './components/pages/Settings';
 import { StoragePage } from './components/pages/Storage';
 import { AccessPage } from './components/pages/Access';
 import { Layout } from './components/Layout';
+import { Cluster } from '@/components/pages/Start/types';
 import { invoke } from '@tauri-apps/api/core';
 
 export const router = createBrowserRouter([
@@ -18,9 +19,6 @@ export const router = createBrowserRouter([
       {
         path: '/',
         element: <StartPage />,
-        loader: async () => {
-          return { configs: await invoke<Object[]>('lookup_configs') };
-        },
       },
       {
         path: '/cluster',
