@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import BlinkingCell from '@/components/ui/BlinkingCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
-import PodName from '@/components/resources/Workloads/ResourceName';
+import PodName from '@/components/resources/ResourceName';
 import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
 import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
@@ -137,7 +137,7 @@ const columns: ColumnDef<Pod>[] = [
           className="text-xs"
           variant="table"
           size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column?.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Status
           <ArrowUpDown size={32} className="h-12 w-12" />

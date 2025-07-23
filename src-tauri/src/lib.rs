@@ -39,7 +39,6 @@ pub fn init_logger() -> Result<(), SetLoggerError> {
         .map(|()| log::set_max_level(LevelFilter::Info))
 }
 
-// Доступ к логам
 pub fn get_logs() -> Vec<String> {
     MEMORY_LOGS.lock().unwrap().clone()
 }
