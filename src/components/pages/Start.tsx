@@ -31,7 +31,7 @@ export function StartPage() {
           <SearchField />
         </button>
         <div className="flex items-center justify-between w-full h-12 px-2">
-          <span className="hidden md:block text-muted-foreground text-xs font-bold"></span>
+          <span className="hidden md:block mx-auto text-muted-foreground text-xs font-bold"></span>
         </div>
         <div className="relative focus:outline-none group">
           <div className="flex items-center w-full h-12 px-4"></div>

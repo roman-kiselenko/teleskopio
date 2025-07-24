@@ -22,7 +22,7 @@ export function AccessPage() {
           <SearchField />
         </button>
         <div className="flex items-center justify-between w-full h-12 px-2">
-          <span className="hidden md:block text-muted-foreground text-xs font-bold">
+          <span className="hidden md:block mx-auto text-muted-foreground text-xs font-bold">
             {cc.cluster.get()} {cv.version.get()}
           </span>
         </div>

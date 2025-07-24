@@ -11,6 +11,7 @@ import Jobs from '~/components/resources/Workloads/Jobs';
 import CronJobs from '~/components/resources/Workloads/CronJobs';
 import { Namespaces } from '~/components/Namespaces';
 import { useEffect } from 'react';
+import { PaginationComponent } from '@/components/resources/Pagination';
 
 export function WorkloadsPage() {
   const cv = useVersionState();
@@ -28,7 +29,7 @@ export function WorkloadsPage() {
           <SearchField />
         </button>
         <div className="flex items-center justify-between w-full h-12 px-2">
-          <span className="hidden md:block text-muted-foreground text-xs font-bold">
+          <span className="hidden md:block mx-auto text-muted-foreground text-xs font-bold">
             {cc.cluster.get()} {cv.version.get()}
           </span>
         </div>
@@ -48,6 +49,9 @@ export function WorkloadsPage() {
           {currentPage.currentPage.get() === 'jobs' ? <Jobs /> : <></>}
           {currentPage.currentPage.get() === 'cronjobs' ? <CronJobs /> : <></>}
         </div>
+      </div>
+      <div className="border-t border-gray-300">
+        <PaginationComponent />
       </div>
     </div>
   );
