@@ -3,7 +3,7 @@ import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 function PodStatus({ pod }: { pod: any }) {
-  let phase = pod.status.phase;
+  let phase = pod.status?.phase ?? 'Unknown';
   let color = 'text-green-500';
   if (pod.metadata?.deletionTimestamp) {
     phase = 'Terminating';

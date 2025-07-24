@@ -18,6 +18,7 @@ type Pod = {
     name: string;
     namespace: string;
     uid: string;
+    resourceVersion: string;
     creationTimestamp: string;
     deletionTimestamp: string;
   };
@@ -31,7 +32,7 @@ type Pod = {
     initContainerStatuses: ContainerStatus[];
     hostIP: string;
     podIP: string;
-    phase: string;
+    phase?: string;
   };
 };
 

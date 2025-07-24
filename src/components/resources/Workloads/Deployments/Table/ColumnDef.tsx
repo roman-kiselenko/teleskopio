@@ -175,7 +175,7 @@ const columns: ColumnDef<Deployment>[] = [
                     success: () => {
                       return (
                         <span>
-                          Deployment <b>{dp.metadata.name}</b> deleted
+                          Terminating Deployment <b>{dp.metadata.name}</b>
                         </span>
                       );
                     },

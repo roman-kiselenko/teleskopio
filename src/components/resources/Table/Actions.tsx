@@ -52,7 +52,7 @@ function Actions({
               success: () => {
                 return (
                   <span>
-                    {name} <b>{resource.metadata.name}</b> deleted
+                    Terminating {name} <b>{resource.metadata.name}</b>
                   </span>
                 );
               },

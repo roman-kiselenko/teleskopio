@@ -1,8 +1,8 @@
 mod k8s;
 
-use log::{Record, Level, Metadata, SetLoggerError, LevelFilter};
-use std::sync::{Mutex, Arc};
 use lazy_static::lazy_static;
+use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
+use std::sync::{Arc, Mutex};
 
 struct MemoryLogger {
     logs: Arc<Mutex<Vec<String>>>,
@@ -35,8 +35,7 @@ lazy_static! {
 }
 
 pub fn init_logger() -> Result<(), SetLoggerError> {
-    log::set_logger(&*LOGGER)
-        .map(|()| log::set_max_level(LevelFilter::Info))
+    log::set_logger(&*LOGGER).map(|()| log::set_max_level(LevelFilter::Info))
 }
 
 pub fn get_logs() -> Vec<String> {

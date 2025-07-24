@@ -99,7 +99,7 @@ const columns: ColumnDef<Pod>[] = [
       const pod = row.original;
       const allContainers = [
         ...(pod.status?.initContainerStatuses || []),
-        ...pod.status.containerStatuses,
+        ...(pod.status?.containerStatuses || []),
       ];
       return (
         <div className="flex flex-wrap w-30">
@@ -110,7 +110,6 @@ const columns: ColumnDef<Pod>[] = [
       );
     },
   },
-
   {
     accessorFn: (row) => row.status?.podIP ?? '',
     id: 'podIP',
@@ -137,7 +136,7 @@ const columns: ColumnDef<Pod>[] = [
           className="text-xs"
           variant="table"
           size="table"
-          onClick={() => column?.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column?.toggleSorting(column?.getIsSorted() === 'asc')}
         >
           Status
           <ArrowUpDown size={32} className="h-12 w-12" />
@@ -211,7 +210,7 @@ const columns: ColumnDef<Pod>[] = [
                     success: () => {
                       return (
                         <span>
-                          Pod <b>{pod.metadata.name}</b> deleted
+                          Terminating Pod <b>{pod.metadata.name}</b>
                         </span>
                       );
                     },
