@@ -1,6 +1,8 @@
 pub mod client {
+    use chrono::{DateTime, Utc};
     use dirs::home_dir;
     use either::Either;
+    use futures::StreamExt;
     use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
     use k8s_openapi::api::batch::v1::{CronJob, Job};
     use k8s_openapi::api::core::v1::{
@@ -9,16 +11,27 @@ pub mod client {
     use k8s_openapi::api::networking::v1::{Ingress, NetworkPolicy};
     use k8s_openapi::api::rbac::v1::Role;
     use k8s_openapi::api::storage::v1::StorageClass;
-    use kube::api::{DeleteParams, ListParams, Patch, PatchParams};
+    use kube::api::{DeleteParams, ListParams, Patch, PatchParams, WatchEvent, WatchParams};
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
-    use kube::{api::Api, Client, Config, Error};
+    use kube::runtime::watcher::Config as WatcherConfig;
+    use kube::{
+        api::Api,
+        runtime::{reflector, reflector::store::Writer, watcher},
+        Client, Config, Error,
+    };
+    use lazy_static::lazy_static;
     use serde::Serialize;
     use serde_json::json;
     use serde_json::Value;
+    use std::collections::HashMap;
     use std::fmt;
     use std::fs;
     use std::io;
+    use std::sync::Arc;
+    use std::sync::Mutex;
+    use tauri::async_runtime::{spawn, JoinHandle};
     use tauri::http::Request;
+    use tauri::{AppHandle, Emitter};
     use walkdir::{DirEntry, WalkDir};
 
     #[derive(Debug, Serialize)]
@@ -125,6 +138,28 @@ pub mod client {
 
     fn is_excluded(entry: &DirEntry) -> bool {
         entry.path().components().any(|c| c.as_os_str() == "cache")
+    }
+
+    type Key = (String, String); // (path, context)
+
+    lazy_static! {
+        static ref REFLECTOR_HANDLES: Mutex<HashMap<Key, JoinHandle<()>>> =
+            Mutex::new(HashMap::new());
+    }
+
+    pub fn has_reflector(path: &str, context: &str) -> bool {
+        let map = REFLECTOR_HANDLES.lock().unwrap();
+        map.contains_key(&(path.to_string(), context.to_string()))
+    }
+
+    pub fn insert_reflector(path: String, context: String, handle: JoinHandle<()>) {
+        let mut map = REFLECTOR_HANDLES.lock().unwrap();
+        map.insert((path, context), handle);
+    }
+
+    pub fn remove_reflector(path: &str, context: &str) {
+        let mut map = REFLECTOR_HANDLES.lock().unwrap();
+        map.remove(&(path.to_string(), context.to_string()));
     }
 
     #[tauri::command]
@@ -254,17 +289,110 @@ pub mod client {
     }
 
     #[tauri::command]
-    pub async fn get_pods(path: &str, context: &str) -> Result<Vec<Pod>, GenericError> {
-        log::info!("get_pods {:?} {:?}", path, context);
+    pub async fn get_pods_page(
+        path: &str,
+        context: &str,
+        limit: u32,
+        continue_token: Option<String>,
+    ) -> Result<(Vec<Pod>, Option<String>), GenericError> {
+        log::info!(
+            "get_pods_page {:?} {:?} {:?} {:?}",
+            path,
+            context,
+            limit,
+            continue_token
+        );
         let client = get_client(&path, context).await?;
         let pod_api: Api<Pod> = Api::all(client);
 
-        let pods = pod_api.list(&ListParams::default()).await.map_err(|err| {
+        let lp = if let Some(token) = &continue_token {
+            ListParams::default().limit(limit).continue_token(token)
+        } else {
+            ListParams::default().limit(limit)
+        };
+
+        let pods = pod_api.list(&lp).await.map_err(|err| {
             println!("error {:?}", err);
             GenericError::from(err)
         })?;
+        let next_token = pods.metadata.continue_;
+        let mut items = pods.items;
 
-        Ok(pods.items)
+        items.sort_by(|a, b| {
+            let a_time = a
+                .metadata
+                .creation_timestamp
+                .as_ref()
+                .map(|t| t.0)
+                .unwrap_or_default();
+            let b_time = b
+                .metadata
+                .creation_timestamp
+                .as_ref()
+                .map(|t| t.0)
+                .unwrap_or_default();
+            b_time.cmp(&a_time)
+        });
+        Ok((items, next_token))
+    }
+
+    #[tauri::command]
+    pub async fn start_pod_reflector(
+        path: &str,
+        context: &str,
+        app: AppHandle,
+    ) -> Result<(), GenericError> {
+        if has_reflector(path, context) {
+            log::info!("reflector already running");
+            return Ok(());
+        }
+        log::info!("start_pod_reflector {:?} {:?}", path, context,);
+
+        let client = get_client(path, context).await?;
+        let api: Api<Pod> = Api::all(client);
+
+        let config = WatcherConfig {
+            ..Default::default()
+        };
+        let watch_stream = watcher(api, config);
+
+        let store = Writer::<Pod>::default();
+        let reader = store.as_reader();
+
+        let rf = reflector(store, watch_stream);
+
+        let path = path.to_string();
+        let path_clone = path.clone();
+        let context = context.to_string();
+        let context_clone = context.clone();
+        let app_handle = Arc::new(app);
+
+        let task = tauri::async_runtime::spawn({
+            let app_handle = Arc::clone(&app_handle);
+            async move {
+                let mut rf = Box::pin(rf);
+                while let Some(event) = rf.next().await {
+                    match event {
+                        Ok(_) => {
+                            let pods: Vec<Pod> = reader
+                                .state()
+                                .iter()
+                                .map(|arc_pod| (**arc_pod).clone())
+                                .collect();
+                            let _ = app_handle.emit("pods-update", pods);
+                        }
+                        Err(err) => {
+                            eprintln!("reflector error: {:?}", err);
+                        }
+                    }
+                }
+
+                remove_reflector(&path, &context);
+            }
+        });
+
+        insert_reflector(path_clone, context_clone, task);
+        Ok(())
     }
 
     #[tauri::command]

@@ -15,7 +15,7 @@ import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
 import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import toast from 'react-hot-toast';
-
+import { memo } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +52,7 @@ const columns: ColumnDef<Pod>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
-    header: ({ column }) => {
+    header: memo(({ column }) => {
       return (
         <Button
           className="text-xs"
@@ -64,16 +64,16 @@ const columns: ColumnDef<Pod>[] = [
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
-    },
-    cell: ({ row }) => {
+    }),
+    cell: memo(({ row }) => {
       const name = row.original.metadata.name;
       return <PodName name={name} content={row.original.spec.nodeName} />;
-    },
+    }),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
-    header: ({ column }) => {
+    header: memo(({ column }) => {
       return (
         <Button
           className="text-xs"
@@ -85,17 +85,38 @@ const columns: ColumnDef<Pod>[] = [
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
-    },
-    cell: ({ row }) => {
+    }),
+    cell: memo(({ row }) => {
       const name = row.original.metadata.namespace;
       return <div>{name}</div>;
-    },
+    }),
+  },
+  {
+    accessorKey: 'spec.nodeName',
+    id: 'nodename',
+    header: memo(({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Node
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    }),
+    cell: memo(({ row }) => {
+      const name = row.original.spec.nodeName;
+      return <div>{name}</div>;
+    }),
   },
   {
     accessorKey: 'spec.containers',
     header: 'Containers',
     id: 'containers',
-    cell: ({ row }) => {
+    cell: memo(({ row }) => {
       const pod = row.original;
       const allContainers = [
         ...(pod.status?.initContainerStatuses || []),
@@ -108,12 +129,12 @@ const columns: ColumnDef<Pod>[] = [
           })}
         </div>
       );
-    },
+    }),
   },
   {
     accessorFn: (row) => row.status?.podIP ?? '',
     id: 'podIP',
-    header: ({ column }) => {
+    header: memo(({ column }) => {
       return (
         <Button
           className="text-xs"
@@ -125,12 +146,12 @@ const columns: ColumnDef<Pod>[] = [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
-    },
+    }),
   },
   {
     accessorKey: 'status.phase',
     id: 'phase',
-    header: ({ column }) => {
+    header: memo(({ column }) => {
       return (
         <Button
           className="text-xs"
@@ -142,15 +163,15 @@ const columns: ColumnDef<Pod>[] = [
           <ArrowUpDown size={32} className="h-12 w-12" />
         </Button>
       );
-    },
-    cell: ({ row }) => {
+    }),
+    cell: memo(({ row }) => {
       return <PodStatus pod={row.original} />;
-    },
+    }),
   },
   {
     id: 'creationTimestamp',
     accessorFn: (row) => row.metadata?.creationTimestamp,
-    header: ({ column }) => {
+    header: memo(({ column }) => {
       return (
         <Button
           className="text-xs"
@@ -162,16 +183,14 @@ const columns: ColumnDef<Pod>[] = [
           <ArrowUpDown className="h-2 w-2" />
         </Button>
       );
-    },
-    cell: ({ getValue }) => {
-      const age = moment(getValue<string>()).fromNow();
-      const ageSeconds = moment().diff(getValue<string>(), 'seconds');
-      return <BlinkingCell timestamp={getValue<string>()} value={age} isNew={ageSeconds < 60} />;
-    },
+    }),
+    cell: memo(({ getValue }) => {
+      return <BlinkingCell timestamp={getValue<string>()} />;
+    }),
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
+    cell: memo(({ row }) => {
       const pod = row.original;
       const actionDisabled = pod.metadata?.deletionTimestamp !== undefined;
       return (
@@ -240,7 +259,7 @@ const columns: ColumnDef<Pod>[] = [
           </DropdownMenuContent>
         </DropdownMenu>
       );
-    },
+    }),
   },
 ];
 

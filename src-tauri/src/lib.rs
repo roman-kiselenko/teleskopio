@@ -52,11 +52,15 @@ pub fn run() {
             k8s::client::lookup_configs,
             k8s::client::get_version,
             k8s::client::get_namespaces,
+            // Nodes
             k8s::client::get_nodes,
             k8s::client::cordon_node,
             k8s::client::uncordon_node,
-            k8s::client::get_pods,
+            // Pods
+            k8s::client::get_pods_page,
+            k8s::client::start_pod_reflector,
             k8s::client::delete_pod,
+            // Deployments
             k8s::client::get_deployments,
             k8s::client::delete_deployment,
             k8s::client::get_daemonset,

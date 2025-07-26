@@ -11,7 +11,6 @@ import Jobs from '~/components/resources/Workloads/Jobs';
 import CronJobs from '~/components/resources/Workloads/CronJobs';
 import { Namespaces } from '~/components/Namespaces';
 import { useEffect } from 'react';
-import { PaginationComponent } from '@/components/resources/Pagination';
 
 export function WorkloadsPage() {
   const cv = useVersionState();
@@ -49,9 +48,6 @@ export function WorkloadsPage() {
           {currentPage.currentPage.get() === 'jobs' ? <Jobs /> : <></>}
           {currentPage.currentPage.get() === 'cronjobs' ? <CronJobs /> : <></>}
         </div>
-      </div>
-      <div className="border-t border-gray-300">
-        <PaginationComponent />
       </div>
     </div>
   );
