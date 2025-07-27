@@ -50,7 +50,7 @@ moment.updateLocale('en', {
 
 const columns: ColumnDef<Pod>[] = [
   {
-    accessorKey: 'metadata.name',
+    accessorKey: 'name',
     id: 'name',
     header: memo(({ column }) => {
       return (
@@ -66,12 +66,12 @@ const columns: ColumnDef<Pod>[] = [
       );
     }),
     cell: memo(({ row }) => {
-      const name = row.original.metadata.name;
-      return <PodName name={name} content={row.original.spec.nodeName} />;
+      const name = row.original.name;
+      return <PodName name={name} content={row.original.node_name} />;
     }),
   },
   {
-    accessorKey: 'metadata.namespace',
+    accessorKey: 'namespace',
     id: 'namespace',
     header: memo(({ column }) => {
       return (
@@ -87,12 +87,12 @@ const columns: ColumnDef<Pod>[] = [
       );
     }),
     cell: memo(({ row }) => {
-      const name = row.original.metadata.namespace;
+      const name = row.original.namespace;
       return <div>{name}</div>;
     }),
   },
   {
-    accessorKey: 'spec.nodeName',
+    accessorKey: 'node_name',
     id: 'nodename',
     header: memo(({ column }) => {
       return (
@@ -108,23 +108,19 @@ const columns: ColumnDef<Pod>[] = [
       );
     }),
     cell: memo(({ row }) => {
-      const name = row.original.spec.nodeName;
+      const name = row.original.node_name;
       return <div>{name}</div>;
     }),
   },
   {
-    accessorKey: 'spec.containers',
+    accessorKey: 'containers',
     header: 'Containers',
     id: 'containers',
     cell: memo(({ row }) => {
       const pod = row.original;
-      const allContainers = [
-        ...(pod.status?.initContainerStatuses || []),
-        ...(pod.status?.containerStatuses || []),
-      ];
       return (
         <div className="flex flex-wrap w-30">
-          {allContainers.map((c: any) => {
+          {pod?.containers.map((c: any) => {
             return <ContainerIcon key={c.name} container={c} pod={pod} />;
           })}
         </div>
@@ -132,8 +128,8 @@ const columns: ColumnDef<Pod>[] = [
     }),
   },
   {
-    accessorFn: (row) => row.status?.podIP ?? '',
-    id: 'podIP',
+    accessorFn: (row) => row.pod_ip ?? '',
+    id: 'pod_ip',
     header: memo(({ column }) => {
       return (
         <Button
@@ -147,9 +143,12 @@ const columns: ColumnDef<Pod>[] = [
         </Button>
       );
     }),
+    cell: memo(({ row }) => {
+      return <div>{row.original.pod_ip}</div>;
+    }),
   },
   {
-    accessorKey: 'status.phase',
+    accessorKey: 'phase',
     id: 'phase',
     header: memo(({ column }) => {
       return (
@@ -169,8 +168,8 @@ const columns: ColumnDef<Pod>[] = [
     }),
   },
   {
-    id: 'creationTimestamp',
-    accessorFn: (row) => row.metadata?.creationTimestamp,
+    id: 'age',
+    accessorFn: (row) => row?.age,
     header: memo(({ column }) => {
       return (
         <Button
@@ -185,14 +184,14 @@ const columns: ColumnDef<Pod>[] = [
       );
     }),
     cell: memo(({ getValue }) => {
-      return <BlinkingCell timestamp={getValue<string>()} />;
+      return <BlinkingCell age={getValue<string>()} />;
     }),
   },
   {
     id: 'actions',
     cell: memo(({ row }) => {
       const pod = row.original;
-      const actionDisabled = pod.metadata?.deletionTimestamp !== undefined;
+      const actionDisabled = pod?.deletionTimestamp !== undefined;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -204,7 +203,7 @@ const columns: ColumnDef<Pod>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(pod.name)}
             >
               <ClipboardCopy size={8} />
               Copy name
@@ -221,21 +220,21 @@ const columns: ColumnDef<Pod>[] = [
                   invoke<Pod>('delete_pod', {
                     path: getKubeconfig(),
                     context: getCluster(),
-                    podNamespace: pod.metadata.namespace,
-                    podName: pod.metadata.name,
+                    podNamespace: pod.namespace,
+                    podName: pod.name,
                   }),
                   {
                     loading: 'Deleting...',
                     success: () => {
                       return (
                         <span>
-                          Terminating Pod <b>{pod.metadata.name}</b>
+                          Terminating Pod <b>{pod.name}</b>
                         </span>
                       );
                     },
                     error: (err) => (
                       <span>
-                        Cant delete pod <b>{pod.metadata.name}</b>
+                        Cant delete pod <b>{pod.name}</b>
                         <br />
                         {err.message}
                       </span>

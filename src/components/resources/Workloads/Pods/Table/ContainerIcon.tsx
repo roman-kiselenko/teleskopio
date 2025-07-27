@@ -9,24 +9,24 @@ function ContainerIcon({ container, pod }: { container: Container; pod: Pod }) {
   let color = 'text-gray-400';
   let initcontainer = false;
   let blink = true;
-  if (pod.spec?.initContainers?.map((c) => c.name).includes(container.name)) {
+  if (container.container_type === 'Init') {
     initcontainer = true;
   }
-  if (container.state?.running) {
-    output = moment(container.state.running.startedAt).fromNow();
+  if (container.running) {
+    output = moment(container.started_at).fromNow();
     blink = false;
     color = 'text-green-400';
   }
-  if (container.state?.terminated) {
-    output = `${container.state?.terminated?.reason} ${container.state?.terminated?.exitCode === 0 ? '' : container.state?.terminated?.exitCode}`;
+  if (container.terminated) {
+    output = `${container.reason} ${container.exit_code === 0 ? '' : container.exit_code}`;
     blink = false;
     color = 'text-red-400';
-    if (container.state?.terminated?.exitCode === 0) {
+    if (container.exit_code === 0) {
       color = 'text-green-400';
     }
   }
-  if (container.state?.waiting) {
-    output = container.state?.waiting?.reason;
+  if (container.waiting) {
+    output = container.reason;
     blink = true;
     color = 'text-orange-400';
   }

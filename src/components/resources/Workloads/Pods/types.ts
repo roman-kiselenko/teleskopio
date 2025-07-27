@@ -1,39 +1,29 @@
 type Container = {
   name: string;
   image: string;
-  state: ContainerStatus;
-};
-
-type ContainerStatus = {
-  name: string;
-  image: string;
-  started: any;
-  running: any;
-  terminated: any;
-  waiting: any;
+  started: Boolean;
+  running: Boolean;
+  terminated: Boolean;
+  waiting: Boolean;
+  started_at: string;
+  exit_code: number;
+  container_type: String;
+  reason: string;
 };
 
 type Pod = {
-  metadata: {
-    name: string;
-    namespace: string;
-    uid: string;
-    resourceVersion: string;
-    creationTimestamp: string;
-    deletionTimestamp: string;
-  };
-  spec: {
-    containers: Container[];
-    initContainers: Container[];
-    nodeName: string;
-  };
-  status: {
-    containerStatuses: ContainerStatus[];
-    initContainerStatuses: ContainerStatus[];
-    hostIP: string;
-    podIP: string;
-    phase?: string;
-  };
+  name: string;
+  namespace: string;
+  uid: string;
+  age: string;
+  deletionTimestamp: string;
+  containers: Container[];
+  initContainers: Container[];
+  node_name: string;
+  host_ip: string;
+  pod_ip: string;
+  phase?: string;
+  is_terminating: Boolean;
 };
 
-export type { Pod, Container, ContainerStatus };
+export type { Pod, Container };

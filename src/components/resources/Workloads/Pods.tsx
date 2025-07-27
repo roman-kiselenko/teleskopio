@@ -37,7 +37,7 @@ const Pods = () => {
       podsState.set((prev) => {
         const newMap = new Map(prev);
         newPods.forEach((p: Pod) => {
-          newMap.set(p.metadata.uid, p);
+          newMap.set(p.uid, p);
         });
         return newMap;
       });
@@ -57,10 +57,9 @@ const Pods = () => {
     });
     const podsupdate = listen<Pod[]>('pods-update', (event) => {
       const pods = event.payload;
-      console.log('got pods update', pods.length);
       const nextMap = new Map<string, Pod>();
       pods.forEach((p: Pod) => {
-        nextMap.set(p.metadata.uid, p);
+        nextMap.set(p.uid, p);
       });
       podsState.set(nextMap);
     });

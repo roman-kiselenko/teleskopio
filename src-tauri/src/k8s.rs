@@ -6,12 +6,12 @@ pub mod client {
     use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
     use k8s_openapi::api::batch::v1::{CronJob, Job};
     use k8s_openapi::api::core::v1::{
-        ConfigMap, Namespace, Node, Pod, Secret, Service, ServiceAccount,
+        ConfigMap, ContainerStatus, Namespace, Node, Pod, Secret, Service, ServiceAccount,
     };
     use k8s_openapi::api::networking::v1::{Ingress, NetworkPolicy};
     use k8s_openapi::api::rbac::v1::Role;
     use k8s_openapi::api::storage::v1::StorageClass;
-    use kube::api::{DeleteParams, ListParams, Patch, PatchParams, WatchEvent, WatchParams};
+    use kube::api::{DeleteParams, ListParams, Patch, PatchParams};
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
     use kube::runtime::watcher::Config as WatcherConfig;
     use kube::{
@@ -29,9 +29,10 @@ pub mod client {
     use std::io;
     use std::sync::Arc;
     use std::sync::Mutex;
-    use tauri::async_runtime::{spawn, JoinHandle};
+    use tauri::async_runtime::JoinHandle;
     use tauri::http::Request;
     use tauri::{AppHandle, Emitter};
+    use timeago::Formatter;
     use walkdir::{DirEntry, WalkDir};
 
     #[derive(Debug, Serialize)]
@@ -39,6 +40,34 @@ pub mod client {
         name: String,
         path: String,
         server: Option<String>,
+    }
+
+    #[derive(Debug, Serialize)]
+    pub struct PodData {
+        uid: String,
+        name: String,
+        namespace: String,
+        age: String,
+        node_name: Option<String>,
+        host_ip: Option<String>,
+        pod_ip: Option<String>,
+        phase: Option<String>,
+        is_terminating: bool,
+        containers: Vec<Container>,
+    }
+
+    #[derive(Debug, Serialize)]
+    pub struct Container {
+        name: String,
+        phase: Option<String>,
+        started: bool,
+        container_type: String,
+        running: bool,
+        terminated: bool,
+        waiting: bool,
+        started_at: String,
+        reason: String,
+        exit_code: Option<u16>,
     }
 
     #[derive(Debug, Serialize)]
@@ -57,6 +86,94 @@ pub mod client {
                 reason: None,
                 details: None,
             }
+        }
+    }
+
+    fn extract_containers(pod: &Pod) -> Vec<Container> {
+        let mut all = Vec::new();
+        let phase = pod.status.as_ref().and_then(|s| s.phase.clone());
+
+        if let Some(status) = &pod.status {
+            if let Some(init_statuses) = &status.init_container_statuses {
+                all.extend(process_statuses(init_statuses, "Init", &phase));
+            }
+            if let Some(main_statuses) = &status.container_statuses {
+                all.extend(process_statuses(main_statuses, "Main", &phase));
+            }
+        }
+
+        all
+    }
+
+    fn process_statuses(
+        statuses: &Vec<ContainerStatus>,
+        container_type: &str,
+        phase: &Option<String>,
+    ) -> Vec<Container> {
+        statuses
+            .iter()
+            .map(|status| {
+                let state = status.state.as_ref();
+
+                let (started_at, reason, exit_code) = if let Some(state) = state {
+                    if let Some(running) = &state.running {
+                        let started = running
+                            .started_at
+                            .as_ref()
+                            .map(|t| t.0.to_rfc3339())
+                            .unwrap_or_default();
+                        (started, "Running".to_string(), None)
+                    } else if let Some(waiting) = &state.waiting {
+                        (
+                            "".to_string(),
+                            waiting.reason.clone().unwrap_or("Waiting".to_string()),
+                            None,
+                        )
+                    } else if let Some(terminated) = &state.terminated {
+                        let started = terminated
+                            .started_at
+                            .as_ref()
+                            .map(|t| t.0.to_rfc3339())
+                            .unwrap_or_default();
+                        let reason = terminated
+                            .reason
+                            .clone()
+                            .unwrap_or("Terminated".to_string());
+                        let code = Some(terminated.exit_code as u16);
+                        (started, reason, code)
+                    } else {
+                        ("".to_string(), "-".to_string(), None)
+                    }
+                } else {
+                    ("".to_string(), "-".to_string(), None)
+                };
+
+                Container {
+                    name: status.name.clone(),
+                    phase: phase.clone(),
+                    container_type: container_type.to_string(),
+                    started: status.started.unwrap_or(false),
+                    running: matches!(state.and_then(|s| s.running.as_ref()), Some(_)),
+                    waiting: matches!(state.and_then(|s| s.waiting.as_ref()), Some(_)),
+                    terminated: matches!(state.and_then(|s| s.terminated.as_ref()), Some(_)),
+                    started_at,
+                    reason,
+                    exit_code,
+                }
+            })
+            .collect()
+    }
+
+    fn from_now(
+        creation_timestamp: &Option<k8s_openapi::apimachinery::pkg::apis::meta::v1::Time>,
+    ) -> String {
+        if let Some(ts) = creation_timestamp {
+            let dt: DateTime<Utc> = ts.0;
+            let now = Utc::now();
+            let formatter = Formatter::new();
+            formatter.convert_chrono(dt, now)
+        } else {
+            "-".to_string()
         }
     }
 
@@ -294,7 +411,7 @@ pub mod client {
         context: &str,
         limit: u32,
         continue_token: Option<String>,
-    ) -> Result<(Vec<Pod>, Option<String>), GenericError> {
+    ) -> Result<(Vec<PodData>, Option<String>), GenericError> {
         log::info!(
             "get_pods_page {:?} {:?} {:?} {:?}",
             path,
@@ -333,7 +450,25 @@ pub mod client {
                 .unwrap_or_default();
             b_time.cmp(&a_time)
         });
-        Ok((items, next_token))
+        let pod_items = items
+            .iter()
+            .map(|p| {
+                let age = from_now(&p.metadata.creation_timestamp);
+                PodData {
+                    uid: p.metadata.uid.clone().unwrap_or_default(),
+                    name: p.metadata.name.clone().unwrap_or_default(),
+                    namespace: p.metadata.namespace.clone().unwrap_or_default(),
+                    node_name: p.spec.clone().unwrap().node_name,
+                    age,
+                    host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
+                    pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                    phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+                    containers: extract_containers(p),
+                    is_terminating: p.metadata.deletion_timestamp.is_some(),
+                }
+            })
+            .collect();
+        Ok((pod_items, next_token))
     }
 
     #[tauri::command]
@@ -374,12 +509,46 @@ pub mod client {
                 while let Some(event) = rf.next().await {
                     match event {
                         Ok(_) => {
-                            let pods: Vec<Pod> = reader
+                            let mut items: Vec<Pod> = reader
                                 .state()
                                 .iter()
                                 .map(|arc_pod| (**arc_pod).clone())
                                 .collect();
-                            let _ = app_handle.emit("pods-update", pods);
+
+                            items.sort_by(|a, b| {
+                                let a_time = a
+                                    .metadata
+                                    .creation_timestamp
+                                    .as_ref()
+                                    .map(|t| t.0)
+                                    .unwrap_or_default();
+                                let b_time = b
+                                    .metadata
+                                    .creation_timestamp
+                                    .as_ref()
+                                    .map(|t| t.0)
+                                    .unwrap_or_default();
+                                b_time.cmp(&a_time)
+                            });
+                            let pods: Vec<PodData> = items
+                                .iter()
+                                .map(|p| {
+                                    let age = from_now(&p.metadata.creation_timestamp);
+                                    PodData {
+                                        uid: p.metadata.uid.clone().unwrap_or_default(),
+                                        name: p.metadata.name.clone().unwrap_or_default(),
+                                        namespace: p.metadata.namespace.clone().unwrap_or_default(),
+                                        node_name: p.spec.clone().unwrap().node_name,
+                                        age,
+                                        host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
+                                        pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                                        phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+                                        containers: extract_containers(&p),
+                                        is_terminating: p.metadata.deletion_timestamp.is_some(),
+                                    }
+                                })
+                                .collect();
+                            let _ = app_handle.emit("pods-update", &pods);
                         }
                         Err(err) => {
                             eprintln!("reflector error: {:?}", err);
