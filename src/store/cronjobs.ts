@@ -1,27 +1,21 @@
 import { hookstate, useHookstate } from '@hookstate/core';
-import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
-import moment from 'moment';
+import toast from 'react-hot-toast';
+import { CronJob } from '@/types';
 
-export const cronJobsState = hookstate<{ cronjobs: Object[] }>({
-  cronjobs: [],
-});
+export const cronJobsState = hookstate<Map<string, CronJob>>(new Map());
 
 export async function getCronJobs(path: string, context: string, query: string) {
   try {
-    let cronjobs = await invoke<any>('get_cronjobs', { path: path, context: context });
-    cronjobs.sort(function (a, b) {
-      return moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp));
-    });
-    if (query !== '') {
-      cronjobs = cronjobs.filter((p) => {
-        return String(p.metadata.name || '')
-          .toLowerCase()
-          .includes(query.toLowerCase());
-      });
-    }
+    const cronjobs = await invoke<CronJob[]>('get_cronjobs', { path: path, context: context });
     console.log('found cronjobs', cronjobs);
-    cronJobsState.cronjobs.set(cronjobs);
+    cronJobsState.set((prev) => {
+      const newMap = new Map(prev);
+      cronjobs.forEach((p) => {
+        newMap.set(p.metadata.uid, p);
+      });
+      return newMap;
+    });
   } catch (error: any) {
     toast.error('Error! Cant load cronjobs\n' + error.message);
     console.log('Error! Cant load cronjobs\n' + error.message);

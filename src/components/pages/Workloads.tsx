@@ -1,21 +1,36 @@
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { usePageState, setPage } from '@/store/page';
-import Pods from '~/components/resources/Workloads/Pods';
 import { SearchField } from '~/components/SearchField';
-import Deployments from '@/components/resources/Workloads/Deployments';
-import DaemonSets from '~/components/resources/Workloads/DaemonSets';
-import ReplicaSets from '~/components/resources/Workloads/ReplicaSets';
-import StatefulSets from '~/components/resources/Workloads/StatefulSets';
-import Jobs from '~/components/resources/Workloads/Jobs';
-import CronJobs from '~/components/resources/Workloads/CronJobs';
+import { AbstractPage } from '@/components/resources/Main';
+import Pods from '~/components/resources/Workloads/Pods';
 import { Namespaces } from '~/components/Namespaces';
 import { useEffect } from 'react';
+
+import { useDeploymentState, getDeployments } from '@/store/deployments';
+import { useDaemonSetsState, getDaemonSets } from '@/store/daemonsets';
+import { useReplicaSetsState, getReplicaSets } from '@/store/replicasets';
+import { useStatefulSetsState, getStatefulSets } from '@/store/statefulsets';
+import { useJobsState, getJobs } from '@/store/jobs';
+import { useCronJobsState, getCronJobs } from '@/store/cronjobs';
+import deploymnetsColumns from '@/components/resources/Workloads/columns/Deployments';
+import daemonsetsColumns from '@/components/resources/Workloads/columns/DaemonSets';
+import replicasetsColumns from '@/components/resources/Workloads/columns/ReplicaSets';
+import statefulsetsColumns from '@/components/resources/Workloads/columns/StatefulSets';
+import jobsColumns from '@/components/resources/Workloads/columns/Jobs';
+import cronJobsColumns from '@/components/resources/Workloads/columns/CronJobs';
 
 export function WorkloadsPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
+
+  const deploymentsState = useDeploymentState();
+  const daemonSetsState = useDaemonSetsState();
+  const replicaSetsState = useReplicaSetsState();
+  const statefulSetsState = useStatefulSetsState();
+  const jobsState = useJobsState();
+  const cronJobsState = useCronJobsState();
 
   useEffect(() => {
     setPage('pods');
@@ -41,12 +56,60 @@ export function WorkloadsPage() {
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
           {currentPage.currentPage.get() === 'pods' ? <Pods /> : <></>}
-          {currentPage.currentPage.get() === 'deployments' ? <Deployments /> : <></>}
-          {currentPage.currentPage.get() === 'daemonsets' ? <DaemonSets /> : <></>}
-          {currentPage.currentPage.get() === 'replicasets' ? <ReplicaSets /> : <></>}
-          {currentPage.currentPage.get() === 'statefulsets' ? <StatefulSets /> : <></>}
-          {currentPage.currentPage.get() === 'jobs' ? <Jobs /> : <></>}
-          {currentPage.currentPage.get() === 'cronjobs' ? <CronJobs /> : <></>}
+          {currentPage.currentPage.get() === 'deployments' ? (
+            <AbstractPage
+              getData={getDeployments}
+              state={() => Array.from(deploymentsState.get().values())}
+              columns={deploymnetsColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'daemonsets' ? (
+            <AbstractPage
+              getData={getDaemonSets}
+              state={() => Array.from(daemonSetsState.get().values())}
+              columns={daemonsetsColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'replicasets' ? (
+            <AbstractPage
+              getData={getReplicaSets}
+              state={() => Array.from(replicaSetsState.get().values())}
+              columns={replicasetsColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'statefulsets' ? (
+            <AbstractPage
+              getData={getStatefulSets}
+              state={() => Array.from(statefulSetsState.get().values())}
+              columns={statefulsetsColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'jobs' ? (
+            <AbstractPage
+              getData={getJobs}
+              state={() => Array.from(jobsState.get().values())}
+              columns={jobsColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'cronjobs' ? (
+            <AbstractPage
+              getData={getCronJobs}
+              state={() => Array.from(cronJobsState.get().values())}
+              columns={cronJobsColumns}
+            />
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>

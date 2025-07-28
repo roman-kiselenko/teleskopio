@@ -1,33 +1,41 @@
 import { useCurrentClusterState } from '@/store/cluster';
-import { useDeploymentsState, getDeployments } from '@/store/deployments';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/columns/Deployments';
 
-const Deployments = () => {
+interface AbstractPageProps<T> {
+  getData: (kubeConfig: any, cluster: any, query: string) => Promise<void>;
+  state: () => T[];
+  columns: any;
+  intervalMs?: number;
+}
+
+export const AbstractPage = <T,>({
+  getData,
+  state,
+  columns,
+  intervalMs = 1000,
+}: AbstractPageProps<T>) => {
   const cc = useCurrentClusterState();
   const searchQuery = useSearchState();
-  const deploymentsState = useDeploymentsState();
 
   const kubeConfig = cc.kube_config.get();
   const cluster = cc.cluster.get();
   const query = searchQuery.q.get();
 
   const fetchData = useCallback(async () => {
-    await getDeployments(kubeConfig, cluster, query);
-  }, [kubeConfig, cluster, query]);
+    await getData(kubeConfig, cluster, query);
+  }, [getData, kubeConfig, cluster, query]);
 
   useEffect(() => {
     fetchData();
 
     const interval = setInterval(() => {
       fetchData();
-    }, 1000);
+    }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [fetchData]);
-  return <DataTable columns={columns} data={deploymentsState.deployments.get()} />;
-};
+  }, [fetchData, intervalMs]);
 
-export default Deployments;
+  return <DataTable columns={columns} data={state()} />;
+};

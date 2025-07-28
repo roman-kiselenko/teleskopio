@@ -1,5 +1,5 @@
 import { hookstate, useHookstate } from '@hookstate/core';
-import { Pod } from '@/components/resources/Workloads/Pods/types';
+import { Pod } from '@/types';
 
 export const podsState = hookstate<Map<string, Pod>>(new Map());
 
