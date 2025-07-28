@@ -3,7 +3,7 @@ import { useNetworkPoliciesState, getNetworkPolicies } from '~/store/networkpoli
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Network/NetworkPolicies/ColumnDef';
+import columns from '@/components/resources/Network/columns/NetworkPolicies';
 
 const Networkpolicies = () => {
   const cc = useCurrentClusterState();

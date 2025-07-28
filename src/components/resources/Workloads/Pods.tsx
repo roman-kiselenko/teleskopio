@@ -2,7 +2,7 @@ import { useCurrentClusterState } from '@/store/cluster';
 import { usePodsState } from '~/store/pods';
 import { useEffect, useState, useRef } from 'react';
 import { DataTable } from '@/components/ui/DataTable';
-import columns from '@/components/resources/Workloads/Pods/ColumnDef';
+import columns from '@/components/resources/Workloads/columns/Pods/Pods';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Pod } from '@/types';

@@ -71,19 +71,34 @@ type Condition = {
 };
 
 type StatefulSet = {
-  name: string;
-  namespace: string;
-  uid: string;
-  age: string;
-  creation_timestamp: string;
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {};
+  status: {
+    currentReplicas: number;
+    availableReplicas: number;
+  };
 };
 
 type Deployment = {
-  name: string;
-  namespace: string;
-  uid: string;
-  age: string;
-  creation_timestamp: string;
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    replicas: number;
+  };
+  status: {
+    availableReplicas: number;
+  };
 };
 
 type DaemonSet = {

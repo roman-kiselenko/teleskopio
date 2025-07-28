@@ -3,7 +3,7 @@ import { useStorageClassesState, getStorageClasses } from '~/store/storageclasse
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Storage/StorageClasses/ColumnDef';
+import columns from '@/components/resources/Storage/columns/StorageClasses';
 
 const StorageClasses = () => {
   const cc = useCurrentClusterState();

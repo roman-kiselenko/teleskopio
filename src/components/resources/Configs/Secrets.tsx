@@ -3,7 +3,7 @@ import { useSecretsState, getSecrets } from '~/store/secrets';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Configs/Secrets/ColumnDef';
+import columns from '@/components/resources/Configs/columns/Secrets';
 
 const Secrets = () => {
   const cc = useCurrentClusterState();

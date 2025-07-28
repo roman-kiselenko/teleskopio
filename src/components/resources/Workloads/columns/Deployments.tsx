@@ -3,41 +3,55 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DaemonSet } from '@/types';
+import { Deployment } from '@/types';
 import DsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 
-const columns: ColumnDef<DaemonSet>[] = [
+const columns: ColumnDef<Deployment>[] = [
   {
-    accessorKey: 'name',
+    accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <DsName name={row.original.name} />),
+    cell: memo(({ row }) => <DsName name={row.original.metadata.name} />),
   },
   {
-    accessorKey: 'namespace',
+    accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+  },
+  {
+    accessorKey: 'spec.replicas',
+    id: 'replicase',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Replicas'} />),
+    cell: ({ row }) => {
+      const replicas = row.original.spec.replicas;
+      const availableReplicas = row.original.status.availableReplicas;
+      return (
+        <div>
+          {replicas}/{availableReplicas}
+        </div>
+      );
+    },
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.creation_timestamp,
+    accessorFn: (row) => row?.metadata.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ds = row.original;
+      const dp = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        dsNamespace: ds.metadata.namespace,
-        dsName: ds.metadata.name,
+        dpNamespace: dp.metadata.namespace,
+        dpName: dp.metadata.name,
       };
       return (
-        <Actions resource={ds} name={'DaemonSet'} action={'delete_daemonset'} payload={payload} />
+        <Actions resource={dp} name={'Deployment'} action={'delete_deployment'} payload={payload} />
       );
     },
   },

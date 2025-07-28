@@ -3,7 +3,7 @@ import { useDeploymentsState, getDeployments } from '@/store/deployments';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/Deployments/ColumnDef';
+import columns from '@/components/resources/Workloads/columns/Deployments';
 
 const Deployments = () => {
   const cc = useCurrentClusterState();

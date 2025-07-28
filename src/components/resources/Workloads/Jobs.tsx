@@ -3,7 +3,7 @@ import { useJobsState, getJobs } from '@/store/jobs';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/Jobs/ColumnDef';
+import columns from '@/components/resources/Workloads/columns/Jobs';
 
 const Jobs = () => {
   const cc = useCurrentClusterState();
