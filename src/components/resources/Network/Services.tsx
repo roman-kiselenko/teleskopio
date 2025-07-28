@@ -3,7 +3,7 @@ import { useServicesState, getServices } from '~/store/services';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Network/Services/Table/ColumnDef';
+import columns from '@/components/resources/Network/Services/ColumnDef';
 
 const Services = () => {
   const cc = useCurrentClusterState();

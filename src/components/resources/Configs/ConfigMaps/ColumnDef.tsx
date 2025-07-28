@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { Ingress } from '@/components/resources/Network/Ingresses/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { ConfigMap } from '@/components/resources/Configs/ConfigMaps/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<Ingress>[] = [
+const columns: ColumnDef<ConfigMap>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -73,27 +73,6 @@ const columns: ColumnDef<Ingress>[] = [
     },
   },
   {
-    accessorKey: 'spec.ingressClassName',
-    id: 'ingressClassName',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          IngressClassName
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const name = row.original.spec.ingressClassName;
-      return <div>{name}</div>;
-    },
-  },
-  {
     id: 'creationTimestamp',
     accessorFn: (row) => row.metadata?.creationTimestamp,
     header: ({ column }) => {
@@ -110,21 +89,22 @@ const columns: ColumnDef<Ingress>[] = [
       );
     },
     cell: ({ getValue }) => {
-      return <AgeCell age={getValue<string>()} />;
+      const age = moment(getValue<string>()).fromNow();
+      return <AgeCell age={age} />;
     },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ingress = row.original;
+      const cm = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        ingressNamespace: ingress.metadata.namespace,
-        ingressName: ingress.metadata.name,
+        cmNamespace: cm.metadata.namespace,
+        cmName: cm.metadata.name,
       };
       return (
-        <Actions resource={ingress} name={'Ingress'} action={'delete_ingress'} payload={payload} />
+        <Actions resource={cm} name={'ConfigMap'} action={'delete_configmap'} payload={payload} />
       );
     },
   },

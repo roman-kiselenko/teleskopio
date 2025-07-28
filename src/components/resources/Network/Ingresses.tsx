@@ -3,7 +3,7 @@ import { useIngressesState, getIngresses } from '~/store/ingresses';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Network/Ingresses/Table/ColumnDef';
+import columns from '@/components/resources/Network/Ingresses/ColumnDef';
 
 const Ingresses = () => {
   const cc = useCurrentClusterState();

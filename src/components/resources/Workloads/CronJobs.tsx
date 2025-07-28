@@ -3,7 +3,7 @@ import { useCronJobsState, getCronJobs } from '@/store/cronjobs';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/CronJobs/Table/ColumnDef';
+import columns from '@/components/resources/Workloads/CronJobs/ColumnDef';
 
 const CronJobs = () => {
   const cc = useCurrentClusterState();

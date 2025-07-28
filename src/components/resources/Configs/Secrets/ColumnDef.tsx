@@ -5,8 +5,8 @@ import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
 import { Secret } from '@/components/resources/Configs/Secrets/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {

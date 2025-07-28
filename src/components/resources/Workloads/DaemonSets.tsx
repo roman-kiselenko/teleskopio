@@ -3,7 +3,7 @@ import { useDaemonSetsState, getDaemonSets } from '@/store/daemonsets';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/DaemonSets/Table/ColumnDef';
+import columns from '@/components/resources/Workloads/DaemonSets/ColumnDef';
 
 const DaemonSets = () => {
   const cc = useCurrentClusterState();

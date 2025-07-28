@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { NetworkPolicy } from '@/components/resources/Network/NetworkPolicies/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { Service } from '@/components/resources/Network/Services/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<NetworkPolicy>[] = [
+const columns: ColumnDef<Service>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -73,8 +73,8 @@ const columns: ColumnDef<NetworkPolicy>[] = [
     },
   },
   {
-    accessorKey: 'spec.policyTypes',
-    id: 'PolicyType',
+    accessorKey: 'spec.type',
+    id: 'type',
     header: ({ column }) => {
       return (
         <Button
@@ -83,14 +83,56 @@ const columns: ColumnDef<NetworkPolicy>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          PolicyTypes
+          Type
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const name = row.original.spec.policyTypes;
-      return <div>{name.join(',')}</div>;
+      const t = row.original.spec.type;
+      return <div>{t}</div>;
+    },
+  },
+  {
+    accessorKey: 'spec.clusterIP',
+    id: 'clusterIP',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          ClusterIP
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const t = row.original.spec.clusterIP;
+      return <div>{t}</div>;
+    },
+  },
+  {
+    accessorKey: 'spec.internalTrafficPolicy',
+    id: 'internalTrafficPolicy',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          InternalTrafficPolicy
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const t = row.original.spec.internalTrafficPolicy;
+      return <div>{t}</div>;
     },
   },
   {
@@ -117,20 +159,15 @@ const columns: ColumnDef<NetworkPolicy>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const np = row.original;
+      const service = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        networkpolicyNamespace: np.metadata.namespace,
-        networkpolicyName: np.metadata.name,
+        serviceNamespace: service.metadata.namespace,
+        serviceName: service.metadata.name,
       };
       return (
-        <Actions
-          resource={np}
-          name={'NetworkPolicy'}
-          action={'delete_networkpolicy'}
-          payload={payload}
-        />
+        <Actions resource={service} name={'Service'} action={'delete_service'} payload={payload} />
       );
     },
   },

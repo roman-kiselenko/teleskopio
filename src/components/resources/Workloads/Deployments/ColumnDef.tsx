@@ -21,7 +21,7 @@ import {
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
 import { Deployment } from '@/components/resources/Workloads/Deployments/types';
-import DsName from '@/components/resources/ResourceName';
+import DsName from '@/components/ui/Table/ResourceName';
 
 moment.updateLocale('en', {
   relativeTime: {

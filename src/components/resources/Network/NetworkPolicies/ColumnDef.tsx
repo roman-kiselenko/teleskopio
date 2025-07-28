@@ -4,11 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { CronJob } from '@/components/resources/Workloads/CronJobs/types';
-import JobName from '@/components/resources/ResourceName';
-import cronstrue from 'cronstrue';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import Actions from '@/components/resources/Table/Actions';
+import { NetworkPolicy } from '@/components/resources/Network/NetworkPolicies/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -31,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<CronJob>[] = [
+const columns: ColumnDef<NetworkPolicy>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -75,20 +73,24 @@ const columns: ColumnDef<CronJob>[] = [
     },
   },
   {
-    accessorKey: 'spec.schedule',
-    id: 'schedule',
-    header: 'Schedule',
-    cell: ({ row }) => {
+    accessorKey: 'spec.policyTypes',
+    id: 'PolicyType',
+    header: ({ column }) => {
       return (
-        <div className="flex flex-row items-center">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="font-bold">{row.original.spec.schedule}</div>
-            </TooltipTrigger>
-            <TooltipContent>{cronstrue.toString(row.original.spec.schedule)}</TooltipContent>
-          </Tooltip>
-        </div>
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          PolicyTypes
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
       );
+    },
+    cell: ({ row }) => {
+      const name = row.original.spec.policyTypes;
+      return <div>{name.join(',')}</div>;
     },
   },
   {
@@ -115,15 +117,20 @@ const columns: ColumnDef<CronJob>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const cronjob = row.original;
+      const np = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        cronjobNamespace: cronjob.metadata.namespace,
-        cronjobName: cronjob.metadata.name,
+        networkpolicyNamespace: np.metadata.namespace,
+        networkpolicyName: np.metadata.name,
       };
       return (
-        <Actions resource={cronjob} name={'CronJob'} action={'delete_cronjob'} payload={payload} />
+        <Actions
+          resource={np}
+          name={'NetworkPolicy'}
+          action={'delete_networkpolicy'}
+          payload={payload}
+        />
       );
     },
   },

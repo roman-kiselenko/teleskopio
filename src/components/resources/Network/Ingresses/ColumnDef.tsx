@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { ReplicaSet } from '@/components/resources/Workloads/ReplicaSets/types';
-import RsName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { Ingress } from '@/components/resources/Network/Ingresses/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<ReplicaSet>[] = [
+const columns: ColumnDef<Ingress>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -48,7 +48,7 @@ const columns: ColumnDef<ReplicaSet>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <RsName name={name} content={row.original.metadata.namespace} />;
+      return <JobName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -73,8 +73,8 @@ const columns: ColumnDef<ReplicaSet>[] = [
     },
   },
   {
-    accessorKey: 'spec.replicas',
-    id: 'replicase',
+    accessorKey: 'spec.ingressClassName',
+    id: 'ingressClassName',
     header: ({ column }) => {
       return (
         <Button
@@ -83,17 +83,14 @@ const columns: ColumnDef<ReplicaSet>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Replicas
+          IngressClassName
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      return (
-        <div>
-          {row.original.spec.replicas}/{row.original.status.readyReplicas}
-        </div>
-      );
+      const name = row.original.spec.ingressClassName;
+      return <div>{name}</div>;
     },
   },
   {
@@ -113,22 +110,21 @@ const columns: ColumnDef<ReplicaSet>[] = [
       );
     },
     cell: ({ getValue }) => {
-      const age = moment(getValue<string>()).fromNow();
-      return <AgeCell age={age} />;
+      return <AgeCell age={getValue<string>()} />;
     },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const rs = row.original;
+      const ingress = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        rsNamespace: rs.metadata.namespace,
-        rsName: rs.metadata.name,
+        ingressNamespace: ingress.metadata.namespace,
+        ingressName: ingress.metadata.name,
       };
       return (
-        <Actions resource={rs} name={'ReplicaSet'} action={'delete_replicaset'} payload={payload} />
+        <Actions resource={ingress} name={'Ingress'} action={'delete_ingress'} payload={payload} />
       );
     },
   },

@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { StorageClass } from '@/components/resources/Storage/StorageClasses/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { StatefulSet } from '@/types';
+import SsName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<StorageClass>[] = [
+const columns: ColumnDef<StatefulSet>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -48,12 +48,12 @@ const columns: ColumnDef<StorageClass>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <JobName name={name} content={row.original.metadata.namespace} />;
+      return <SsName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
-    accessorKey: 'provisioner',
-    id: 'provisioner',
+    accessorKey: 'metadata.namespace',
+    id: 'namespace',
     header: ({ column }) => {
       return (
         <Button
@@ -62,19 +62,19 @@ const columns: ColumnDef<StorageClass>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Provisioner
+          Namespace
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const name = row.original.provisioner;
+      const name = row.original.metadata.namespace;
       return <div>{name}</div>;
     },
   },
   {
-    accessorKey: 'reclaimPolicy',
-    id: 'reclaimPolicy',
+    accessorKey: 'spec.replicas',
+    id: 'replicase',
     header: ({ column }) => {
       return (
         <Button
@@ -83,35 +83,19 @@ const columns: ColumnDef<StorageClass>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          ReclaimPolicy
+          Replicas
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const name = row.original.reclaimPolicy;
-      return <div>{name}</div>;
-    },
-  },
-  {
-    accessorKey: 'volumeBindingMode',
-    id: 'volumeBindingMode',
-    header: ({ column }) => {
+      const currentReplicas = row.original.status.currentReplicas;
+      const availableReplicas = row.original.status.availableReplicas;
       return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          VolumeBindingMode
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
+        <div>
+          {currentReplicas}/{availableReplicas}
+        </div>
       );
-    },
-    cell: ({ row }) => {
-      const name = row.original.volumeBindingMode;
-      return <div>{name}</div>;
     },
   },
   {
@@ -138,17 +122,18 @@ const columns: ColumnDef<StorageClass>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const sc = row.original;
+      const ss = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        scName: sc.metadata.name,
+        ssNamespace: ss.metadata.namespace,
+        ssName: ss.metadata.name,
       };
       return (
         <Actions
-          resource={sc}
-          name={'StorageClass'}
-          action={'delete_storageclass'}
+          resource={ss}
+          name={'StatefulSet'}
+          action={'delete_statefulset'}
           payload={payload}
         />
       );

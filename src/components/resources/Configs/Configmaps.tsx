@@ -3,7 +3,7 @@ import { useConfigmapsState, getConfigmaps } from '~/store/configmaps';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Configs/ConfigMaps/Table/ColumnDef';
+import columns from '@/components/resources/Configs/ConfigMaps/ColumnDef';
 
 const Configmaps = () => {
   const cc = useCurrentClusterState();

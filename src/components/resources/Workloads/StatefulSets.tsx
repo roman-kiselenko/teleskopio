@@ -3,7 +3,7 @@ import { useStatefulSetsState, getStatefulSets } from '@/store/statefulsets';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/StatefulSets/Table/ColumnDef';
+import columns from '@/components/resources/Workloads/StatefulSets/ColumnDef';
 
 const StatefulSets = () => {
   const cc = useCurrentClusterState();

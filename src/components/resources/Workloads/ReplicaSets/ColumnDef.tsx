@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { Service } from '@/components/resources/Network/Services/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { ReplicaSet } from '@/components/resources/Workloads/ReplicaSets/types';
+import RsName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<Service>[] = [
+const columns: ColumnDef<ReplicaSet>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -48,7 +48,7 @@ const columns: ColumnDef<Service>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <JobName name={name} content={row.original.metadata.namespace} />;
+      return <RsName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -73,8 +73,8 @@ const columns: ColumnDef<Service>[] = [
     },
   },
   {
-    accessorKey: 'spec.type',
-    id: 'type',
+    accessorKey: 'spec.replicas',
+    id: 'replicase',
     header: ({ column }) => {
       return (
         <Button
@@ -83,56 +83,17 @@ const columns: ColumnDef<Service>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Type
+          Replicas
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const t = row.original.spec.type;
-      return <div>{t}</div>;
-    },
-  },
-  {
-    accessorKey: 'spec.clusterIP',
-    id: 'clusterIP',
-    header: ({ column }) => {
       return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          ClusterIP
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
+        <div>
+          {row.original.spec.replicas}/{row.original.status.readyReplicas}
+        </div>
       );
-    },
-    cell: ({ row }) => {
-      const t = row.original.spec.clusterIP;
-      return <div>{t}</div>;
-    },
-  },
-  {
-    accessorKey: 'spec.internalTrafficPolicy',
-    id: 'internalTrafficPolicy',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          InternalTrafficPolicy
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const t = row.original.spec.internalTrafficPolicy;
-      return <div>{t}</div>;
     },
   },
   {
@@ -159,15 +120,15 @@ const columns: ColumnDef<Service>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const service = row.original;
+      const rs = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        serviceNamespace: service.metadata.namespace,
-        serviceName: service.metadata.name,
+        rsNamespace: rs.metadata.namespace,
+        rsName: rs.metadata.name,
       };
       return (
-        <Actions resource={service} name={'Service'} action={'delete_service'} payload={payload} />
+        <Actions resource={rs} name={'ReplicaSet'} action={'delete_replicaset'} payload={payload} />
       );
     },
   },

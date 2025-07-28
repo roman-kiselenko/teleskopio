@@ -71,6 +71,22 @@ type Condition = {
 };
 
 type StatefulSet = {
+  name: string;
+  namespace: string;
+  uid: string;
+  age: string;
+  creation_timestamp: string;
+};
+
+type Deployment = {
+  name: string;
+  namespace: string;
+  uid: string;
+  age: string;
+  creation_timestamp: string;
+};
+
+type DaemonSet = {
   metadata: {
     name: string;
     namespace: string;
@@ -80,9 +96,176 @@ type StatefulSet = {
   };
   spec: {};
   status: {
-    currentReplicas: number;
-    availableReplicas: number;
+    desiredNumberScheduled: number;
+    numberReady: number;
   };
 };
 
-export type { Pod, Container, Cluster, Node, StatefulSet };
+type Job = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    backoffLimit: number;
+  };
+  status: {
+    ready: number;
+    succeeded: number;
+  };
+};
+
+type CronJob = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    schedule: string;
+  };
+  status: {};
+};
+
+type ReplicaSet = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    replicas: number;
+  };
+  status: {
+    availableReplicas: number;
+    fullyLabeledReplicas: number;
+    readyReplicas: number;
+    replicas: number;
+  };
+};
+
+type StorageClass = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  provisioner: string;
+  reclaimPolicy: string;
+  volumeBindingMode: string;
+};
+
+type Ingress = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    ingressClassName: string;
+  };
+};
+
+type NetworkPolicy = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    policyTypes: string[];
+  };
+};
+
+type Service = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {
+    clusterIP: string;
+    type: string;
+    internalTrafficPolicy: string;
+  };
+};
+
+type ConfigMap = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {};
+  status: {};
+};
+
+type Secret = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+  spec: {};
+  type: string;
+};
+
+type ServiceAccount = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+};
+
+type Role = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+};
+
+export type {
+  Pod,
+  Container,
+  Cluster,
+  Node,
+  StatefulSet,
+  Deployment,
+  DaemonSet,
+  Job,
+  CronJob,
+  ReplicaSet,
+  StorageClass,
+  Ingress,
+  NetworkPolicy,
+  Service,
+  ConfigMap,
+  Secret,
+  ServiceAccount,
+  Role,
+};

@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { ServiceAccount } from '@/components/resources/Access/ServiceAccounts/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { StorageClass } from '@/components/resources/Storage/StorageClasses/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<ServiceAccount>[] = [
+const columns: ColumnDef<StorageClass>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -52,8 +52,8 @@ const columns: ColumnDef<ServiceAccount>[] = [
     },
   },
   {
-    accessorKey: 'metadata.namespace',
-    id: 'namespace',
+    accessorKey: 'provisioner',
+    id: 'provisioner',
     header: ({ column }) => {
       return (
         <Button
@@ -62,13 +62,55 @@ const columns: ColumnDef<ServiceAccount>[] = [
           size="table"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Namespace
+          Provisioner
           <ArrowUpDown className="ml-2 h-2 w-2" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const name = row.original.metadata.namespace;
+      const name = row.original.provisioner;
+      return <div>{name}</div>;
+    },
+  },
+  {
+    accessorKey: 'reclaimPolicy',
+    id: 'reclaimPolicy',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          ReclaimPolicy
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const name = row.original.reclaimPolicy;
+      return <div>{name}</div>;
+    },
+  },
+  {
+    accessorKey: 'volumeBindingMode',
+    id: 'volumeBindingMode',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          VolumeBindingMode
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const name = row.original.volumeBindingMode;
       return <div>{name}</div>;
     },
   },
@@ -89,24 +131,24 @@ const columns: ColumnDef<ServiceAccount>[] = [
       );
     },
     cell: ({ getValue }) => {
-      return <AgeCell age={getValue<string>()} />;
+      const age = moment(getValue<string>()).fromNow();
+      return <AgeCell age={age} />;
     },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const sa = row.original;
+      const sc = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        saName: sa.metadata.name,
-        saNamespace: sa.metadata.namespace,
+        scName: sc.metadata.name,
       };
       return (
         <Actions
-          resource={sa}
-          name={'ServiceAccount'}
-          action={'delete_serviceaccount'}
+          resource={sc}
+          name={'StorageClass'}
+          action={'delete_storageclass'}
           payload={payload}
         />
       );

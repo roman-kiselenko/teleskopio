@@ -1,9 +1,8 @@
 import { useCurrentClusterState } from '@/store/cluster';
 import { usePodsState } from '~/store/pods';
-import { useSearchState } from '@/store/search';
 import { useEffect, useState, useRef } from 'react';
 import { DataTable } from '@/components/ui/DataTable';
-import columns from '@/components/resources/Workloads/Pods/Table/ColumnDef';
+import columns from '@/components/resources/Workloads/Pods/ColumnDef';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Pod } from '@/types';
@@ -11,11 +10,9 @@ import toast from 'react-hot-toast';
 
 const Pods = () => {
   const cc = useCurrentClusterState();
-  const searchQuery = useSearchState();
   const podsState = usePodsState();
   const kubeConfig = cc.kube_config.get();
   const cluster = cc.cluster.get();
-  const query = searchQuery.q.get();
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

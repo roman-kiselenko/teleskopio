@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { ConfigMap } from '@/components/resources/Configs/ConfigMaps/types';
-import JobName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { Job } from '@/components/resources/Workloads/Jobs/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<ConfigMap>[] = [
+const columns: ColumnDef<Job>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -73,6 +73,37 @@ const columns: ColumnDef<ConfigMap>[] = [
     },
   },
   {
+    accessorKey: 'status.ready',
+    id: 'replicase',
+    header: ({ column }) => {
+      return (
+        <Button
+          className="text-xs"
+          variant="table"
+          size="table"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Ready
+          <ArrowUpDown className="ml-2 h-2 w-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const ready = row.original.status.ready;
+      const succeeded = row.original.status.succeeded;
+      return (
+        <div>
+          {ready}/{succeeded}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'spec.backoffLimit',
+    id: 'backofflimit',
+    header: 'BackoffLimit',
+  },
+  {
     id: 'creationTimestamp',
     accessorFn: (row) => row.metadata?.creationTimestamp,
     header: ({ column }) => {
@@ -96,16 +127,14 @@ const columns: ColumnDef<ConfigMap>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const cm = row.original;
+      const job = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        cmNamespace: cm.metadata.namespace,
-        cmName: cm.metadata.name,
+        jobNamespace: job.metadata.namespace,
+        jobName: job.metadata.name,
       };
-      return (
-        <Actions resource={cm} name={'ConfigMap'} action={'delete_configmap'} payload={payload} />
-      );
+      return <Actions resource={job} name={'Job'} action={'delete_job'} payload={payload} />;
     },
   },
 ];

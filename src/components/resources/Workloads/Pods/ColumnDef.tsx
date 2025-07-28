@@ -8,10 +8,10 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AgeCell from '@/components/ui/AgeCell';
-import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
-import HeaderAction from '@/components/resources/Table/HeaderAction';
-import PodName from '@/components/resources/ResourceName';
-import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
+import ContainerIcon from '@/components/resources/Workloads/Pods/ContainerIcon';
+import HeaderAction from '@/components/ui/Table/HeaderAction';
+import PodName from '@/components/ui/Table/ResourceName';
+import PodStatus from '@/components/resources/Workloads/Pods/PodStatus';
 import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import toast from 'react-hot-toast';

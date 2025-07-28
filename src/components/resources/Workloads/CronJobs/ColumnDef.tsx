@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { DaemonSet } from '@/components/resources/Workloads/DaemonSets/types';
-import DsName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { CronJob } from '@/components/resources/Workloads/CronJobs/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import cronstrue from 'cronstrue';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +31,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<DaemonSet>[] = [
+const columns: ColumnDef<CronJob>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -48,7 +50,7 @@ const columns: ColumnDef<DaemonSet>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <DsName name={name} content={row.original.metadata.namespace} />;
+      return <JobName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -73,27 +75,18 @@ const columns: ColumnDef<DaemonSet>[] = [
     },
   },
   {
-    accessorKey: 'spec.replicas',
-    id: 'replicase',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Replicas
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
+    accessorKey: 'spec.schedule',
+    id: 'schedule',
+    header: 'Schedule',
     cell: ({ row }) => {
-      const desiredNumberScheduled = row.original.status.desiredNumberScheduled;
-      const numberReady = row.original.status.numberReady;
       return (
-        <div>
-          {desiredNumberScheduled}/{numberReady}
+        <div className="flex flex-row items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="font-bold">{row.original.spec.schedule}</div>
+            </TooltipTrigger>
+            <TooltipContent>{cronstrue.toString(row.original.spec.schedule)}</TooltipContent>
+          </Tooltip>
         </div>
       );
     },
@@ -122,15 +115,15 @@ const columns: ColumnDef<DaemonSet>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ds = row.original;
+      const cronjob = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        dsNamespace: ds.metadata.namespace,
-        dsName: ds.metadata.name,
+        cronjobNamespace: cronjob.metadata.namespace,
+        cronjobName: cronjob.metadata.name,
       };
       return (
-        <Actions resource={ds} name={'DaemonSet'} action={'delete_daemonset'} payload={payload} />
+        <Actions resource={cronjob} name={'CronJob'} action={'delete_cronjob'} payload={payload} />
       );
     },
   },

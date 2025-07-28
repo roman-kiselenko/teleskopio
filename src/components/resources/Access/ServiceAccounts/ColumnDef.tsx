@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { StatefulSet } from '@/types';
-import SsName from '@/components/resources/ResourceName';
-import Actions from '@/components/resources/Table/Actions';
+import { ServiceAccount } from '@/components/resources/Access/ServiceAccounts/types';
+import JobName from '@/components/ui/Table/ResourceName';
+import Actions from '@/components/ui/Table/Actions';
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -29,7 +29,7 @@ moment.updateLocale('en', {
   },
 });
 
-const columns: ColumnDef<StatefulSet>[] = [
+const columns: ColumnDef<ServiceAccount>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -48,7 +48,7 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.metadata.name;
-      return <SsName name={name} content={row.original.metadata.namespace} />;
+      return <JobName name={name} content={row.original.metadata.namespace} />;
     },
   },
   {
@@ -73,32 +73,6 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
   },
   {
-    accessorKey: 'spec.replicas',
-    id: 'replicase',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Replicas
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const currentReplicas = row.original.status.currentReplicas;
-      const availableReplicas = row.original.status.availableReplicas;
-      return (
-        <div>
-          {currentReplicas}/{availableReplicas}
-        </div>
-      );
-    },
-  },
-  {
     id: 'creationTimestamp',
     accessorFn: (row) => row.metadata?.creationTimestamp,
     header: ({ column }) => {
@@ -115,25 +89,24 @@ const columns: ColumnDef<StatefulSet>[] = [
       );
     },
     cell: ({ getValue }) => {
-      const age = moment(getValue<string>()).fromNow();
-      return <AgeCell age={age} />;
+      return <AgeCell age={getValue<string>()} />;
     },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ss = row.original;
+      const sa = row.original;
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        ssNamespace: ss.metadata.namespace,
-        ssName: ss.metadata.name,
+        saName: sa.metadata.name,
+        saNamespace: sa.metadata.namespace,
       };
       return (
         <Actions
-          resource={ss}
-          name={'StatefulSet'}
-          action={'delete_statefulset'}
+          resource={sa}
+          name={'ServiceAccount'}
+          action={'delete_serviceaccount'}
           payload={payload}
         />
       );

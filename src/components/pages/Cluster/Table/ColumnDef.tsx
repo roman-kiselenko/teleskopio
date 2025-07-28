@@ -6,7 +6,7 @@ import { getKubeconfig, getCluster } from '@/store/cluster';
 import { ColumnDef } from '@tanstack/react-table';
 import { Node } from '@/components/pages/Cluster/types';
 import { Badge } from '@/components/ui/badge';
-import Actions from '@/components/resources/Table/Actions';
+import Actions from '@/components/ui/Table/Actions';
 import { cn } from '@/util';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import toast from 'react-hot-toast';

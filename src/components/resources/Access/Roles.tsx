@@ -3,7 +3,7 @@ import { useRolesState, getRoles } from '~/store/roles';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Access/Roles/Table/ColumnDef';
+import columns from '@/components/resources/Access/Roles/ColumnDef';
 
 const Roles = () => {
   const cc = useCurrentClusterState();

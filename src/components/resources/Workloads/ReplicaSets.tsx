@@ -3,7 +3,7 @@ import { useReplicaSetsState, getReplicaSets } from '@/store/replicasets';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Workloads/ReplicaSets/Table/ColumnDef';
+import columns from '@/components/resources/Workloads/ReplicaSets/ColumnDef';
 
 const ReplicaSets = () => {
   const cc = useCurrentClusterState();

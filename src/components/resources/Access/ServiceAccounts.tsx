@@ -3,7 +3,7 @@ import { useServiceAccountsState, getServiceAccounts } from '~/store/serviceacco
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import { useEffect, useCallback } from 'react';
-import columns from '@/components/resources/Access/ServiceAccounts/Table/ColumnDef';
+import columns from '@/components/resources/Access/ServiceAccounts/ColumnDef';
 
 const ServiceAccounts = () => {
   const cc = useCurrentClusterState();
