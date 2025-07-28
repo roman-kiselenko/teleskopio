@@ -1,7 +1,7 @@
 import { ArrowUpDown, Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
-import { Cluster } from '@/components/pages/Start/types';
+import { Cluster } from '@/types';
 import { useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';

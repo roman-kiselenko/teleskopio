@@ -7,7 +7,7 @@ import {
   ScrollText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BlinkingCell from '@/components/ui/BlinkingCell';
+import AgeCell from '@/components/ui/AgeCell';
 import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import toast from 'react-hot-toast';
@@ -131,8 +131,7 @@ const columns: ColumnDef<Deployment>[] = [
     },
     cell: ({ getValue }) => {
       const age = moment(getValue<string>()).fromNow();
-      const ageSeconds = moment().diff(getValue<string>(), 'seconds');
-      return <BlinkingCell timestamp={getValue<string>()} value={age} isNew={ageSeconds < 60} />;
+      return <AgeCell age={age} />;
     },
   },
   {

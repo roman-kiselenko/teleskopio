@@ -1,10 +1,24 @@
 import { Container as Icon } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Container } from '@/types';
+import timeAgo from '@/timeAgo';
 import moment from 'moment';
-import { Pod, Container } from '@/components/resources/Workloads/Pods/types';
+import { useEffect, useState } from 'react';
 
-function ContainerIcon({ container, pod }: { container: Container; pod: Pod }) {
+function ContainerIcon({ container }: { container: Container }) {
+  const [value, setValue] = useState(container.started_at);
+  useEffect(() => {
+    const updateValue = () => {
+      if (container.running) {
+        setValue(timeAgo.format(moment(container.started_at).toDate(), 'mini'));
+      }
+    };
+    updateValue();
+    const interval = setInterval(updateValue, 1000);
+    return () => clearInterval(interval);
+  }, [container.started_at]);
+
   let output = 'Unknown';
   let color = 'text-gray-400';
   let initcontainer = false;
@@ -13,7 +27,7 @@ function ContainerIcon({ container, pod }: { container: Container; pod: Pod }) {
     initcontainer = true;
   }
   if (container.running) {
-    output = moment(container.started_at).fromNow();
+    output = value;
     blink = false;
     color = 'text-green-400';
   }

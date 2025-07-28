@@ -1,10 +1,10 @@
-import BlinkingCell from '@/components/ui/BlinkingCell';
+import AgeCell from '@/components/ui/AgeCell';
 import { ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { StatefulSet } from '@/components/resources/Workloads/StatefulSets/types';
+import { StatefulSet } from '@/types';
 import SsName from '@/components/resources/ResourceName';
 import Actions from '@/components/resources/Table/Actions';
 
@@ -116,8 +116,7 @@ const columns: ColumnDef<StatefulSet>[] = [
     },
     cell: ({ getValue }) => {
       const age = moment(getValue<string>()).fromNow();
-      const ageSeconds = moment().diff(getValue<string>(), 'seconds');
-      return <BlinkingCell timestamp={getValue<string>()} value={age} isNew={ageSeconds < 60} />;
+      return <AgeCell age={age} />;
     },
   },
   {

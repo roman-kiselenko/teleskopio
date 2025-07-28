@@ -1,7 +1,7 @@
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Pod } from '@/components/resources/Workloads/Pods/types';
+import { Pod } from '@/types';
 
 function PodStatus({ pod }: { pod: Pod }) {
   let phase = pod.phase ?? 'Unknown';
@@ -24,21 +24,18 @@ function PodStatus({ pod }: { pod: Pod }) {
   const restarts = `${pod?.containers?.length} / ${pod?.containers?.reduce((acc, curr) => {
     return curr.running ? acc + 1 : acc;
   }, 0)}`;
+  const className = cn(
+    blink
+      ? 'animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
+      : '',
+    `${color}`,
+  );
   return (
     <div className="flex flex-row items-center">
       {pod?.containers?.length && !pod?.is_terminating ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span
-              className={cn(
-                blink
-                  ? 'animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
-                  : '',
-                `${color}`,
-              )}
-            >
-              {phase}
-            </span>
+            <span className={className}>{phase}</span>
           </TooltipTrigger>
           <TooltipContent>
             <div className="flex flex-row items-center">
@@ -48,16 +45,7 @@ function PodStatus({ pod }: { pod: Pod }) {
           </TooltipContent>
         </Tooltip>
       ) : (
-        <span
-          className={cn(
-            blink
-              ? 'animate-pulse animate-infinite animate-duration-[500ms] animate-ease-out animate-fill-both'
-              : '',
-            `${color}`,
-          )}
-        >
-          {phase}
-        </span>
+        <span className={className}>{phase}</span>
       )}
     </div>
   );

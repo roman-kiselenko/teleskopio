@@ -6,8 +6,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/resources/Workloads/Pods/Table/ColumnDef';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Pod } from '@/components/resources/Workloads/Pods/types';
-import debounce from 'lodash/debounce';
+import { Pod } from '@/types';
 import toast from 'react-hot-toast';
 
 const Pods = () => {
@@ -22,7 +21,6 @@ const Pods = () => {
 
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
-
   const loadPods = async () => {
     if (loading) return;
     setLoading(true);
@@ -33,10 +31,9 @@ const Pods = () => {
         limit: 50,
         continueToken: nextToken ?? undefined,
       });
-
       podsState.set((prev) => {
         const newMap = new Map(prev);
-        newPods.forEach((p: Pod) => {
+        newPods.forEach((p) => {
           newMap.set(p.uid, p);
         });
         return newMap;
@@ -57,11 +54,13 @@ const Pods = () => {
     });
     const podsupdate = listen<Pod[]>('pods-update', (event) => {
       const pods = event.payload;
-      const nextMap = new Map<string, Pod>();
-      pods.forEach((p: Pod) => {
-        nextMap.set(p.uid, p);
+      podsState.set(() => {
+        const newMap = new Map();
+        pods.forEach((p) => {
+          newMap.set(p.uid, p);
+        });
+        return newMap;
       });
-      podsState.set(nextMap);
     });
 
     return () => {

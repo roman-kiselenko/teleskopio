@@ -1,6 +1,5 @@
 import {
   MoreHorizontal,
-  ArrowUpDown,
   Trash,
   Pencil,
   ClipboardCopy,
@@ -8,8 +7,9 @@ import {
   SquareTerminal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BlinkingCell from '@/components/ui/BlinkingCell';
+import AgeCell from '@/components/ui/AgeCell';
 import ContainerIcon from '@/components/resources/Workloads/Pods/Table/ContainerIcon';
+import HeaderAction from '@/components/resources/Table/HeaderAction';
 import PodName from '@/components/resources/ResourceName';
 import PodStatus from '@/components/resources/Workloads/Pods/Table/PodStatus';
 import { invoke } from '@tauri-apps/api/core';
@@ -23,94 +23,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import moment from 'moment';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pod } from '@/components/resources/Workloads/Pods/types';
-
-moment.updateLocale('en', {
-  relativeTime: {
-    future: 'in %s',
-    past: '%s',
-    s: '%ds',
-    ss: '%ds',
-    m: '%dm',
-    mm: '%dm',
-    h: '%dh',
-    hh: '%dh',
-    d: '%dd',
-    dd: '%dd',
-    w: '%dw',
-    ww: '%dw',
-    M: '%dmn',
-    MM: '%dmn',
-    y: '%dy',
-    yy: '%dy',
-  },
-});
+import { Pod } from '@/types';
 
 const columns: ColumnDef<Pod>[] = [
   {
     accessorKey: 'name',
     id: 'name',
-    header: memo(({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    }),
-    cell: memo(({ row }) => {
-      const name = row.original.name;
-      return <PodName name={name} content={row.original.node_name} />;
-    }),
+    header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
+    cell: memo(({ row }) => <PodName name={row.original.name} />),
   },
   {
     accessorKey: 'namespace',
     id: 'namespace',
-    header: memo(({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Namespace
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    }),
-    cell: memo(({ row }) => {
-      const name = row.original.namespace;
-      return <div>{name}</div>;
-    }),
+    header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
+    cell: memo(({ row }) => <div>{row.original.namespace}</div>),
   },
   {
     accessorKey: 'node_name',
     id: 'nodename',
-    header: memo(({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Node
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    }),
-    cell: memo(({ row }) => {
-      const name = row.original.node_name;
-      return <div>{name}</div>;
-    }),
+    header: memo(({ column }) => <HeaderAction column={column} name={'Node'} />),
+    cell: memo(({ row }) => <div>{row.original.node_name}</div>),
   },
   {
     accessorKey: 'containers',
@@ -120,9 +53,9 @@ const columns: ColumnDef<Pod>[] = [
       const pod = row.original;
       return (
         <div className="flex flex-wrap w-30">
-          {pod?.containers.map((c: any) => {
-            return <ContainerIcon key={c.name} container={c} pod={pod} />;
-          })}
+          {pod?.containers.map((c: any) => (
+            <ContainerIcon key={c.name} container={c} />
+          ))}
         </div>
       );
     }),
@@ -130,68 +63,26 @@ const columns: ColumnDef<Pod>[] = [
   {
     accessorFn: (row) => row.pod_ip ?? '',
     id: 'pod_ip',
-    header: memo(({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          podIP
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    }),
-    cell: memo(({ row }) => {
-      return <div>{row.original.pod_ip}</div>;
-    }),
+    header: memo(({ column }) => <HeaderAction column={column} name={'PodIP'} />),
+    cell: memo(({ row }) => <div>{row.original.pod_ip}</div>),
   },
   {
     accessorKey: 'phase',
     id: 'phase',
-    header: memo(({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column?.toggleSorting(column?.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown size={32} className="h-12 w-12" />
-        </Button>
-      );
-    }),
-    cell: memo(({ row }) => {
-      return <PodStatus pod={row.original} />;
-    }),
+    header: memo(({ column }) => <HeaderAction column={column} name={'Status'} />),
+    cell: memo(({ row }) => <PodStatus pod={row.original} />),
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.age,
-    header: memo(({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Age
-          <ArrowUpDown className="h-2 w-2" />
-        </Button>
-      );
-    }),
-    cell: memo(({ getValue }) => {
-      return <BlinkingCell age={getValue<string>()} />;
-    }),
+    accessorFn: (row) => row?.creation_timestamp,
+    header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
+    cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
     cell: memo(({ row }) => {
       const pod = row.original;
-      const actionDisabled = pod?.deletionTimestamp !== undefined;
+      const actionDisabled = pod?.is_terminating;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

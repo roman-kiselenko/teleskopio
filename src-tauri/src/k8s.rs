@@ -47,12 +47,12 @@ pub mod client {
         uid: String,
         name: String,
         namespace: String,
-        age: String,
         node_name: Option<String>,
         host_ip: Option<String>,
         pod_ip: Option<String>,
         phase: Option<String>,
         is_terminating: bool,
+        creation_timestamp: k8s_openapi::apimachinery::pkg::apis::meta::v1::Time,
         containers: Vec<Container>,
     }
 
@@ -162,19 +162,6 @@ pub mod client {
                 }
             })
             .collect()
-    }
-
-    fn from_now(
-        creation_timestamp: &Option<k8s_openapi::apimachinery::pkg::apis::meta::v1::Time>,
-    ) -> String {
-        if let Some(ts) = creation_timestamp {
-            let dt: DateTime<Utc> = ts.0;
-            let now = Utc::now();
-            let formatter = Formatter::new();
-            formatter.convert_chrono(dt, now)
-        } else {
-            "-".to_string()
-        }
     }
 
     impl fmt::Display for GenericError {
@@ -452,20 +439,17 @@ pub mod client {
         });
         let pod_items = items
             .iter()
-            .map(|p| {
-                let age = from_now(&p.metadata.creation_timestamp);
-                PodData {
-                    uid: p.metadata.uid.clone().unwrap_or_default(),
-                    name: p.metadata.name.clone().unwrap_or_default(),
-                    namespace: p.metadata.namespace.clone().unwrap_or_default(),
-                    node_name: p.spec.clone().unwrap().node_name,
-                    age,
-                    host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
-                    pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
-                    phase: p.status.as_ref().and_then(|s| s.phase.clone()),
-                    containers: extract_containers(p),
-                    is_terminating: p.metadata.deletion_timestamp.is_some(),
-                }
+            .map(|p| PodData {
+                uid: p.metadata.uid.clone().unwrap_or_default(),
+                name: p.metadata.name.clone().unwrap_or_default(),
+                creation_timestamp: p.metadata.creation_timestamp.clone().unwrap(),
+                namespace: p.metadata.namespace.clone().unwrap_or_default(),
+                node_name: p.spec.clone().unwrap().node_name,
+                host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
+                pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+                containers: extract_containers(p),
+                is_terminating: p.metadata.deletion_timestamp.is_some(),
             })
             .collect();
         Ok((pod_items, next_token))
@@ -532,20 +516,21 @@ pub mod client {
                             });
                             let pods: Vec<PodData> = items
                                 .iter()
-                                .map(|p| {
-                                    let age = from_now(&p.metadata.creation_timestamp);
-                                    PodData {
-                                        uid: p.metadata.uid.clone().unwrap_or_default(),
-                                        name: p.metadata.name.clone().unwrap_or_default(),
-                                        namespace: p.metadata.namespace.clone().unwrap_or_default(),
-                                        node_name: p.spec.clone().unwrap().node_name,
-                                        age,
-                                        host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
-                                        pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
-                                        phase: p.status.as_ref().and_then(|s| s.phase.clone()),
-                                        containers: extract_containers(&p),
-                                        is_terminating: p.metadata.deletion_timestamp.is_some(),
-                                    }
+                                .map(|p| PodData {
+                                    uid: p.metadata.uid.clone().unwrap_or_default(),
+                                    name: p.metadata.name.clone().unwrap_or_default(),
+                                    namespace: p.metadata.namespace.clone().unwrap_or_default(),
+                                    node_name: p.spec.clone().unwrap().node_name,
+                                    creation_timestamp: p
+                                        .metadata
+                                        .creation_timestamp
+                                        .clone()
+                                        .unwrap(),
+                                    host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
+                                    pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                                    phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+                                    containers: extract_containers(&p),
+                                    is_terminating: p.metadata.deletion_timestamp.is_some(),
                                 })
                                 .collect();
                             let _ = app_handle.emit("pods-update", &pods);

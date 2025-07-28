@@ -1,4 +1,4 @@
-function ResourceName({ name, content }: { content: any; name: String }) {
+function ResourceName({ name }: { name: String }) {
   return <div className="flex flex-row items-center">{name}</div>;
 }
 

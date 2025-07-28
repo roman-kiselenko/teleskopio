@@ -1,4 +1,4 @@
-import BlinkingCell from '@/components/ui/BlinkingCell';
+import AgeCell from '@/components/ui/AgeCell';
 import { ArrowUpDown, CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import moment from 'moment';
@@ -200,9 +200,7 @@ const columns: ColumnDef<Node>[] = [
       );
     },
     cell: ({ getValue }) => {
-      const age = moment(getValue<string>()).fromNow();
-      const ageSeconds = moment().diff(getValue<string>(), 'seconds');
-      return <BlinkingCell timestamp={getValue<string>()} value={age} isNew={ageSeconds < 60} />;
+      return <AgeCell age={getValue<string>()} />;
     },
   },
   {
