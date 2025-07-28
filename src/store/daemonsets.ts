@@ -7,7 +7,10 @@ export const deamonSetsState = hookstate<Map<string, DaemonSet>>(new Map());
 
 export async function getDaemonSets(path: string, context: string, query: string) {
   try {
-    const daemonsets = await invoke<DaemonSet[]>('get_daemonset', { path: path, context: context });
+    const daemonsets = await invoke<DaemonSet[]>('get_daemonsets', {
+      path: path,
+      context: context,
+    });
     console.log('found daemonsets', daemonsets);
     deamonSetsState.set((prev) => {
       const newMap = new Map(prev);

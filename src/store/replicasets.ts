@@ -7,7 +7,7 @@ export const replicaSetsState = hookstate<Map<string, ReplicaSet>>(new Map());
 
 export async function getReplicaSets(path: string, context: string, query: string) {
   try {
-    const replicasets = await invoke<ReplicaSet[]>('get_replicaset', {
+    const replicasets = await invoke<ReplicaSet[]>('get_replicasets', {
       path: path,
       context: context,
     });

@@ -7,7 +7,7 @@ export const statefulSetsState = hookstate<Map<string, StatefulSet>>(new Map());
 
 export async function getStatefulSets(path: string, context: string, query: string) {
   try {
-    const statefulsets = await invoke<StatefulSet[]>('get_statefulset', {
+    const statefulsets = await invoke<StatefulSet[]>('get_statefulsets', {
       path: path,
       context: context,
     });
