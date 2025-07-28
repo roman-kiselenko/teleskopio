@@ -7,9 +7,18 @@ export const statefulSetsState = hookstate<Map<string, StatefulSet>>(new Map());
 
 export async function getStatefulSets(path: string, context: string, query: string) {
   try {
-    const statefulsets = await invoke<any>('get_statefulset', { path: path, context: context });
+    const statefulsets = await invoke<StatefulSet[]>('get_statefulset', {
+      path: path,
+      context: context,
+    });
     console.log('found statefulsets', statefulsets);
-    statefulSetsState.set(statefulsets);
+    statefulSetsState.set((prev) => {
+      const newMap = new Map(prev);
+      statefulsets.forEach((p) => {
+        newMap.set(p.metadata.uid, p);
+      });
+      return newMap;
+    });
   } catch (error: any) {
     toast.error('Error! Cant load statefulsets\n' + error.message);
     console.log('Error! Cant load statefulsets\n' + error.message);

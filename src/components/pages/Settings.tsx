@@ -9,7 +9,7 @@ export function SettingsPage() {
       <div className="flex items-center flex-shrink-0 h-12 border-b border-gray-300"></div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          <div className="h-24 col-span-1 bg-background">
+          <div className="h-24 text-xs col-span-1 bg-background">
             <RadioGroup className="p-2" defaultValue="option-one">
               <div onClick={() => setTheme('light')} className="flex items-center space-x-2">
                 <RadioGroupItem value="option-one" id="option-one" />

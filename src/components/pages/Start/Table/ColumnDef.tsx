@@ -1,5 +1,7 @@
-import { ArrowUpDown, Unplug } from 'lucide-react';
+import { Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import HeaderAction from '@/components/ui/Table/HeaderAction';
+import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Cluster } from '@/types';
 import { useNavigate } from 'react-router';
@@ -12,44 +14,14 @@ const columns: ColumnDef<Cluster>[] = [
   {
     accessorKey: 'name',
     id: 'name',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const name = row.original.name;
-      return <div>{name}</div>;
-    },
+    header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
+    cell: memo(({ row }) => <div>{row.original.name}</div>),
   },
   {
     accessorKey: 'path',
     id: 'path',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Path
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const path = row.original.path;
-      return <div>{path}</div>;
-    },
+    header: memo(({ column }) => <HeaderAction column={column} name={'Path'} />),
+    cell: memo(({ row }) => <div>{row.original.path}</div>),
   },
   {
     accessorKey: 'server',

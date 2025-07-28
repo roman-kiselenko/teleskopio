@@ -1,67 +1,30 @@
 import AgeCell from '@/components/ui/AgeCell';
-import { ArrowUpDown, CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import moment from 'moment';
+import HeaderAction from '@/components/ui/Table/HeaderAction';
+import { CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { ColumnDef } from '@tanstack/react-table';
-import { Node } from '@/components/pages/Cluster/types';
+import { Node } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import Actions from '@/components/ui/Table/Actions';
 import { cn } from '@/util';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import toast from 'react-hot-toast';
+import { memo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-moment.updateLocale('en', {
-  relativeTime: {
-    future: 'in %s',
-    past: '%s',
-    s: '%ds',
-    ss: '%ds',
-    m: '%dm',
-    mm: '%dm',
-    h: '%dh',
-    hh: '%dh',
-    d: '%dd',
-    dd: '%dd',
-    w: '%dw',
-    ww: '%dw',
-    M: '%dmn',
-    MM: '%dmn',
-    y: '%dy',
-    yy: '%dy',
-  },
-});
 
 const columns: ColumnDef<Node>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const name = row.original.metadata.name;
-      return <div>{name}</div>;
-    },
+    header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
+    cell: memo(({ row }) => <div>{row.original.metadata.name}</div>),
   },
   {
     accessorFn: (row) => row.metadata?.labels,
     id: 'role',
     header: 'Role',
     cell: ({ row }) => {
-      const name = row.original.metadata.labels['node-role.kubernetes.io/control-plane'];
       return (
         <div>
           <Badge
@@ -83,40 +46,13 @@ const columns: ColumnDef<Node>[] = [
   {
     accessorKey: 'spec.podCIDR',
     id: 'podCIDR',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          PodCIDR
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const name = row.original.spec.podCIDR;
-      return <div>{name}</div>;
-    },
+    header: memo(({ column }) => <HeaderAction column={column} name={'PodCIDR'} />),
+    cell: memo(({ row }) => <div>{row.original.spec.podCIDR}</div>),
   },
   {
     accessorFn: (row) => row.status.addresses?.find((a) => a.type === 'InternalIP'),
     id: 'InternalIP',
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          InternalIP
-          <ArrowUpDown className="ml-2 h-2 w-2" />
-        </Button>
-      );
-    },
+    header: memo(({ column }) => <HeaderAction column={column} name={'InternalIP'} />),
     cell: ({ row }) => {
       const address = row.original.status.addresses?.find((a) => a.type === 'InternalIP');
       return <div>{address?.address}</div>;
@@ -145,19 +81,7 @@ const columns: ColumnDef<Node>[] = [
   {
     id: 'kubeletReady',
     accessorFn: (row) => row.status?.conditions?.find((c) => c.reason === 'KubeletReady'),
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className="h-2 w-2" />
-        </Button>
-      );
-    },
+    header: memo(({ column }) => <HeaderAction column={column} name={'Status'} />),
     cell: ({ row }) => {
       const cordoned = row.original.spec?.taints?.find(
         (t) => t.effect === 'NoSchedule' && t.key === 'node.kubernetes.io/unschedulable',
@@ -184,24 +108,10 @@ const columns: ColumnDef<Node>[] = [
     },
   },
   {
-    id: 'creationTimestamp',
-    accessorFn: (row) => row.metadata?.creationTimestamp,
-    header: ({ column }) => {
-      return (
-        <Button
-          className="text-xs"
-          variant="table"
-          size="table"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Age
-          <ArrowUpDown className="h-2 w-2" />
-        </Button>
-      );
-    },
-    cell: ({ getValue }) => {
-      return <AgeCell age={getValue<string>()} />;
-    },
+    id: 'age',
+    accessorFn: (row) => row?.metadata.creationTimestamp,
+    header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
+    cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',

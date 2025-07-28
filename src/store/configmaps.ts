@@ -1,27 +1,24 @@
 import { hookstate, useHookstate } from '@hookstate/core';
-import toast from 'react-hot-toast';
 import { invoke } from '@tauri-apps/api/core';
-import moment from 'moment';
+import toast from 'react-hot-toast';
+import { ConfigMap } from '@/types';
 
-export const configmapsState = hookstate<{ configmaps: Object[] }>({
-  configmaps: [],
-});
+export const configmapsState = hookstate<Map<string, ConfigMap>>(new Map());
 
 export async function getConfigmaps(path: string, context: string, query: string) {
   try {
-    let configmaps = await invoke<any>('get_configmaps', { path: path, context: context });
-    configmaps.sort(function (a, b) {
-      return moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp));
+    const configmaps = await invoke<ConfigMap[]>('get_configmaps', {
+      path: path,
+      context: context,
     });
-    if (query !== '') {
-      configmaps = configmaps.filter((p) => {
-        return String(p.metadata.name || '')
-          .toLowerCase()
-          .includes(query.toLowerCase());
-      });
-    }
     console.log('found configmaps', configmaps);
-    configmapsState.configmaps.set(configmaps);
+    configmapsState.set((prev) => {
+      const newMap = new Map(prev);
+      configmaps.forEach((p) => {
+        newMap.set(p.metadata.uid, p);
+      });
+      return newMap;
+    });
   } catch (error: any) {
     toast.error('Error! Cant load configmaps\n' + error.message);
     console.log('Error! Cant load configmaps\n' + error.message);

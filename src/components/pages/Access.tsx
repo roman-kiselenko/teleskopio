@@ -3,14 +3,20 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-import ServiceAccounts from '~/components/resources/Access/ServiceAccounts';
-import Roles from '~/components/resources/Access/Roles';
+import { AbstractPage } from '@/components/resources/Main';
+import { useRolesState, getRoles } from '~/store/roles';
+import { useServiceAccountsState, getServiceAccounts } from '~/store/serviceaccounts';
 import { useEffect } from 'react';
+import rolesColumns from '@/components/resources/Access/columns/Roles';
+import saColumns from '@/components/resources/Access/columns/ServiceAccounts';
 
 export function AccessPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
+
+  const rolesState = useRolesState();
+  const saState = useServiceAccountsState();
 
   useEffect(() => {
     setPage('serviceaccounts');
@@ -34,8 +40,24 @@ export function AccessPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'serviceaccounts' ? <ServiceAccounts /> : <></>}
-          {currentPage.currentPage.get() === 'roles' ? <Roles /> : <></>}
+          {currentPage.currentPage.get() === 'serviceaccounts' ? (
+            <AbstractPage
+              getData={getServiceAccounts}
+              state={() => Array.from(saState.get().values())}
+              columns={saColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'roles' ? (
+            <AbstractPage
+              getData={getRoles}
+              state={() => Array.from(rolesState.get().values())}
+              columns={rolesColumns}
+            />
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>

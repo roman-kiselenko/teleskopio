@@ -1,17 +1,26 @@
 import { usePageState, setPage } from '@/store/page';
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
-import { SearchField } from '~/components/SearchField';
 import { Namespaces } from '~/components/Namespaces';
-import Services from '~/components/resources/Network/Services';
-import Ingresses from '~/components/resources/Network/Ingresses';
-import NetworkPolicies from '~/components/resources/Network/NetworkPolicies';
+import { SearchField } from '~/components/SearchField';
+import { AbstractPage } from '@/components/resources/Main';
+import { useServicesState, getServices } from '~/store/services';
+import { useNetworkPoliciesState, getNetworkPolicies } from '~/store/networkpolicies';
+import { useIngressesState, getIngresses } from '~/store/ingresses';
+
 import { useEffect } from 'react';
+import servicesColumns from '@/components/resources/Network/columns/Services';
+import ingressesColumns from '@/components/resources/Network/columns/Ingresses';
+import networkpoliciesColumns from '@/components/resources/Network/columns/NetworkPolicies';
 
 export function NetworkPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
+
+  const servicesState = useServicesState();
+  const npState = useNetworkPoliciesState();
+  const ingressesState = useIngressesState();
 
   useEffect(() => {
     setPage('services');
@@ -36,9 +45,33 @@ export function NetworkPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'services' ? <Services /> : <></>}
-          {currentPage.currentPage.get() === 'ingresses' ? <Ingresses /> : <></>}
-          {currentPage.currentPage.get() === 'networkpolicies' ? <NetworkPolicies /> : <></>}
+          {currentPage.currentPage.get() === 'services' ? (
+            <AbstractPage
+              getData={getServices}
+              state={() => Array.from(servicesState.get().values())}
+              columns={servicesColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'ingresses' ? (
+            <AbstractPage
+              getData={getIngresses}
+              state={() => Array.from(ingressesState.get().values())}
+              columns={ingressesColumns}
+            />
+          ) : (
+            <></>
+          )}
+          {currentPage.currentPage.get() === 'networkpolicies' ? (
+            <AbstractPage
+              getData={getNetworkPolicies}
+              state={() => Array.from(npState.get().values())}
+              columns={networkpoliciesColumns}
+            />
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>
