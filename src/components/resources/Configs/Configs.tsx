@@ -5,6 +5,7 @@ export function Configs() {
   const sections = [
     { section: 'configmaps', title: 'ConfigMaps' },
     { section: 'secrets', title: 'Secrets' },
+    { section: 'namespaces', title: 'Namespaces' },
   ];
   return (
     <div className="flex flex-col w-35 border-r border-gray-300">

@@ -264,6 +264,16 @@ type Role = {
   };
 };
 
+type Namespace = {
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+};
+
 export type {
   Pod,
   Container,
@@ -283,4 +293,5 @@ export type {
   Secret,
   ServiceAccount,
   Role,
+  Namespace,
 };

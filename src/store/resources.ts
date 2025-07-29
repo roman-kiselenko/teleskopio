@@ -15,6 +15,7 @@ import {
   NetworkPolicy,
   Ingress,
   ConfigMap,
+  Namespace,
 } from '@/types';
 
 export const daemonSetsState = hookstate<Map<string, DaemonSet>>(new Map());
@@ -102,6 +103,13 @@ export function useIngressesState() {
 }
 
 export const configmapsState = hookstate<Map<string, ConfigMap>>(new Map());
+
 export function useConfigmapsState() {
   return useHookstate(configmapsState);
+}
+
+export const namespacesState = hookstate<Map<string, Namespace>>(new Map());
+
+export function useNamespacesState() {
+  return useHookstate(namespacesState);
 }

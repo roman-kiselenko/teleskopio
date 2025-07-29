@@ -1,7 +1,9 @@
 import { usePageState, setPage } from '@/store/page';
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
-import { Namespaces } from '~/components/Namespaces';
+import Roles from '@/components/resources/Access/Roles';
+import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
+import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { SearchField } from '~/components/SearchField';
 import { useEffect } from 'react';
 
@@ -26,30 +28,14 @@ export function AccessPage() {
         </div>
         <div className="relative text-sm focus:outline-none group">
           <div className="flex items-center w-full h-12 px-4">
-            <Namespaces />
+            <NamespaceSelector />
           </div>
         </div>
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {/* {currentPage.currentPage.get() === 'serviceaccounts' ? (
-            <AbstractPage
-              getData={getServiceAccounts}
-              state={() => Array.from(saState.get().values())}
-              columns={saColumns}
-            />
-          ) : (
-            <></>
-          )}
-          {currentPage.currentPage.get() === 'roles' ? (
-            <AbstractPage
-              getData={getRoles}
-              state={() => Array.from(rolesState.get().values())}
-              columns={rolesColumns}
-            />
-          ) : (
-            <></>
-          )} */}
+          {currentPage.currentPage.get() === 'serviceaccounts' ? <ServiceAccounts /> : <></>}
+          {currentPage.currentPage.get() === 'roles' ? <Roles /> : <></>}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { usePageState, setPage } from '@/store/page';
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
-import { Namespaces } from '~/components/Namespaces';
+import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { SearchField } from '~/components/SearchField';
 import { useEffect } from 'react';
 
@@ -27,7 +27,7 @@ export function StoragePage() {
         </div>
         <div className="relative text-sm focus:outline-none group">
           <div className="flex items-center w-full h-12 px-4">
-            <Namespaces />
+            <NamespaceSelector />
           </div>
         </div>
       </div>

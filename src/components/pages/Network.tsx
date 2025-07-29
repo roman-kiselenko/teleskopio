@@ -1,7 +1,10 @@
 import { usePageState, setPage } from '@/store/page';
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
-import { Namespaces } from '~/components/Namespaces';
+import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
+import Services from '@/components/resources/Network/Services';
+import Ingresses from '@/components/resources/Network/Ingresses';
+import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { SearchField } from '~/components/SearchField';
 
 import { useEffect } from 'react';
@@ -28,39 +31,15 @@ export function NetworkPage() {
         </div>
         <div className="relative focus:outline-none group">
           <div className="flex items-center w-full h-12 px-4">
-            <Namespaces />
+            <NamespaceSelector />
           </div>
         </div>
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {/* {currentPage.currentPage.get() === 'services' ? (
-            <AbstractPage
-              getData={getServices}
-              state={() => Array.from(servicesState.get().values())}
-              columns={servicesColumns}
-            />
-          ) : (
-            <></>
-          )}
-          {currentPage.currentPage.get() === 'ingresses' ? (
-            <AbstractPage
-              getData={getIngresses}
-              state={() => Array.from(ingressesState.get().values())}
-              columns={ingressesColumns}
-            />
-          ) : (
-            <></>
-          )}
-          {currentPage.currentPage.get() === 'networkpolicies' ? (
-            <AbstractPage
-              getData={getNetworkPolicies}
-              state={() => Array.from(npState.get().values())}
-              columns={networkpoliciesColumns}
-            />
-          ) : (
-            <></>
-          )} */}
+          {currentPage.currentPage.get() === 'services' ? <Services /> : <></>}
+          {currentPage.currentPage.get() === 'ingresses' ? <Ingresses /> : <></>}
+          {currentPage.currentPage.get() === 'networkpolicies' ? <NetworkPolicies /> : <></>}
         </div>
       </div>
     </div>

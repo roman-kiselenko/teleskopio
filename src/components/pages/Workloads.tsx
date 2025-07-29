@@ -9,7 +9,7 @@ import ReplicaSets from '@/components/resources/Workloads/ReplicaSets';
 import StatefulSets from '@/components/resources/Workloads/StatefulSets';
 import Jobs from '@/components/resources/Workloads/Jobs';
 import CronJobs from '@/components/resources/Workloads/CronJobs';
-import { Namespaces } from '~/components/Namespaces';
+import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { useEffect } from 'react';
 
 export function WorkloadsPage() {
@@ -34,7 +34,7 @@ export function WorkloadsPage() {
         </div>
         <div className="relative focus:outline-none group">
           <div className="flex items-center w-full h-12 px-4">
-            <Namespaces />
+            <NamespaceSelector />
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-export function Namespaces() {
+export function NamespaceSelector() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
 

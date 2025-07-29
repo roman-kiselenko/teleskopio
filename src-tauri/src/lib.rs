@@ -51,7 +51,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             k8s::client::lookup_configs,
             k8s::client::get_version,
+            // Namespaces
             k8s::client::get_namespaces,
+            k8s::client::get_namespaces_page,
+            k8s::client::start_namespace_reflector,
+            k8s::client::delete_namespace,
             // Nodes
             k8s::client::get_nodes,
             k8s::client::cordon_node,

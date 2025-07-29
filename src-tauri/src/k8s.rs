@@ -748,6 +748,14 @@ pub mod client {
     }
     generate_get_fn!(get_nodes, Node);
     generate_delete_fn!(delete_pod, Pod, "pod");
+    // Namespaces
+    generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");
+    generate_start_reflector_fn!(
+        start_namespace_reflector,
+        Namespace,
+        "namespaces",
+        "namespace-update"
+    );
     // Deployments
     generate_get_page_fn!(get_deployments_page, Deployment, "deployments");
     generate_start_reflector_fn!(
@@ -808,12 +816,7 @@ pub mod client {
     generate_delete_fn!(delete_configmap, ConfigMap, "configmap");
     // Secrets
     generate_get_page_fn!(get_secrets_page, Secret, "secret");
-    generate_start_reflector_fn!(
-        start_secret_reflector,
-        Secret,
-        "secrets",
-        "secret-update"
-    );
+    generate_start_reflector_fn!(start_secret_reflector, Secret, "secrets", "secret-update");
     generate_delete_fn!(delete_secret, Secret, "secret");
     // Services
     generate_get_page_fn!(get_services_page, Service, "service");
@@ -885,6 +888,42 @@ pub mod client {
                 log::info!(
                     "deleted storageclass: {}",
                     storageclass.metadata.name.unwrap_or_default()
+                );
+            }
+            Either::Right(status) => {
+                log::info!("API response: {:?}", status.message);
+            }
+        };
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn delete_namespace(
+        path: &str,
+        context: &str,
+        resource_name: &str,
+    ) -> Result<(), GenericError> {
+        log::info!(
+            "delete_namespace {:?} {:?} {:?}",
+            path,
+            context,
+            resource_name
+        );
+        let client = get_client(&path, context).await?;
+        let namespace_api: Api<Namespace> = Api::all(client);
+        let dp = DeleteParams::default();
+        let namespace = namespace_api
+            .delete(resource_name, &dp)
+            .await
+            .map_err(|err| {
+                println!("error {:?}", err);
+                GenericError::from(err)
+            })?;
+        match namespace {
+            Either::Left(namespace) => {
+                log::info!(
+                    "deleted namespace: {}",
+                    namespace.metadata.name.unwrap_or_default()
                 );
             }
             Either::Right(status) => {
