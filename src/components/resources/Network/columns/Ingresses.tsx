@@ -39,8 +39,8 @@ const columns: ColumnDef<Ingress>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        ingressNamespace: ingress.metadata.namespace,
-        ingressName: ingress.metadata.name,
+        resourceNamespace: ingress.metadata.namespace,
+        resourceName: ingress.metadata.name,
       };
       return (
         <Actions resource={ingress} name={'Ingress'} action={'delete_ingress'} payload={payload} />

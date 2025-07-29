@@ -1,6 +1,6 @@
 import { hookstate, useHookstate } from '@hookstate/core';
 
-const currentClusterState = hookstate<{
+export const currentClusterState = hookstate<{
   cluster: string;
   kube_config: string;
 }>({

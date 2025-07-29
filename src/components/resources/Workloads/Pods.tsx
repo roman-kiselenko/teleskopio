@@ -1,99 +1,60 @@
-import { useCurrentClusterState } from '@/store/cluster';
-import { usePodsState } from '~/store/pods';
-import { useEffect, useState, useRef } from 'react';
-import { DataTable } from '@/components/ui/DataTable';
+import { PaginatedTable } from '@/components/resources/PaginatedTable';
+import { usePodsState, podsState } from '@/store/pods';
+import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/Pods/Pods';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Pod } from '@/types';
-import toast from 'react-hot-toast';
+
+const globalPodState = async () => {
+  try {
+    await invoke('start_pod_reflector', {
+      path: currentClusterState.kube_config.get(),
+      context: currentClusterState.cluster.get(),
+    });
+  } catch (error: any) {
+    console.log('error start reflector ', error.message);
+  }
+
+  await listen<Pod[]>('pods-update', (event) => {
+    const pods = event.payload;
+    if (pods.length === 0) return;
+    podsState.set(() => {
+      const newMap = new Map();
+      pods.forEach((p) => newMap.set(p.uid, p));
+      return newMap;
+    });
+  });
+};
+
+const getPodsPage = async ({
+  path,
+  context,
+  continueToken,
+}: {
+  path: string;
+  context: string;
+  continueToken?: string;
+}) => {
+  return await invoke<[Pod[], string | null]>('get_pods_page', {
+    path,
+    context,
+    limit: 50,
+    continueToken,
+  });
+};
 
 const Pods = () => {
-  const cc = useCurrentClusterState();
   const podsState = usePodsState();
-  const kubeConfig = cc.kube_config.get();
-  const cluster = cc.cluster.get();
-  const [nextToken, setNextToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const observer = useRef<IntersectionObserver | null>(null);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
-  const loadPods = async () => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const [newPods, next]: [Pod[], string | null] = await invoke('get_pods_page', {
-        path: kubeConfig,
-        context: cluster,
-        limit: 50,
-        continueToken: nextToken ?? undefined,
-      });
-      podsState.set((prev) => {
-        const newMap = new Map(prev);
-        newPods.forEach((p) => {
-          newMap.set(p.uid, p);
-        });
-        return newMap;
-      });
-      setNextToken(next);
-    } catch (e: any) {
-      console.error('Error! Cant fetch pods:', e);
-      toast.error('Error! Cant fetch pods\n' + e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    invoke('start_pod_reflector', {
-      path: kubeConfig,
-      context: cluster,
-    });
-    const podsupdate = listen<Pod[]>('pods-update', (event) => {
-      const pods = event.payload;
-      podsState.set(() => {
-        const newMap = new Map();
-        pods.forEach((p) => {
-          newMap.set(p.uid, p);
-        });
-        return newMap;
-      });
-    });
-
-    return () => {
-      podsupdate.then((f) => f());
-    };
-  }, [kubeConfig, cluster]);
-
-  useEffect(() => {
-    loadPods();
-  }, []);
-
-  useEffect(() => {
-    if (!loaderRef.current || !nextToken) return;
-
-    if (observer.current) {
-      observer.current.disconnect();
-    }
-
-    observer.current = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && nextToken && !loading) {
-        loadPods();
-      }
-    });
-
-    observer.current.observe(loaderRef.current);
-
-    return () => {
-      observer.current?.disconnect();
-    };
-  }, [nextToken, loading]);
+  globalPodState();
   return (
-    <div>
-      <DataTable columns={columns} data={Array.from(podsState.get().values())} />
-
-      {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
-    </div>
+    <PaginatedTable<Pod>
+      getPage={getPodsPage}
+      state={() => podsState.get() as Map<string, Pod>}
+      setState={podsState.set}
+      extractKey={(p) => p.uid}
+      columns={columns}
+    />
   );
 };
 

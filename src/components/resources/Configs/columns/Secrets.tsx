@@ -39,8 +39,8 @@ const columns: ColumnDef<Secret>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        secretNamespace: secret.metadata.namespace,
-        secretName: secret.metadata.name,
+        resourceNamespace: secret.metadata.namespace,
+        resourceName: secret.metadata.name,
       };
       return (
         <Actions resource={secret} name={'Secret'} action={'delete_secret'} payload={payload} />

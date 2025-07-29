@@ -33,8 +33,8 @@ const columns: ColumnDef<ServiceAccount>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        saName: sa.metadata.name,
-        saNamespace: sa.metadata.namespace,
+        resourceName: sa.metadata.name,
+        resourceNamespace: sa.metadata.namespace,
       };
       return (
         <Actions

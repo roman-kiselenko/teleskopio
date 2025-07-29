@@ -39,8 +39,8 @@ const columns: ColumnDef<NetworkPolicy>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        networkpolicyNamespace: np.metadata.namespace,
-        networkpolicyName: np.metadata.name,
+        resourceNamespace: np.metadata.namespace,
+        resourceName: np.metadata.name,
       };
       return (
         <Actions

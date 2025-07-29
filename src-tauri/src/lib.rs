@@ -63,6 +63,9 @@ pub fn run() {
             // Deployments
             k8s::client::get_deployments,
             k8s::client::delete_deployment,
+            // DaemonSets
+            k8s::client::get_daemonsets_page,
+            k8s::client::start_daemonset_reflector,
             k8s::client::get_daemonsets,
             k8s::client::delete_daemonset,
             k8s::client::get_replicasets,

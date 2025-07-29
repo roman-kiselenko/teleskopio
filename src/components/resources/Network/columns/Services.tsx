@@ -51,8 +51,8 @@ const columns: ColumnDef<Service>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        serviceNamespace: service.metadata.namespace,
-        serviceName: service.metadata.name,
+        resourceNamespace: service.metadata.namespace,
+        resourceName: service.metadata.name,
       };
       return (
         <Actions resource={service} name={'Service'} action={'delete_service'} payload={payload} />

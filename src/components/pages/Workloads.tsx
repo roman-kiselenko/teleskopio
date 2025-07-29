@@ -2,13 +2,14 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { usePageState, setPage } from '@/store/page';
 import { SearchField } from '~/components/SearchField';
-import { AbstractPage } from '@/components/resources/Main';
-import Pods from '~/components/resources/Workloads/Pods';
+import Pods from '@/components/resources/Workloads/Pods';
+import DaemonSets from '@/components/resources/Workloads/DaemonSets';
+// import Pods from '~/components/resources/Workloads/Pods';
 import { Namespaces } from '~/components/Namespaces';
 import { useEffect } from 'react';
 
 import { useDeploymentState, getDeployments } from '@/store/deployments';
-import { useDaemonSetsState, getDaemonSets } from '@/store/daemonsets';
+// import { useDaemonSetsState, getDaemonSets } from '@/store/daemonsets';
 import { useReplicaSetsState, getReplicaSets } from '@/store/replicasets';
 import { useStatefulSetsState, getStatefulSets } from '@/store/statefulsets';
 import { useJobsState, getJobs } from '@/store/jobs';
@@ -26,7 +27,7 @@ export function WorkloadsPage() {
   const currentPage = usePageState();
 
   const deploymentsState = useDeploymentState();
-  const daemonSetsState = useDaemonSetsState();
+  // const daemonSetsState = useDaemonSetsState();
   const replicaSetsState = useReplicaSetsState();
   const statefulSetsState = useStatefulSetsState();
   const jobsState = useJobsState();
@@ -56,7 +57,8 @@ export function WorkloadsPage() {
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
           {currentPage.currentPage.get() === 'pods' ? <Pods /> : <></>}
-          {currentPage.currentPage.get() === 'deployments' ? (
+          {currentPage.currentPage.get() === 'daemonsets' ? <DaemonSets /> : <></>}
+          {/* {currentPage.currentPage.get() === 'deployments' ? (
             <AbstractPage
               getData={getDeployments}
               state={() => Array.from(deploymentsState.get().values())}
@@ -109,7 +111,7 @@ export function WorkloadsPage() {
             />
           ) : (
             <></>
-          )}
+          )} */}
         </div>
       </div>
     </div>

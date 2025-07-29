@@ -3,7 +3,7 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-import { AbstractPage } from '@/components/resources/Main';
+// import { AbstractPage } from '@/components/resources/PaginatedTable';
 import { useConfigmapsState, getConfigmaps } from '~/store/configmaps';
 import { useSecretsState, getSecrets } from '~/store/secrets';
 
@@ -43,7 +43,7 @@ export function ConfigsPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'secrets' ? (
+          {/* {currentPage.currentPage.get() === 'secrets' ? (
             <AbstractPage
               getData={getSecrets}
               state={() => Array.from(secretsState.get().values())}
@@ -60,7 +60,7 @@ export function ConfigsPage() {
             />
           ) : (
             <></>
-          )}
+          )} */}
         </div>
       </div>
     </div>

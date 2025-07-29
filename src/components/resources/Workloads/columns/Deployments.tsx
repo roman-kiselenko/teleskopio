@@ -47,8 +47,8 @@ const columns: ColumnDef<Deployment>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        dpNamespace: dp.metadata.namespace,
-        dpName: dp.metadata.name,
+        resourceNamespace: dp.metadata.namespace,
+        resourceName: dp.metadata.name,
       };
       return (
         <Actions resource={dp} name={'Deployment'} action={'delete_deployment'} payload={payload} />

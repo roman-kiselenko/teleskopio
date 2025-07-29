@@ -45,7 +45,7 @@ const columns: ColumnDef<StorageClass>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        scName: sc.metadata.name,
+        resourceName: sc.metadata.name,
       };
       return (
         <Actions

@@ -33,8 +33,8 @@ const columns: ColumnDef<Role>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        roleName: role.metadata.name,
-        roleNamespace: role.metadata.namespace,
+        resourceName: role.metadata.name,
+        resourceNamespace: role.metadata.namespace,
       };
       return <Actions resource={role} name={'Role'} action={'delete_role'} payload={payload} />;
     },

@@ -33,8 +33,8 @@ const columns: ColumnDef<ConfigMap>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        cmNamespace: cm.metadata.namespace,
-        cmName: cm.metadata.name,
+        resourceNamespace: cm.metadata.namespace,
+        resourceName: cm.metadata.name,
       };
       return (
         <Actions resource={cm} name={'ConfigMap'} action={'delete_configmap'} payload={payload} />

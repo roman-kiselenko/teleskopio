@@ -33,8 +33,8 @@ const columns: ColumnDef<DaemonSet>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        dsNamespace: ds.metadata.namespace,
-        dsName: ds.metadata.name,
+        resourceNamespace: ds.metadata.namespace,
+        resourceName: ds.metadata.name,
       };
       return (
         <Actions resource={ds} name={'DaemonSet'} action={'delete_daemonset'} payload={payload} />

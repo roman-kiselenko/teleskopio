@@ -3,7 +3,7 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-import { AbstractPage } from '@/components/resources/Main';
+// import { AbstractPage } from '@/components/resources/PaginatedTable';
 import { useRolesState, getRoles } from '~/store/roles';
 import { useServiceAccountsState, getServiceAccounts } from '~/store/serviceaccounts';
 import { useEffect } from 'react';
@@ -40,7 +40,7 @@ export function AccessPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'serviceaccounts' ? (
+          {/* {currentPage.currentPage.get() === 'serviceaccounts' ? (
             <AbstractPage
               getData={getServiceAccounts}
               state={() => Array.from(saState.get().values())}
@@ -57,7 +57,7 @@ export function AccessPage() {
             />
           ) : (
             <></>
-          )}
+          )} */}
         </div>
       </div>
     </div>

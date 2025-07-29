@@ -1,5 +1,4 @@
 pub mod client {
-    use chrono::{DateTime, Utc};
     use dirs::home_dir;
     use either::Either;
     use futures::StreamExt;
@@ -243,26 +242,31 @@ pub mod client {
         entry.path().components().any(|c| c.as_os_str() == "cache")
     }
 
-    type Key = (String, String); // (path, context)
+    type Key = (String, String, String); // (path, context, resource)
 
     lazy_static! {
         static ref REFLECTOR_HANDLES: Mutex<HashMap<Key, JoinHandle<()>>> =
             Mutex::new(HashMap::new());
     }
 
-    pub fn has_reflector(path: &str, context: &str) -> bool {
+    pub fn has_reflector(path: &str, context: &str, resource: &str) -> bool {
         let map = REFLECTOR_HANDLES.lock().unwrap();
-        map.contains_key(&(path.to_string(), context.to_string()))
+        map.contains_key(&(path.to_string(), context.to_string(), resource.to_string()))
     }
 
-    pub fn insert_reflector(path: String, context: String, handle: JoinHandle<()>) {
+    pub fn insert_reflector(
+        path: String,
+        context: String,
+        resource: String,
+        handle: JoinHandle<()>,
+    ) {
         let mut map = REFLECTOR_HANDLES.lock().unwrap();
-        map.insert((path, context), handle);
+        map.insert((path, context, resource), handle);
     }
 
-    pub fn remove_reflector(path: &str, context: &str) {
+    pub fn remove_reflector(path: &str, context: &str, resource: &str) {
         let mut map = REFLECTOR_HANDLES.lock().unwrap();
-        map.remove(&(path.to_string(), context.to_string()));
+        map.remove(&(path.to_string(), context.to_string(), resource.to_string()));
     }
 
     #[tauri::command]
@@ -307,7 +311,7 @@ pub mod client {
     pub async fn cordon_node(
         path: &str,
         context: &str,
-        node_name: &str,
+        resource_name: &str,
     ) -> Result<(), GenericError> {
         let client = get_client(&path, context).await?;
         let nodes: Api<Node> = Api::all(client);
@@ -319,7 +323,7 @@ pub mod client {
 
         nodes
             .patch(
-                node_name,
+                resource_name,
                 &PatchParams::apply("teleskopio-cordon"),
                 &Patch::Merge(&patch),
             )
@@ -331,7 +335,7 @@ pub mod client {
     pub async fn uncordon_node(
         path: &str,
         context: &str,
-        node_name: &str,
+        resource_name: &str,
     ) -> Result<(), GenericError> {
         let client = get_client(&path, context).await?;
         let nodes: Api<Node> = Api::all(client);
@@ -343,7 +347,7 @@ pub mod client {
 
         nodes
             .patch(
-                node_name,
+                resource_name,
                 &PatchParams::apply("teleskopio-cordon"),
                 &Patch::Merge(&patch),
             )
@@ -375,20 +379,6 @@ pub mod client {
             })?;
 
         Ok(namespaces.items)
-    }
-
-    #[tauri::command]
-    pub async fn get_nodes(path: &str, context: &str) -> Result<Vec<Node>, GenericError> {
-        log::info!("get_nodes {:?} {:?}", path, context);
-        let client = get_client(&path, context).await?;
-        let node_api: Api<Node> = Api::all(client);
-
-        let nodes = node_api.list(&ListParams::default()).await.map_err(|err| {
-            println!("error {:?}", err);
-            GenericError::from(err)
-        })?;
-
-        Ok(nodes.items)
     }
 
     #[tauri::command]
@@ -460,8 +450,8 @@ pub mod client {
         context: &str,
         app: AppHandle,
     ) -> Result<(), GenericError> {
-        if has_reflector(path, context) {
-            log::info!("reflector already running");
+        if has_reflector(path, context, "pod") {
+            log::info!("pod reflector already running");
             return Ok(());
         }
         log::info!("start_pod_reflector {:?} {:?}", path, context,);
@@ -483,6 +473,8 @@ pub mod client {
         let path_clone = path.clone();
         let context = context.to_string();
         let context_clone = context.clone();
+        let resource = "pod".to_string();
+        let resource_clone = resource.clone();
         let app_handle = Arc::new(app);
 
         let task = tauri::async_runtime::spawn({
@@ -540,43 +532,136 @@ pub mod client {
                     }
                 }
 
-                remove_reflector(&path, &context);
+                remove_reflector(&path, &context, &resource);
             }
         });
 
-        insert_reflector(path_clone, context_clone, task);
+        insert_reflector(path_clone, context_clone, resource_clone, task);
         Ok(())
     }
 
     #[tauri::command]
-    pub async fn delete_pod(
+    pub async fn get_daemonsets_page(
         path: &str,
         context: &str,
-        pod_namespace: &str,
-        pod_name: &str,
-    ) -> Result<(), GenericError> {
+        limit: u32,
+        continue_token: Option<String>,
+    ) -> Result<(Vec<DaemonSet>, Option<String>), GenericError> {
         log::info!(
-            "delete_pod {:?} {:?} {:?} {:?}",
+            "get_daemonsets_page {:?} {:?} {:?} {:?}",
             path,
             context,
-            pod_namespace,
-            pod_name
+            limit,
+            continue_token
         );
         let client = get_client(&path, context).await?;
-        let pod_api: Api<Pod> = Api::namespaced(client, pod_namespace);
-        let dp = DeleteParams::default();
-        let pod = pod_api.delete(pod_name, &dp).await.map_err(|err| {
+        let ds_api: Api<DaemonSet> = Api::all(client);
+
+        let lp = if let Some(token) = &continue_token {
+            ListParams::default().limit(limit).continue_token(token)
+        } else {
+            ListParams::default().limit(limit)
+        };
+
+        let ds = ds_api.list(&lp).await.map_err(|err| {
             println!("error {:?}", err);
             GenericError::from(err)
         })?;
-        match pod {
-            Either::Left(pod) => {
-                log::info!("deleted pod: {}", pod.metadata.name.unwrap_or_default());
-            }
-            Either::Right(status) => {
-                log::info!("API response: {:?}", status.message);
-            }
+        let next_token = ds.metadata.continue_;
+        let mut items = ds.items;
+
+        items.sort_by(|a, b| {
+            let a_time = a
+                .metadata
+                .creation_timestamp
+                .as_ref()
+                .map(|t| t.0)
+                .unwrap_or_default();
+            let b_time = b
+                .metadata
+                .creation_timestamp
+                .as_ref()
+                .map(|t| t.0)
+                .unwrap_or_default();
+            b_time.cmp(&a_time)
+        });
+        Ok((items, next_token))
+    }
+
+    #[tauri::command]
+    pub async fn start_daemonset_reflector(
+        path: &str,
+        context: &str,
+        app: AppHandle,
+    ) -> Result<(), GenericError> {
+        if has_reflector(path, context, "daemonset") {
+            log::info!("daemonset reflector already running");
+            return Ok(());
+        }
+        log::info!("start_daemonset_reflector {:?} {:?}", path, context,);
+
+        let client = get_client(path, context).await?;
+        let api: Api<DaemonSet> = Api::all(client);
+
+        let config = WatcherConfig {
+            ..Default::default()
         };
+        let watch_stream = watcher(api, config);
+
+        let store = Writer::<DaemonSet>::default();
+        let reader = store.as_reader();
+
+        let rf = reflector(store, watch_stream);
+
+        let path = path.to_string();
+        let path_clone = path.clone();
+        let context = context.to_string();
+        let context_clone = context.clone();
+        let resource = "daemonset".to_string();
+        let resource_clone = resource.clone();
+        let app_handle = Arc::new(app);
+
+        let task = tauri::async_runtime::spawn({
+            let app_handle = Arc::clone(&app_handle);
+            async move {
+                let mut rf = Box::pin(rf);
+                while let Some(event) = rf.next().await {
+                    match event {
+                        Ok(_) => {
+                            let mut items: Vec<DaemonSet> = reader
+                                .state()
+                                .iter()
+                                .map(|arc_ds| (**arc_ds).clone())
+                                .collect();
+
+                            items.sort_by(|a, b| {
+                                let a_time = a
+                                    .metadata
+                                    .creation_timestamp
+                                    .as_ref()
+                                    .map(|t| t.0)
+                                    .unwrap_or_default();
+                                let b_time = b
+                                    .metadata
+                                    .creation_timestamp
+                                    .as_ref()
+                                    .map(|t| t.0)
+                                    .unwrap_or_default();
+                                b_time.cmp(&a_time)
+                            });
+                            let _ = app_handle.emit("daemonset-update", &items);
+                        }
+                        Err(err) => {
+                            eprintln!("reflector error: {:?}", err);
+                        }
+                    }
+                }
+
+                remove_reflector(&path, &context, &resource);
+            }
+        });
+
+        insert_reflector(path_clone, context_clone, resource_clone, task);
         Ok(())
     }
 
@@ -614,7 +699,7 @@ pub mod client {
                     Either::Right(status) => {
                         log::info!(
                             concat!("API response (", $log_type, "): {:?}"),
-                            status.message
+                            status.status
                         );
                     }
                 };
@@ -640,6 +725,8 @@ pub mod client {
             }
         };
     }
+    generate_get_fn!(get_nodes, Node);
+    generate_delete_fn!(delete_pod, Pod, "pod");
     generate_get_fn!(get_deployments, Deployment);
     generate_delete_fn!(delete_deployment, Deployment, "deployment");
     generate_get_fn!(get_daemonsets, DaemonSet);
@@ -673,21 +760,19 @@ pub mod client {
     pub async fn delete_storageclass(
         path: &str,
         context: &str,
-        _storageclass_namespace: &str,
-        storageclass_name: &str,
+        resource_name: &str,
     ) -> Result<(), GenericError> {
         log::info!(
-            "delete_storageclass {:?} {:?} {:?} {:?}",
+            "delete_storageclass {:?} {:?} {:?}",
             path,
             context,
-            _storageclass_namespace,
-            storageclass_name
+            resource_name
         );
         let client = get_client(&path, context).await?;
         let storageclass_api: Api<StorageClass> = Api::all(client);
         let dp = DeleteParams::default();
         let storageclass = storageclass_api
-            .delete(storageclass_name, &dp)
+            .delete(resource_name, &dp)
             .await
             .map_err(|err| {
                 println!("error {:?}", err);

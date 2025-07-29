@@ -52,8 +52,8 @@ const columns: ColumnDef<CronJob>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        cronjobNamespace: cronjob.metadata.namespace,
-        cronjobName: cronjob.metadata.name,
+        resourceNamespace: cronjob.metadata.namespace,
+        resourceName: cronjob.metadata.name,
       };
       return (
         <Actions resource={cronjob} name={'CronJob'} action={'delete_cronjob'} payload={payload} />

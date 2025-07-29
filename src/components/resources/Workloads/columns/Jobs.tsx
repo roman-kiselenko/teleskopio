@@ -52,8 +52,8 @@ const columns: ColumnDef<Job>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        jobNamespace: job.metadata.namespace,
-        jobName: job.metadata.name,
+        resourceNamespace: job.metadata.namespace,
+        resourceName: job.metadata.name,
       };
       return <Actions resource={job} name={'Job'} action={'delete_job'} payload={payload} />;
     },

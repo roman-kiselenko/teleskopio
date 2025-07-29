@@ -47,8 +47,8 @@ const columns: ColumnDef<StatefulSet>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        ssNamespace: ss.metadata.namespace,
-        ssName: ss.metadata.name,
+        resourceNamespace: ss.metadata.namespace,
+        resourceName: ss.metadata.name,
       };
       return (
         <Actions

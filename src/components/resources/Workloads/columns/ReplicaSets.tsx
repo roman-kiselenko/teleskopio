@@ -45,8 +45,8 @@ const columns: ColumnDef<ReplicaSet>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        rsNamespace: rs.metadata.namespace,
-        rsName: rs.metadata.name,
+        resourceNamespace: rs.metadata.namespace,
+        resourceName: rs.metadata.name,
       };
       return (
         <Actions resource={rs} name={'ReplicaSet'} action={'delete_replicaset'} payload={payload} />

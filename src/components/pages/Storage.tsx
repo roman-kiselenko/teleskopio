@@ -3,7 +3,7 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-import { AbstractPage } from '@/components/resources/Main';
+// import { AbstractPage } from '@/components/resources/PaginatedTable';
 import { useStorageClassesState, getStorageClasses } from '~/store/storageclasses';
 import { useEffect } from 'react';
 import storageClassColumns from '@/components/resources/Storage/columns/StorageClasses';
@@ -37,7 +37,7 @@ export function StoragePage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'storageclasses' ? (
+          {/* {currentPage.currentPage.get() === 'storageclasses' ? (
             <AbstractPage
               getData={getStorageClasses}
               state={() => Array.from(storageClassesState.get().values())}
@@ -45,7 +45,7 @@ export function StoragePage() {
             />
           ) : (
             <></>
-          )}
+          )} */}
         </div>
       </div>
     </div>

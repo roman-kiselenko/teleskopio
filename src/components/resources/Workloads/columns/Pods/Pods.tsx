@@ -111,8 +111,8 @@ const columns: ColumnDef<Pod>[] = [
                   invoke<Pod>('delete_pod', {
                     path: getKubeconfig(),
                     context: getCluster(),
-                    podNamespace: pod.namespace,
-                    podName: pod.name,
+                    resourceNamespace: pod.namespace,
+                    resourceName: pod.name,
                   }),
                   {
                     loading: 'Deleting...',

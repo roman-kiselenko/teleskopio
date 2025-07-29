@@ -3,7 +3,7 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-import { AbstractPage } from '@/components/resources/Main';
+// import { AbstractPage } from '@/components/resources/PaginatedTable';
 import { useServicesState, getServices } from '~/store/services';
 import { useNetworkPoliciesState, getNetworkPolicies } from '~/store/networkpolicies';
 import { useIngressesState, getIngresses } from '~/store/ingresses';
@@ -45,7 +45,7 @@ export function NetworkPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {currentPage.currentPage.get() === 'services' ? (
+          {/* {currentPage.currentPage.get() === 'services' ? (
             <AbstractPage
               getData={getServices}
               state={() => Array.from(servicesState.get().values())}
@@ -71,7 +71,7 @@ export function NetworkPage() {
             />
           ) : (
             <></>
-          )}
+          )} */}
         </div>
       </div>
     </div>

@@ -123,7 +123,7 @@ const columns: ColumnDef<Node>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        nodeName: node.metadata.name,
+        resourceName: node.metadata.name,
       };
       const additional = [
         <DropdownMenuItem
@@ -134,7 +134,7 @@ const columns: ColumnDef<Node>[] = [
               invoke<any>(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
                 path: getKubeconfig(),
                 context: getCluster(),
-                nodeName: node.metadata.name,
+                resourceName: node.metadata.name,
               }),
               {
                 loading: `${cordoned ? 'Uncordoning' : 'Cordoning'}...`,
