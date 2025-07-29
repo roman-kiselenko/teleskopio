@@ -61,36 +61,59 @@ pub fn run() {
             k8s::client::start_pod_reflector,
             k8s::client::delete_pod,
             // Deployments
-            k8s::client::get_deployments,
+            k8s::client::get_deployments_page,
+            k8s::client::start_deployment_reflector,
             k8s::client::delete_deployment,
             // DaemonSets
             k8s::client::get_daemonsets_page,
             k8s::client::start_daemonset_reflector,
-            k8s::client::get_daemonsets,
             k8s::client::delete_daemonset,
-            k8s::client::get_replicasets,
+            // ReplicaSets
+            k8s::client::get_replicasets_page,
+            k8s::client::start_replicaset_reflector,
             k8s::client::delete_replicaset,
-            k8s::client::get_statefulsets,
+            // StatefulSets
+            k8s::client::get_statefulsets_page,
+            k8s::client::start_statefulset_reflector,
             k8s::client::delete_statefulset,
-            k8s::client::get_jobs,
+            // Jobs
+            k8s::client::get_jobs_page,
+            k8s::client::start_job_reflector,
             k8s::client::delete_job,
-            k8s::client::get_cronjobs,
+            // CronJobs
+            k8s::client::get_cronjobs_page,
+            k8s::client::start_cronjob_reflector,
             k8s::client::delete_cronjob,
-            k8s::client::get_configmaps,
+            // ConfigMaps
+            k8s::client::get_configmaps_page,
+            k8s::client::start_configmap_reflector,
             k8s::client::delete_configmap,
-            k8s::client::get_secrets,
+            // Secrets
+            k8s::client::get_secrets_page,
+            k8s::client::start_secret_reflector,
             k8s::client::delete_secret,
-            k8s::client::get_services,
+            // Services
+            k8s::client::get_services_page,
+            k8s::client::start_service_reflector,
             k8s::client::delete_service,
-            k8s::client::get_ingresses,
+            // Ingresses
+            k8s::client::get_ingresses_page,
+            k8s::client::start_ingress_reflector,
             k8s::client::delete_ingress,
-            k8s::client::get_networkpolicies,
+            // NetworkPolicies
+            k8s::client::get_networkpolicies_page,
+            k8s::client::start_networkpolicy_reflector,
             k8s::client::delete_networkpolicy,
+            // StorageClasses
             k8s::client::get_storageclasses,
             k8s::client::delete_storageclass,
-            k8s::client::get_serviceaccounts,
+            // ServiceAccounts
+            k8s::client::get_serviceaccounts_page,
+            k8s::client::start_serviceaccount_reflector,
             k8s::client::delete_serviceaccount,
-            k8s::client::get_roles,
+            // Roles
+            k8s::client::get_roles_page,
+            k8s::client::start_role_reflector,
             k8s::client::delete_role,
         ])
         .run(tauri::generate_context!())

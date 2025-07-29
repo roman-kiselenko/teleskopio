@@ -540,129 +540,150 @@ pub mod client {
         Ok(())
     }
 
-    #[tauri::command]
-    pub async fn get_daemonsets_page(
-        path: &str,
-        context: &str,
-        limit: u32,
-        continue_token: Option<String>,
-    ) -> Result<(Vec<DaemonSet>, Option<String>), GenericError> {
-        log::info!(
-            "get_daemonsets_page {:?} {:?} {:?} {:?}",
-            path,
-            context,
-            limit,
-            continue_token
-        );
-        let client = get_client(&path, context).await?;
-        let ds_api: Api<DaemonSet> = Api::all(client);
-
-        let lp = if let Some(token) = &continue_token {
-            ListParams::default().limit(limit).continue_token(token)
-        } else {
-            ListParams::default().limit(limit)
-        };
-
-        let ds = ds_api.list(&lp).await.map_err(|err| {
-            println!("error {:?}", err);
-            GenericError::from(err)
-        })?;
-        let next_token = ds.metadata.continue_;
-        let mut items = ds.items;
-
-        items.sort_by(|a, b| {
-            let a_time = a
-                .metadata
-                .creation_timestamp
-                .as_ref()
-                .map(|t| t.0)
-                .unwrap_or_default();
-            let b_time = b
-                .metadata
-                .creation_timestamp
-                .as_ref()
-                .map(|t| t.0)
-                .unwrap_or_default();
-            b_time.cmp(&a_time)
-        });
-        Ok((items, next_token))
-    }
-
-    #[tauri::command]
-    pub async fn start_daemonset_reflector(
-        path: &str,
-        context: &str,
-        app: AppHandle,
-    ) -> Result<(), GenericError> {
-        if has_reflector(path, context, "daemonset") {
-            log::info!("daemonset reflector already running");
-            return Ok(());
-        }
-        log::info!("start_daemonset_reflector {:?} {:?}", path, context,);
-
-        let client = get_client(path, context).await?;
-        let api: Api<DaemonSet> = Api::all(client);
-
-        let config = WatcherConfig {
-            ..Default::default()
-        };
-        let watch_stream = watcher(api, config);
-
-        let store = Writer::<DaemonSet>::default();
-        let reader = store.as_reader();
-
-        let rf = reflector(store, watch_stream);
-
-        let path = path.to_string();
-        let path_clone = path.clone();
-        let context = context.to_string();
-        let context_clone = context.clone();
-        let resource = "daemonset".to_string();
-        let resource_clone = resource.clone();
-        let app_handle = Arc::new(app);
-
-        let task = tauri::async_runtime::spawn({
-            let app_handle = Arc::clone(&app_handle);
-            async move {
-                let mut rf = Box::pin(rf);
-                while let Some(event) = rf.next().await {
-                    match event {
-                        Ok(_) => {
-                            let mut items: Vec<DaemonSet> = reader
-                                .state()
-                                .iter()
-                                .map(|arc_ds| (**arc_ds).clone())
-                                .collect();
-
-                            items.sort_by(|a, b| {
-                                let a_time = a
-                                    .metadata
-                                    .creation_timestamp
-                                    .as_ref()
-                                    .map(|t| t.0)
-                                    .unwrap_or_default();
-                                let b_time = b
-                                    .metadata
-                                    .creation_timestamp
-                                    .as_ref()
-                                    .map(|t| t.0)
-                                    .unwrap_or_default();
-                                b_time.cmp(&a_time)
-                            });
-                            let _ = app_handle.emit("daemonset-update", &items);
-                        }
-                        Err(err) => {
-                            eprintln!("reflector error: {:?}", err);
-                        }
-                    }
+    macro_rules! generate_start_reflector_fn {
+        ($fn_name:ident, $type:ty, $resource_str:literal, $event_name:literal) => {
+            #[tauri::command]
+            pub async fn $fn_name(
+                path: &str,
+                context: &str,
+                app: tauri::AppHandle,
+            ) -> Result<(), GenericError> {
+                if has_reflector(path, context, $resource_str) {
+                    log::info!(concat!($resource_str, " reflector already running"));
+                    return Ok(());
                 }
 
-                remove_reflector(&path, &context, &resource);
-            }
-        });
+                log::info!(
+                    concat!("start_", $resource_str, "_reflector {:?} {:?}"),
+                    path,
+                    context
+                );
 
-        insert_reflector(path_clone, context_clone, resource_clone, task);
-        Ok(())
+                let client = get_client(path, context).await?;
+                let api: Api<$type> = Api::all(client);
+
+                let config = WatcherConfig {
+                    ..Default::default()
+                };
+                let watch_stream = watcher(api, config);
+
+                let store = Writer::<$type>::default();
+                let reader = store.as_reader();
+                let rf = reflector(store, watch_stream);
+
+                let path = path.to_string();
+                let context = context.to_string();
+                let resource = $resource_str.to_string();
+
+                let path_clone = path.clone();
+                let context_clone = context.clone();
+                let resource_clone = resource.clone();
+
+                let app_handle = Arc::new(app);
+
+                let task = tauri::async_runtime::spawn({
+                    let app_handle = Arc::clone(&app_handle);
+                    async move {
+                        let mut rf = Box::pin(rf);
+                        while let Some(event) = rf.next().await {
+                            match event {
+                                Ok(_) => {
+                                    let mut items: Vec<$type> = reader
+                                        .state()
+                                        .iter()
+                                        .map(|arc_item| (**arc_item).clone())
+                                        .collect();
+
+                                    items.sort_by(|a, b| {
+                                        let a_time = a
+                                            .metadata
+                                            .creation_timestamp
+                                            .as_ref()
+                                            .map(|t| t.0)
+                                            .unwrap_or_default();
+                                        let b_time = b
+                                            .metadata
+                                            .creation_timestamp
+                                            .as_ref()
+                                            .map(|t| t.0)
+                                            .unwrap_or_default();
+                                        b_time.cmp(&a_time)
+                                    });
+
+                                    let _ = app_handle.emit($event_name, &items);
+                                }
+                                Err(err) => {
+                                    eprintln!(
+                                        concat!($resource_str, " reflector error: {:?}"),
+                                        err
+                                    );
+                                }
+                            }
+                        }
+
+                        remove_reflector(&path, &context, &resource);
+                    }
+                });
+
+                insert_reflector(path_clone, context_clone, resource_clone, task);
+                Ok(())
+            }
+        };
+    }
+
+    macro_rules! generate_get_page_fn {
+        ($fn_name:ident, $type:ty, $log_type:literal) => {
+            #[tauri::command]
+            pub async fn $fn_name(
+                path: &str,
+                context: &str,
+                limit: u32,
+                continue_token: Option<String>,
+            ) -> Result<(Vec<$type>, Option<String>), GenericError> {
+                log::info!(
+                    concat!("get_", $log_type, "_page {:?} {:?} {:?} {:?}"),
+                    path,
+                    context,
+                    limit,
+                    continue_token
+                );
+
+                let client = get_client(&path, context).await?;
+                let api: Api<$type> = Api::all(client);
+
+                let lp = if let Some(token) = &continue_token {
+                    ListParams::default().limit(limit).continue_token(token)
+                } else {
+                    ListParams::default().limit(limit)
+                };
+
+                let result = api.list(&lp).await.map_err(|err| {
+                    println!("error {:?}", err);
+                    GenericError::from(err)
+                })?;
+
+                let next_token = result.metadata.continue_;
+                let mut items = result.items;
+
+                items.sort_by(|a, b| {
+                    let a_time = a
+                        .metadata
+                        .creation_timestamp
+                        .as_ref()
+                        .map(|t| t.0)
+                        .unwrap_or_default();
+                    let b_time = b
+                        .metadata
+                        .creation_timestamp
+                        .as_ref()
+                        .map(|t| t.0)
+                        .unwrap_or_default();
+                    b_time.cmp(&a_time)
+                });
+
+                Ok((items, next_token))
+            }
+        };
     }
 
     macro_rules! generate_delete_fn {
@@ -727,33 +748,114 @@ pub mod client {
     }
     generate_get_fn!(get_nodes, Node);
     generate_delete_fn!(delete_pod, Pod, "pod");
-    generate_get_fn!(get_deployments, Deployment);
+    // Deployments
+    generate_get_page_fn!(get_deployments_page, Deployment, "deployments");
+    generate_start_reflector_fn!(
+        start_deployment_reflector,
+        Deployment,
+        "deployments",
+        "deployment-update"
+    );
     generate_delete_fn!(delete_deployment, Deployment, "deployment");
-    generate_get_fn!(get_daemonsets, DaemonSet);
+    // DaemonSets
+    generate_get_page_fn!(get_daemonsets_page, DaemonSet, "daemonsets");
+    generate_start_reflector_fn!(
+        start_daemonset_reflector,
+        DaemonSet,
+        "daemonsets",
+        "daemonset-update"
+    );
     generate_delete_fn!(delete_daemonset, DaemonSet, "daemonset");
-    generate_get_fn!(get_replicasets, ReplicaSet);
+    // ReplicaSets
+    generate_get_page_fn!(get_replicasets_page, ReplicaSet, "replicasets");
+    generate_start_reflector_fn!(
+        start_replicaset_reflector,
+        ReplicaSet,
+        "replicasets",
+        "replicaset-update"
+    );
     generate_delete_fn!(delete_replicaset, ReplicaSet, "replicaset");
-    generate_get_fn!(get_statefulsets, StatefulSet);
+    // StatefulSets
+    generate_get_page_fn!(get_statefulsets_page, StatefulSet, "statefulset");
+    generate_start_reflector_fn!(
+        start_statefulset_reflector,
+        StatefulSet,
+        "statefulsets",
+        "statefulset-update"
+    );
     generate_delete_fn!(delete_statefulset, StatefulSet, "statefulset");
-    generate_get_fn!(get_jobs, Job);
+    //Jobs
+    generate_get_page_fn!(get_jobs_page, Job, "jobs");
+    generate_start_reflector_fn!(start_job_reflector, Job, "jobs", "job-update");
     generate_delete_fn!(delete_job, Job, "job");
-    generate_get_fn!(get_cronjobs, CronJob);
+    // CronJobs
+    generate_get_page_fn!(get_cronjobs_page, CronJob, "cronjob");
+    generate_start_reflector_fn!(
+        start_cronjob_reflector,
+        CronJob,
+        "cronjobs",
+        "cronjob-update"
+    );
     generate_delete_fn!(delete_cronjob, CronJob, "cronjob");
-    generate_get_fn!(get_configmaps, ConfigMap);
+    // ConfigMaps
+    generate_get_page_fn!(get_configmaps_page, ConfigMap, "configmap");
+    generate_start_reflector_fn!(
+        start_configmap_reflector,
+        ConfigMap,
+        "configmaps",
+        "configmap-update"
+    );
     generate_delete_fn!(delete_configmap, ConfigMap, "configmap");
-    generate_get_fn!(get_secrets, Secret);
+    // Secrets
+    generate_get_page_fn!(get_secrets_page, Secret, "secret");
+    generate_start_reflector_fn!(
+        start_secret_reflector,
+        Secret,
+        "secrets",
+        "secret-update"
+    );
     generate_delete_fn!(delete_secret, Secret, "secret");
-    generate_get_fn!(get_services, Service);
+    // Services
+    generate_get_page_fn!(get_services_page, Service, "service");
+    generate_start_reflector_fn!(
+        start_service_reflector,
+        Service,
+        "services",
+        "service-update"
+    );
     generate_delete_fn!(delete_service, Service, "service");
-    generate_get_fn!(get_ingresses, Ingress);
+    // Ingresses
+    generate_get_page_fn!(get_ingresses_page, Ingress, "ingress");
+    generate_start_reflector_fn!(
+        start_ingress_reflector,
+        Ingress,
+        "ingresses",
+        "ingress-update"
+    );
     generate_delete_fn!(delete_ingress, Ingress, "ingress");
-    generate_get_fn!(get_networkpolicies, NetworkPolicy);
+    // NetworkPolicies
+    generate_get_page_fn!(get_networkpolicies_page, NetworkPolicy, "networkpolicy");
+    generate_start_reflector_fn!(
+        start_networkpolicy_reflector,
+        NetworkPolicy,
+        "networkpolicies",
+        "networkpolicy-update"
+    );
     generate_delete_fn!(delete_networkpolicy, NetworkPolicy, "networkpolicy");
+    // StorageClasses
     generate_get_fn!(get_storageclasses, StorageClass);
-    // generate_delete_fn!(delete_networkpolicy, NetworkPolicy, "networkpolicy");
-    generate_get_fn!(get_serviceaccounts, ServiceAccount);
+    // ServiceAccounts
+    generate_get_page_fn!(get_serviceaccounts_page, ServiceAccount, "serviceaccount");
+    generate_start_reflector_fn!(
+        start_serviceaccount_reflector,
+        ServiceAccount,
+        "serviceaccounts",
+        "serviceaccount-update"
+    );
     generate_delete_fn!(delete_serviceaccount, ServiceAccount, "serviceaccount");
-    generate_get_fn!(get_roles, Role);
+    // Roles
+    generate_get_page_fn!(get_roles_page, Role, "role");
+    generate_start_reflector_fn!(start_role_reflector, Role, "roles", "role-update");
     generate_delete_fn!(delete_role, Role, "role");
 
     #[tauri::command]

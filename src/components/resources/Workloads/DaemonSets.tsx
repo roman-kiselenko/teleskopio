@@ -1,5 +1,5 @@
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { useDaemonSetsState, daemonSetsState } from '@/store/daemonsets';
+import { useDaemonSetsState, daemonSetsState } from '@/store/resources';
 import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/DaemonSets';
 import { invoke } from '@tauri-apps/api/core';
@@ -18,7 +18,6 @@ const globalDaemonSetState = async () => {
 
   await listen<DaemonSet[]>('daemonset-update', (event) => {
     const ds = event.payload;
-    if (ds.length === 0) return;
     daemonSetsState.set(() => {
       const newMap = new Map();
       ds.forEach((p) => newMap.set(p.metadata.uid, p));

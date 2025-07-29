@@ -138,11 +138,11 @@ const columns: ColumnDef<Pod>[] = [
               <Trash size={8} /> Delete
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={actionDisabled} className="text-xs">
+            <DropdownMenuItem disabled className="text-xs">
               <ScrollText />
               Logs
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={actionDisabled} className="text-xs">
+            <DropdownMenuItem disabled className="text-xs">
               <SquareTerminal />
               Attach
             </DropdownMenuItem>

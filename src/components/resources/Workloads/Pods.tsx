@@ -1,5 +1,5 @@
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { usePodsState, podsState } from '@/store/pods';
+import { usePodsState, podsState } from '@/store/resources';
 import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/Pods/Pods';
 import { invoke } from '@tauri-apps/api/core';
@@ -18,7 +18,6 @@ const globalPodState = async () => {
 
   await listen<Pod[]>('pods-update', (event) => {
     const pods = event.payload;
-    if (pods.length === 0) return;
     podsState.set(() => {
       const newMap = new Map();
       pods.forEach((p) => newMap.set(p.uid, p));

@@ -21,8 +21,8 @@ const columns: ColumnDef<StatefulSet>[] = [
     cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
   },
   {
-    accessorKey: 'spec.replicas',
-    id: 'replicase',
+    accessorKey: 'replicas',
+    id: 'replicas',
     header: memo(({ column }) => <HeaderAction column={column} name={'Replicas'} />),
     cell: ({ row }) => {
       const currentReplicas = row.original.status.currentReplicas;
