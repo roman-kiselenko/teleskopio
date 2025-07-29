@@ -1,24 +1,15 @@
-import { usePageState, setPage } from '@/store/page';
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
-import { Namespaces } from '~/components/Namespaces';
+import { usePageState, setPage } from '@/store/page';
 import { SearchField } from '~/components/SearchField';
-// import { AbstractPage } from '@/components/resources/PaginatedTable';
-import { useConfigmapsState, getConfigmaps } from '~/store/configmaps';
-import { useSecretsState, getSecrets } from '~/store/secrets';
-
+import Secrets from '@/components/resources/Configs/Secrets';
+import { Namespaces } from '~/components/Namespaces';
 import { useEffect } from 'react';
-
-import configmapsColumns from '@/components/resources/Configs/columns/ConfigMaps';
-import secretsColumns from '@/components/resources/Configs/columns/Secrets';
 
 export function ConfigsPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
-
-  const secretsState = useSecretsState();
-  const configmapsState = useConfigmapsState();
 
   useEffect(() => {
     setPage('configmaps');
@@ -43,24 +34,7 @@ export function ConfigsPage() {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
-          {/* {currentPage.currentPage.get() === 'secrets' ? (
-            <AbstractPage
-              getData={getSecrets}
-              state={() => Array.from(secretsState.get().values())}
-              columns={secretsColumns}
-            />
-          ) : (
-            <></>
-          )}
-          {currentPage.currentPage.get() === 'configmaps' ? (
-            <AbstractPage
-              getData={getConfigmaps}
-              state={() => Array.from(configmapsState.get().values())}
-              columns={configmapsColumns}
-            />
-          ) : (
-            <></>
-          )} */}
+          {currentPage.currentPage.get() === 'secrets' ? <Secrets /> : <></>}
         </div>
       </div>
     </div>

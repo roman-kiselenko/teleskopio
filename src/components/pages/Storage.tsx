@@ -3,16 +3,12 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-// import { AbstractPage } from '@/components/resources/PaginatedTable';
-import { useStorageClassesState, getStorageClasses } from '~/store/storageclasses';
 import { useEffect } from 'react';
-import storageClassColumns from '@/components/resources/Storage/columns/StorageClasses';
 
 export function StoragePage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
-  const storageClassesState = useStorageClassesState();
 
   useEffect(() => {
     setPage('storageclasses');

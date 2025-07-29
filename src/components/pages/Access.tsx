@@ -3,20 +3,12 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-// import { AbstractPage } from '@/components/resources/PaginatedTable';
-import { useRolesState, getRoles } from '~/store/roles';
-import { useServiceAccountsState, getServiceAccounts } from '~/store/serviceaccounts';
 import { useEffect } from 'react';
-import rolesColumns from '@/components/resources/Access/columns/Roles';
-import saColumns from '@/components/resources/Access/columns/ServiceAccounts';
 
 export function AccessPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
-
-  const rolesState = useRolesState();
-  const saState = useServiceAccountsState();
 
   useEffect(() => {
     setPage('serviceaccounts');

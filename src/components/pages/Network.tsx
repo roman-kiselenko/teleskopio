@@ -3,24 +3,13 @@ import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { Namespaces } from '~/components/Namespaces';
 import { SearchField } from '~/components/SearchField';
-// import { AbstractPage } from '@/components/resources/PaginatedTable';
-import { useServicesState, getServices } from '~/store/services';
-import { useNetworkPoliciesState, getNetworkPolicies } from '~/store/networkpolicies';
-import { useIngressesState, getIngresses } from '~/store/ingresses';
 
 import { useEffect } from 'react';
-import servicesColumns from '@/components/resources/Network/columns/Services';
-import ingressesColumns from '@/components/resources/Network/columns/Ingresses';
-import networkpoliciesColumns from '@/components/resources/Network/columns/NetworkPolicies';
 
 export function NetworkPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const currentPage = usePageState();
-
-  const servicesState = useServicesState();
-  const npState = useNetworkPoliciesState();
-  const ingressesState = useIngressesState();
 
   useEffect(() => {
     setPage('services');
