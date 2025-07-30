@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Secret } from '@/types';
 
-const globalSecretsState = async () => {
-  try {
-    await invoke('start_secret_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeSecretsEvents = async (rv: string) => {
+  await invoke('secret_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Secret[]>('secret-update', (event) => {
+const listenReplicaSetEvents = async () => {
+  await listen<Secret>('secret-deleted', (event) => {
+    const rs = event.payload;
+    secretsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(rs.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Secret>('secret-updated', (event) => {
     const ss = event.payload;
     secretsState.set(() => {
       const newMap = new Map();
-      ss.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(ss.metadata.uid, ss);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getSecretsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Secret[], string | null]>('get_secrets_page', {
+  return await invoke<[Secret[], string | null, string]>('get_secrets_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getSecretsPage = async ({
 
 const Secrets = () => {
   const secretsState = useSecretsState();
-  globalSecretsState();
+  listenReplicaSetEvents();
   return (
     <PaginatedTable<Secret>
+      subscribeEvents={subscribeSecretsEvents}
       getPage={getSecretsPage}
       state={() => secretsState.get() as Map<string, Secret>}
       setState={secretsState.set}

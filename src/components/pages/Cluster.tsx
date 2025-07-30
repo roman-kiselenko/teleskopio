@@ -1,35 +1,63 @@
-import { useVersionState } from '~/store/version';
-import { useCurrentClusterState } from '@/store/cluster';
-import { useNodesState, getNodes } from '~/store/nodes';
-import { useSearchState } from '@/store/search';
-import { useEffect, useCallback } from 'react';
+import { PaginatedTable } from '@/components/resources/PaginatedTable';
+import { useVersionState } from '@/store/version';
+import { useCurrentClusterState, currentClusterState } from '@/store/cluster';
+import { useNodesState, nodesState } from '@/store/resources';
 import { SearchField } from '~/components/SearchField';
-import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Cluster/Table/ColumnDef';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { Node } from '@/types';
+
+const subscribeNodeEvents = async (rv: string) => {
+  await invoke('node_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
+
+const listenNodeEvents = async () => {
+  await listen<Node>('node-deleted', (event) => {
+    const no = event.payload;
+    nodesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(no.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Node>('node-updated', (event) => {
+    const no = event.payload;
+    nodesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(no.metadata.uid, no);
+      return newMap;
+    });
+  });
+};
+
+const getNodesPage = async ({
+  path,
+  context,
+  continueToken,
+}: {
+  path: string;
+  context: string;
+  continueToken?: string;
+}) => {
+  return await invoke<[Node[], string | null, string]>('get_nodes_page', {
+    path,
+    context,
+    limit: 50,
+    continueToken,
+  });
+};
 
 export function ClusterPage() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
   const nodesState = useNodesState();
-  const searchQuery = useSearchState();
-
-  const kubeConfig = cc.kube_config.get();
-  const cluster = cc.cluster.get();
-  const query = searchQuery.q.get();
-
-  const fetchData = useCallback(async () => {
-    await getNodes(kubeConfig, cluster, query);
-  }, [kubeConfig, cluster, query]);
-
-  useEffect(() => {
-    fetchData();
-
-    const interval = setInterval(() => {
-      fetchData();
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [fetchData]);
+  listenNodeEvents();
 
   return (
     <div className="flex flex-col flex-grow">
@@ -49,7 +77,14 @@ export function ClusterPage() {
       <div className="flex-grow overflow-auto">
         <div className="grid grid-cols-1">
           <div className="h-24 col-span-2">
-            <DataTable columns={columns} data={nodesState.nodes.get()} />
+            <PaginatedTable<Node>
+              subscribeEvents={subscribeNodeEvents}
+              getPage={getNodesPage}
+              state={() => nodesState.get() as Map<string, Node>}
+              setState={nodesState.set}
+              extractKey={(p) => p.metadata.uid}
+              columns={columns}
+            />
           </div>
         </div>
       </div>

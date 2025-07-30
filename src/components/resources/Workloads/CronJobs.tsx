@@ -7,7 +7,7 @@ import { listen } from '@tauri-apps/api/event';
 import { CronJob } from '@/types';
 
 const subscribeCronJobEvents = async (rv: string) => {
-  await invoke('start_cronjob_events', {
+  await invoke('cronjob_events', {
     path: currentClusterState.kube_config.get(),
     context: currentClusterState.cluster.get(),
     rv: rv,

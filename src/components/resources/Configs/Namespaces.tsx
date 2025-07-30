@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Namespace } from '@/types';
 
-const globalNamespacesState = async () => {
-  try {
-    await invoke('start_namespace_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeNamespacesEvents = async (rv: string) => {
+  await invoke('namespace_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Namespace[]>('namespace-update', (event) => {
+const listenNamespaceEvents = async () => {
+  await listen<Namespace>('namespace-deleted', (event) => {
     const ns = event.payload;
     namespacesState.set(() => {
       const newMap = new Map();
-      ns.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.delete(ns.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Namespace>('namespace-updated', (event) => {
+    const ns = event.payload;
+    namespacesState.set(() => {
+      const newMap = new Map();
+      newMap.set(ns.metadata.uid, ns);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getNamespacesPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Namespace[], string | null]>('get_namespaces_page', {
+  return await invoke<[Namespace[], string | null, string]>('get_namespaces_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getNamespacesPage = async ({
 
 const Namespaces = () => {
   const nsState = useNamespacesState();
-  globalNamespacesState();
+  listenNamespaceEvents();
   return (
     <PaginatedTable<Namespace>
+      subscribeEvents={subscribeNamespacesEvents}
       getPage={getNamespacesPage}
       state={() => nsState.get() as Map<string, Namespace>}
       setState={nsState.set}

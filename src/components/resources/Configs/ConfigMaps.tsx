@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { ConfigMap } from '@/types';
 
-const globalConfigmapsState = async () => {
-  try {
-    await invoke('start_configmap_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeConfigmapsEvents = async (rv: string) => {
+  await invoke('configmap_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<ConfigMap[]>('configmap-update', (event) => {
+const listenConfigMapsEvents = async () => {
+  await listen<ConfigMap>('configmap-deleted', (event) => {
     const cm = event.payload;
     configmapsState.set(() => {
       const newMap = new Map();
-      cm.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.delete(cm.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<ConfigMap>('configmap-updated', (event) => {
+    const cm = event.payload;
+    configmapsState.set(() => {
+      const newMap = new Map();
+      newMap.set(cm.metadata.uid, cm);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getConfigmapsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[ConfigMap[], string | null]>('get_configmaps_page', {
+  return await invoke<[ConfigMap[], string | null, string]>('get_configmaps_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getConfigmapsPage = async ({
 
 const ConfigMaps = () => {
   const configmapsState = useConfigmapsState();
-  globalConfigmapsState();
+  listenConfigMapsEvents();
   return (
     <PaginatedTable<ConfigMap>
+      subscribeEvents={subscribeConfigmapsEvents}
       getPage={getConfigmapsPage}
       state={() => configmapsState.get() as Map<string, ConfigMap>}
       setState={configmapsState.set}

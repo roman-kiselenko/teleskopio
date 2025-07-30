@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { NetworkPolicy } from '@/types';
 
-const globalNetworkPoliciesState = async () => {
-  try {
-    await invoke('start_networkpolicy_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeNetworkPoliciesEvents = async (rv: string) => {
+  await invoke('networkpolicy_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<NetworkPolicy[]>('networkpolicy-update', (event) => {
+const listenNetworkPoliciesEvents = async () => {
+  await listen<NetworkPolicy>('networkpolicy-deleted', (event) => {
+    const np = event.payload;
+    networkpoliciesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(np.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<NetworkPolicy>('networkpolicy-updated', (event) => {
     const np = event.payload;
     networkpoliciesState.set(() => {
       const newMap = new Map();
-      np.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(np.metadata.uid, np);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getNetworkPoliciesPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[NetworkPolicy[], string | null]>('get_networkpolicies_page', {
+  return await invoke<[NetworkPolicy[], string | null, string]>('get_networkpolicies_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getNetworkPoliciesPage = async ({
 
 const NetworkPolicies = () => {
   const npState = useNetworkPoliciesState();
-  globalNetworkPoliciesState();
+  listenNetworkPoliciesEvents();
   return (
     <PaginatedTable<NetworkPolicy>
+      subscribeEvents={subscribeNetworkPoliciesEvents}
       getPage={getNetworkPoliciesPage}
       state={() => npState.get() as Map<string, NetworkPolicy>}
       setState={npState.set}

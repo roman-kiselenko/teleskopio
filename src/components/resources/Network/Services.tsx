@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Service } from '@/types';
 
-const globalServicesState = async () => {
-  try {
-    await invoke('start_service_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeServicesEvents = async (rv: string) => {
+  await invoke('service_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Service[]>('service-update', (event) => {
+const listenServiceEvents = async () => {
+  await listen<Service>('service-deleted', (event) => {
+    const se = event.payload;
+    servicesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(se.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Service>('service-updated', (event) => {
     const se = event.payload;
     servicesState.set(() => {
       const newMap = new Map();
-      se.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(se.metadata.uid, se);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getServicesPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Service[], string | null]>('get_services_page', {
+  return await invoke<[Service[], string | null, string]>('get_services_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getServicesPage = async ({
 
 const Services = () => {
   const servicesState = useServicesState();
-  globalServicesState();
+  listenServiceEvents();
   return (
     <PaginatedTable<Service>
+      subscribeEvents={subscribeServicesEvents}
       getPage={getServicesPage}
       state={() => servicesState.get() as Map<string, Service>}
       setState={servicesState.set}

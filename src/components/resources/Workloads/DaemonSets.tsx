@@ -7,7 +7,7 @@ import { listen } from '@tauri-apps/api/event';
 import { DaemonSet } from '@/types';
 
 const subscribeDaemonSetEvents = async (rv: string) => {
-  await invoke('start_daemonset_reflector', {
+  await invoke('daemonset_events', {
     path: currentClusterState.kube_config.get(),
     context: currentClusterState.cluster.get(),
     rv: rv,

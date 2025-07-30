@@ -1,7 +1,7 @@
 pub mod client {
     use dirs::home_dir;
     use either::Either;
-    use futures::{StreamExt, TryStreamExt};
+    use futures::StreamExt;
     use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
     use k8s_openapi::api::batch::v1::{CronJob, Job};
     use k8s_openapi::api::core::v1::{
@@ -12,12 +12,7 @@ pub mod client {
     use k8s_openapi::api::storage::v1::StorageClass;
     use kube::api::{DeleteParams, ListParams, Patch, PatchParams, WatchEvent, WatchParams};
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
-    use kube::runtime::watcher::Config as WatcherConfig;
-    use kube::{
-        api::Api,
-        runtime::{reflector, reflector::store::Writer, watcher},
-        Client, Config, Error,
-    };
+    use kube::{api::Api, Client, Config, Error};
     use lazy_static::lazy_static;
     use serde::Serialize;
     use serde_json::json;
@@ -26,9 +21,7 @@ pub mod client {
     use std::fmt;
     use std::fs;
     use std::io;
-    use std::sync::Arc;
     use std::sync::Mutex;
-    // use tauri::async_runtime::JoinHandle;
     use tauri::http::Request;
     use tauri::{AppHandle, Emitter};
     use tokio::task::{spawn, JoinHandle};
@@ -735,7 +728,8 @@ pub mod client {
         };
     }
 
-    generate_get_fn!(get_nodes, Node);
+    generate_get_page_fn!(get_nodes_page, Node, "nodes");
+    generate_event_handler_fn!(node_events, "node", Node, "node-updated", "node-deleted");
     generate_delete_fn!(delete_pod, Pod, "pod");
     // Namespaces
     generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");

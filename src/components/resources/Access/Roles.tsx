@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Role } from '@/types';
 
-const globalRolesState = async () => {
-  try {
-    await invoke('start_role_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeRolesEvents = async (rv: string) => {
+  await invoke('role_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Role[]>('role-update', (event) => {
+const listenRolesEvents = async () => {
+  await listen<Role>('role-deleted', (event) => {
     const ro = event.payload;
     rolesState.set(() => {
       const newMap = new Map();
-      ro.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.delete(ro.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Role>('role-updated', (event) => {
+    const ro = event.payload;
+    rolesState.set(() => {
+      const newMap = new Map();
+      newMap.set(ro.metadata.uid, ro);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getRolesPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Role[], string | null]>('get_roles_page', {
+  return await invoke<[Role[], string | null, string]>('get_roles_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getRolesPage = async ({
 
 const Roles = () => {
   const rolesState = useRolesState();
-  globalRolesState();
+  listenRolesEvents();
   return (
     <PaginatedTable<Role>
+      subscribeEvents={subscribeRolesEvents}
       getPage={getRolesPage}
       state={() => rolesState.get() as Map<string, Role>}
       setState={rolesState.set}

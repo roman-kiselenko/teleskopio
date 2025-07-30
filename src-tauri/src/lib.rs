@@ -56,7 +56,8 @@ pub fn run() {
             k8s::client::get_namespaces_page,
             k8s::client::delete_namespace,
             // Nodes
-            k8s::client::get_nodes,
+            k8s::client::get_nodes_page,
+            k8s::client::node_events,
             k8s::client::cordon_node,
             k8s::client::uncordon_node,
             // Pods

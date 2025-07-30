@@ -6,21 +6,20 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { ServiceAccount } from '@/types';
 
-const globalServiceAccountsState = async () => {
-  try {
-    await invoke('start_serviceaccount_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeServiceAccountsEvents = async (rv: string) => {
+  await invoke('serviceaccount_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<ServiceAccount[]>('serviceaccount-update', (event) => {
+const listenServiceAccountsEvents = async () => {
+  await listen<ServiceAccount>('serviceaccount-updated', (event) => {
     const sa = event.payload;
     serviceaccountsState.set(() => {
       const newMap = new Map();
-      sa.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(sa.metadata.uid, sa);
       return newMap;
     });
   });
@@ -35,7 +34,7 @@ const getServiceAccountsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[ServiceAccount[], string | null]>('get_serviceaccounts_page', {
+  return await invoke<[ServiceAccount[], string | null, string]>('get_serviceaccounts_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +44,10 @@ const getServiceAccountsPage = async ({
 
 const ServiceAccounts = () => {
   const saState = useServiceAccountsState();
-  globalServiceAccountsState();
+  listenServiceAccountsEvents();
   return (
     <PaginatedTable<ServiceAccount>
+      subscribeEvents={subscribeServiceAccountsEvents}
       getPage={getServiceAccountsPage}
       state={() => saState.get() as Map<string, ServiceAccount>}
       setState={saState.set}

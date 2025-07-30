@@ -6,6 +6,7 @@ import {
   ReplicaSet,
   StatefulSet,
   Job,
+  Node,
   CronJob,
   Secret,
   StorageClass,
@@ -112,4 +113,10 @@ export const namespacesState = hookstate<Map<string, Namespace>>(new Map());
 
 export function useNamespacesState() {
   return useHookstate(namespacesState);
+}
+
+export const nodesState = hookstate<Map<string, Node>>(new Map());
+
+export function useNodesState() {
+  return useHookstate(nodesState);
 }
