@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { StatefulSet } from '@/types';
 
-const globalStatefulSetsState = async () => {
-  try {
-    await invoke('start_statefulset_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeStatefulSetEvents = async (rv: string) => {
+  await invoke('statefulset_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<StatefulSet[]>('statefulset-update', (event) => {
+const listenStatefulSetEvents = async () => {
+  await listen<StatefulSet>('replicaset-deleted', (event) => {
+    const ss = event.payload;
+    statefulSetsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ss.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<StatefulSet>('statefulset-updated', (event) => {
     const ss = event.payload;
     statefulSetsState.set(() => {
       const newMap = new Map();
-      ss.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(ss.metadata.uid, ss);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getStatefulSetsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[StatefulSet[], string | null]>('get_statefulsets_page', {
+  return await invoke<[StatefulSet[], string | null, string]>('get_statefulsets_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getStatefulSetsPage = async ({
 
 const StatefulSets = () => {
   const ssState = useStatefulSetsState();
-  globalStatefulSetsState();
+  listenStatefulSetEvents();
   return (
     <PaginatedTable<StatefulSet>
+      subscribeEvents={subscribeStatefulSetEvents}
       getPage={getStatefulSetsPage}
       state={() => ssState.get() as Map<string, StatefulSet>}
       setState={ssState.set}

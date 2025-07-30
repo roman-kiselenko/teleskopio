@@ -8,7 +8,8 @@ interface PaginatedTableProps<T> {
     path: string;
     context: string;
     continueToken?: string;
-  }) => Promise<[T[], string | null]>;
+  }) => Promise<[T[], string | null, string]>;
+  subscribeEvents: (rv: string) => Promise<void>;
   state: () => Map<string, T>;
   setState: (updater: (prev: Map<string, T>) => Map<string, T>) => void;
   extractKey: (item: T) => string;
@@ -17,6 +18,7 @@ interface PaginatedTableProps<T> {
 
 export function PaginatedTable<T>({
   getPage,
+  subscribeEvents,
   state,
   setState,
   extractKey,
@@ -35,7 +37,7 @@ export function PaginatedTable<T>({
     if (loading) return;
     setLoading(true);
     try {
-      const [items, next] = await getPage({
+      const [items, next, rv] = await getPage({
         path: kubeConfig,
         context: cluster,
         continueToken: nextToken ?? undefined,
@@ -47,6 +49,7 @@ export function PaginatedTable<T>({
         });
         return newMap;
       });
+      await subscribeEvents(rv);
       setNextToken(next);
     } catch (e: any) {
       console.error('Error loading page:', e);

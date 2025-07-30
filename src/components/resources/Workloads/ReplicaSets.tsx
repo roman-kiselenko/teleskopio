@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { ReplicaSet } from '@/types';
 
-const globalReplicaSetsState = async () => {
-  try {
-    await invoke('start_replicaset_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeReplicaSetEvents = async (rv: string) => {
+  await invoke('replicaset_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<ReplicaSet[]>('replicaset-update', (event) => {
+const listenReplicaSetEvents = async () => {
+  await listen<ReplicaSet>('replicaset-deleted', (event) => {
+    const rs = event.payload;
+    replicaSetsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(rs.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<ReplicaSet>('replicaset-updated', (event) => {
     const rs = event.payload;
     replicaSetsState.set(() => {
       const newMap = new Map();
-      rs.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(rs.metadata.uid, rs);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getReplicaSetsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[ReplicaSet[], string | null]>('get_replicasets_page', {
+  return await invoke<[ReplicaSet[], string | null, string]>('get_replicasets_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getReplicaSetsPage = async ({
 
 const ReplicaSets = () => {
   const rsState = useReplicaSetsState();
-  globalReplicaSetsState();
+  listenReplicaSetEvents();
   return (
     <PaginatedTable<ReplicaSet>
+      subscribeEvents={subscribeReplicaSetEvents}
       getPage={getReplicaSetsPage}
       state={() => rsState.get() as Map<string, ReplicaSet>}
       setState={rsState.set}

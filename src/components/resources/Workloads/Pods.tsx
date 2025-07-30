@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Pod } from '@/types';
 
-const globalPodState = async () => {
-  try {
-    await invoke('start_pod_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribePodEvents = async (rv: string) => {
+  await invoke('pod_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Pod[]>('pods-update', (event) => {
-    const pods = event.payload;
-    podsState.set(() => {
-      const newMap = new Map();
-      pods.forEach((p) => newMap.set(p.uid, p));
+const listenPodEvents = async () => {
+  await listen<Pod>('pod-deleted', (event) => {
+    const pod = event.payload;
+    podsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(pod.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Pod>('pod-updated', (event) => {
+    const pod = event.payload;
+    podsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(pod.uid, pod);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getPodsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Pod[], string | null]>('get_pods_page', {
+  return await invoke<[Pod[], string | null, string]>('get_pods_page', {
     path,
     context,
     limit: 50,
@@ -45,10 +53,11 @@ const getPodsPage = async ({
 
 const Pods = () => {
   const podsState = usePodsState();
-  globalPodState();
+  listenPodEvents();
   return (
     <PaginatedTable<Pod>
       getPage={getPodsPage}
+      subscribeEvents={subscribePodEvents}
       state={() => podsState.get() as Map<string, Pod>}
       setState={podsState.set}
       extractKey={(p) => p.uid}

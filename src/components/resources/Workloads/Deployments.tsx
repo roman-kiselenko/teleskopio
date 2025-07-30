@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Deployment } from '@/types';
 
-const globalDeploymentsState = async () => {
-  try {
-    await invoke('start_deployment_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeDeploymentEvents = async (rv: string) => {
+  await invoke('deployment_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Deployment[]>('deployment-update', (event) => {
+const listenDeploymentEvents = async () => {
+  await listen<Deployment>('deployment-deleted', (event) => {
     const dp = event.payload;
-    deploymentsState.set(() => {
-      const newMap = new Map();
-      dp.forEach((p) => newMap.set(p.metadata.uid, p));
+    deploymentsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(dp.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Deployment>('deployment-updated', (event) => {
+    const dp = event.payload;
+    deploymentsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(dp.metadata.uid, dp);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getDeploymentsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Deployment[], string | null]>('get_deployments_page', {
+  return await invoke<[Deployment[], string | null, string]>('get_deployments_page', {
     path,
     context,
     limit: 50,
@@ -45,10 +53,11 @@ const getDeploymentsPage = async ({
 
 const Deployments = () => {
   const dpState = useDeploymentsState();
-  globalDeploymentsState();
+  listenDeploymentEvents();
   return (
     <PaginatedTable<Deployment>
       getPage={getDeploymentsPage}
+      subscribeEvents={subscribeDeploymentEvents}
       state={() => dpState.get() as Map<string, Deployment>}
       setState={dpState.set}
       extractKey={(p) => p.metadata.uid}

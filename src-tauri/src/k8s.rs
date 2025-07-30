@@ -1,7 +1,7 @@
 pub mod client {
     use dirs::home_dir;
     use either::Either;
-    use futures::StreamExt;
+    use futures::{StreamExt, TryStreamExt};
     use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
     use k8s_openapi::api::batch::v1::{CronJob, Job};
     use k8s_openapi::api::core::v1::{
@@ -10,7 +10,7 @@ pub mod client {
     use k8s_openapi::api::networking::v1::{Ingress, NetworkPolicy};
     use k8s_openapi::api::rbac::v1::Role;
     use k8s_openapi::api::storage::v1::StorageClass;
-    use kube::api::{DeleteParams, ListParams, Patch, PatchParams};
+    use kube::api::{DeleteParams, ListParams, Patch, PatchParams, WatchEvent, WatchParams};
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
     use kube::runtime::watcher::Config as WatcherConfig;
     use kube::{
@@ -28,9 +28,10 @@ pub mod client {
     use std::io;
     use std::sync::Arc;
     use std::sync::Mutex;
-    use tauri::async_runtime::JoinHandle;
+    // use tauri::async_runtime::JoinHandle;
     use tauri::http::Request;
     use tauri::{AppHandle, Emitter};
+    use tokio::task::{spawn, JoinHandle};
     use walkdir::{DirEntry, WalkDir};
 
     #[derive(Debug, Serialize)]
@@ -387,7 +388,7 @@ pub mod client {
         context: &str,
         limit: u32,
         continue_token: Option<String>,
-    ) -> Result<(Vec<PodData>, Option<String>), GenericError> {
+    ) -> Result<(Vec<PodData>, Option<String>, Option<String>), GenericError> {
         log::info!(
             "get_pods_page {:?} {:?} {:?} {:?}",
             path,
@@ -409,6 +410,7 @@ pub mod client {
             GenericError::from(err)
         })?;
         let next_token = pods.metadata.continue_;
+        let resource_version = pods.metadata.resource_version.unwrap_or_default();
         let mut items = pods.items;
 
         items.sort_by(|a, b| {
@@ -441,191 +443,176 @@ pub mod client {
                 is_terminating: p.metadata.deletion_timestamp.is_some(),
             })
             .collect();
-        Ok((pod_items, next_token))
+        Ok((pod_items, next_token, Some(resource_version)))
     }
 
     #[tauri::command]
-    pub async fn start_pod_reflector(
+    pub async fn pod_events(
         path: &str,
         context: &str,
+        rv: &str,
         app: AppHandle,
     ) -> Result<(), GenericError> {
-        if has_reflector(path, context, "pod") {
-            log::info!("pod reflector already running");
-            return Ok(());
-        }
-        log::info!("start_pod_reflector {:?} {:?}", path, context,);
+        log::info!(
+            "pod_events START: path={:?}, context={:?} rv={:?}",
+            path,
+            context,
+            rv
+        );
 
         let client = get_client(path, context).await?;
-        let api: Api<Pod> = Api::all(client);
+        let pod_api: Api<Pod> = Api::all(client);
+        let wp: WatchParams = WatchParams::default();
+        let rv_string = rv.to_string();
 
-        let config = WatcherConfig {
-            ..Default::default()
-        };
-        let watch_stream = watcher(api, config);
+        {
+            let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+            let resource = "pod".to_string();
+            let key = (path.to_string(), context.to_string(), resource.to_string());
+            let key_clone = key.clone();
 
-        let store = Writer::<Pod>::default();
-        let reader = store.as_reader();
+            if let Some(old_handle) = handles.remove(&key) {
+                log::warn!("Aborting existing pod watcher for {:?}", key);
+                old_handle.abort();
+            }
 
-        let rf = reflector(store, watch_stream);
+            let app_clone = app.clone();
+            let pod_api_clone = pod_api.clone();
 
-        let path = path.to_string();
-        let path_clone = path.clone();
-        let context = context.to_string();
-        let context_clone = context.clone();
-        let resource = "pod".to_string();
-        let resource_clone = resource.clone();
-        let app_handle = Arc::new(app);
+            let handle = spawn(async move {
+                let mut stream = match pod_api_clone.watch(&wp, rv_string.as_str()).await {
+                    Ok(s) => s.boxed(),
+                    Err(e) => {
+                        eprintln!("watch failed: {:?}", e);
+                        return;
+                    }
+                };
 
-        let task = tauri::async_runtime::spawn({
-            let app_handle = Arc::clone(&app_handle);
-            async move {
-                let mut rf = Box::pin(rf);
-                while let Some(event) = rf.next().await {
-                    match event {
-                        Ok(_) => {
-                            let mut items: Vec<Pod> = reader
-                                .state()
-                                .iter()
-                                .map(|arc_pod| (**arc_pod).clone())
-                                .collect();
-
-                            items.sort_by(|a, b| {
-                                let a_time = a
-                                    .metadata
-                                    .creation_timestamp
-                                    .as_ref()
-                                    .map(|t| t.0)
-                                    .unwrap_or_default();
-                                let b_time = b
-                                    .metadata
-                                    .creation_timestamp
-                                    .as_ref()
-                                    .map(|t| t.0)
-                                    .unwrap_or_default();
-                                b_time.cmp(&a_time)
-                            });
-                            let pods: Vec<PodData> = items
-                                .iter()
-                                .map(|p| PodData {
-                                    uid: p.metadata.uid.clone().unwrap_or_default(),
-                                    name: p.metadata.name.clone().unwrap_or_default(),
-                                    namespace: p.metadata.namespace.clone().unwrap_or_default(),
-                                    node_name: p.spec.clone().unwrap().node_name,
-                                    creation_timestamp: p
-                                        .metadata
-                                        .creation_timestamp
-                                        .clone()
-                                        .unwrap(),
-                                    host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
-                                    pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
-                                    phase: p.status.as_ref().and_then(|s| s.phase.clone()),
-                                    containers: extract_containers(&p),
-                                    is_terminating: p.metadata.deletion_timestamp.is_some(),
-                                })
-                                .collect();
-                            let _ = app_handle.emit("pods-update", &pods);
+                while let Some(status) = stream.next().await {
+                    match status {
+                        Ok(WatchEvent::Added(p)) | Ok(WatchEvent::Modified(p)) => {
+                            let pod_data = PodData {
+                                uid: p.metadata.uid.clone().unwrap_or_default(),
+                                name: p.metadata.name.clone().unwrap_or_default(),
+                                namespace: p.metadata.namespace.clone().unwrap_or_default(),
+                                node_name: p.spec.clone().unwrap().node_name,
+                                creation_timestamp: p.metadata.creation_timestamp.clone().unwrap(),
+                                host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
+                                pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                                phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+                                containers: extract_containers(&p),
+                                is_terminating: p.metadata.deletion_timestamp.is_some(),
+                            };
+                            let _ = app_clone.emit("pod-updated", &pod_data);
                         }
+                        Ok(WatchEvent::Deleted(p)) => {
+                            let pod_data = PodData {
+                                uid: p.metadata.uid.clone().unwrap_or_default(),
+                                name: p.metadata.name.clone().unwrap_or_default(),
+                                namespace: p.metadata.namespace.clone().unwrap_or_default(),
+                                node_name: p.spec.clone().unwrap().node_name,
+                                creation_timestamp: p.metadata.creation_timestamp.clone().unwrap(),
+                                host_ip: p.status.as_ref().and_then(|s| s.host_ip.clone()),
+                                pod_ip: p.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                                phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+                                containers: extract_containers(&p),
+                                is_terminating: p.metadata.deletion_timestamp.is_some(),
+                            };
+                            let _ = app_clone.emit("pod-deleted", &pod_data);
+                        }
+                        Ok(_) => {}
                         Err(err) => {
-                            eprintln!("reflector error: {:?}", err);
+                            eprintln!("Watch stream error: {:?}", err);
+                            break;
                         }
                     }
                 }
 
-                remove_reflector(&path, &context, &resource);
-            }
-        });
+                log::info!("Watcher ended for {:?}", key);
+            });
 
-        insert_reflector(path_clone, context_clone, resource_clone, task);
+            handles.insert(key_clone, handle);
+        }
+
         Ok(())
     }
 
-    macro_rules! generate_start_reflector_fn {
-        ($fn_name:ident, $type:ty, $resource_str:literal, $event_name:literal) => {
+    macro_rules! generate_event_handler_fn {
+        (
+        $func_name:ident,
+        $resource_name:literal,
+        $kube_type:ty,
+        $event_updated:literal,
+        $event_deleted:literal
+    ) => {
             #[tauri::command]
-            pub async fn $fn_name(
+            pub async fn $func_name(
                 path: &str,
                 context: &str,
+                rv: &str,
                 app: tauri::AppHandle,
             ) -> Result<(), GenericError> {
-                if has_reflector(path, context, $resource_str) {
-                    log::info!(concat!($resource_str, " reflector already running"));
-                    return Ok(());
-                }
-
                 log::info!(
-                    concat!("start_", $resource_str, "_reflector {:?} {:?}"),
+                    "{} START: path={:?}, context={:?} rv={:?}",
+                    stringify!($func_name),
                     path,
-                    context
+                    context,
+                    rv
                 );
 
                 let client = get_client(path, context).await?;
-                let api: Api<$type> = Api::all(client);
+                let api: Api<$kube_type> = Api::all(client);
+                let wp: WatchParams = WatchParams::default();
+                let rv_string = rv.to_string();
 
-                let config = WatcherConfig {
-                    ..Default::default()
-                };
-                let watch_stream = watcher(api, config);
+                {
+                    let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+                    let key = (
+                        path.to_string(),
+                        context.to_string(),
+                        $resource_name.to_string(),
+                    );
+                    let key_clone = key.clone();
 
-                let store = Writer::<$type>::default();
-                let reader = store.as_reader();
-                let rf = reflector(store, watch_stream);
+                    if let Some(old_handle) = handles.remove(&key) {
+                        log::warn!("Aborting existing watcher for {:?}", key);
+                        old_handle.abort();
+                    }
 
-                let path = path.to_string();
-                let context = context.to_string();
-                let resource = $resource_str.to_string();
+                    let app_clone = app.clone();
+                    let api_clone = api.clone();
 
-                let path_clone = path.clone();
-                let context_clone = context.clone();
-                let resource_clone = resource.clone();
+                    let handle = spawn(async move {
+                        let mut stream = match api_clone.watch(&wp, rv_string.as_str()).await {
+                            Ok(s) => s.boxed(),
+                            Err(e) => {
+                                eprintln!("watch failed: {:?}", e);
+                                return;
+                            }
+                        };
 
-                let app_handle = Arc::new(app);
-
-                let task = tauri::async_runtime::spawn({
-                    let app_handle = Arc::clone(&app_handle);
-                    async move {
-                        let mut rf = Box::pin(rf);
-                        while let Some(event) = rf.next().await {
-                            match event {
-                                Ok(_) => {
-                                    let mut items: Vec<$type> = reader
-                                        .state()
-                                        .iter()
-                                        .map(|arc_item| (**arc_item).clone())
-                                        .collect();
-
-                                    items.sort_by(|a, b| {
-                                        let a_time = a
-                                            .metadata
-                                            .creation_timestamp
-                                            .as_ref()
-                                            .map(|t| t.0)
-                                            .unwrap_or_default();
-                                        let b_time = b
-                                            .metadata
-                                            .creation_timestamp
-                                            .as_ref()
-                                            .map(|t| t.0)
-                                            .unwrap_or_default();
-                                        b_time.cmp(&a_time)
-                                    });
-
-                                    let _ = app_handle.emit($event_name, &items);
+                        while let Some(status) = stream.next().await {
+                            match status {
+                                Ok(WatchEvent::Added(p)) | Ok(WatchEvent::Modified(p)) => {
+                                    let _ = app_clone.emit($event_updated, &p);
                                 }
+                                Ok(WatchEvent::Deleted(p)) => {
+                                    let _ = app_clone.emit($event_deleted, &p);
+                                }
+                                Ok(_) => {}
                                 Err(err) => {
-                                    eprintln!(
-                                        concat!($resource_str, " reflector error: {:?}"),
-                                        err
-                                    );
+                                    eprintln!("watch stream error: {:?}", err);
+                                    break;
                                 }
                             }
                         }
 
-                        remove_reflector(&path, &context, &resource);
-                    }
-                });
+                        log::info!("watcher ended for {:?}", key);
+                    });
 
-                insert_reflector(path_clone, context_clone, resource_clone, task);
+                    handles.insert(key_clone, handle);
+                }
+
                 Ok(())
             }
         };
@@ -639,7 +626,7 @@ pub mod client {
                 context: &str,
                 limit: u32,
                 continue_token: Option<String>,
-            ) -> Result<(Vec<$type>, Option<String>), GenericError> {
+            ) -> Result<(Vec<$type>, Option<String>, Option<String>), GenericError> {
                 log::info!(
                     concat!("get_", $log_type, "_page {:?} {:?} {:?} {:?}"),
                     path,
@@ -663,6 +650,7 @@ pub mod client {
                 })?;
 
                 let next_token = result.metadata.continue_;
+                let resource_version = result.metadata.resource_version.unwrap_or_default();
                 let mut items = result.items;
 
                 items.sort_by(|a, b| {
@@ -681,7 +669,7 @@ pub mod client {
                     b_time.cmp(&a_time)
                 });
 
-                Ok((items, next_token))
+                Ok((items, next_token, Some(resource_version)))
             }
         };
     }
@@ -746,119 +734,137 @@ pub mod client {
             }
         };
     }
+
     generate_get_fn!(get_nodes, Node);
     generate_delete_fn!(delete_pod, Pod, "pod");
     // Namespaces
     generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");
-    generate_start_reflector_fn!(
-        start_namespace_reflector,
+    generate_event_handler_fn!(
+        namespace_events,
+        "namespace",
         Namespace,
-        "namespaces",
-        "namespace-update"
+        "namespace-updated",
+        "namespace-deleted"
     );
     // Deployments
     generate_get_page_fn!(get_deployments_page, Deployment, "deployments");
-    generate_start_reflector_fn!(
-        start_deployment_reflector,
+    generate_event_handler_fn!(
+        deployment_events,
+        "deployment",
         Deployment,
-        "deployments",
-        "deployment-update"
+        "deployment-updated",
+        "deployment-deleted"
     );
     generate_delete_fn!(delete_deployment, Deployment, "deployment");
     // DaemonSets
     generate_get_page_fn!(get_daemonsets_page, DaemonSet, "daemonsets");
-    generate_start_reflector_fn!(
-        start_daemonset_reflector,
+    generate_event_handler_fn!(
+        daemonset_events,
+        "daemonset",
         DaemonSet,
-        "daemonsets",
-        "daemonset-update"
+        "daemonset-updated",
+        "daemonset-deleted"
     );
     generate_delete_fn!(delete_daemonset, DaemonSet, "daemonset");
     // ReplicaSets
     generate_get_page_fn!(get_replicasets_page, ReplicaSet, "replicasets");
-    generate_start_reflector_fn!(
-        start_replicaset_reflector,
+    generate_event_handler_fn!(
+        replicaset_events,
+        "replicaset",
         ReplicaSet,
-        "replicasets",
-        "replicaset-update"
+        "replicaset-updated",
+        "replicaset-deleted"
     );
     generate_delete_fn!(delete_replicaset, ReplicaSet, "replicaset");
     // StatefulSets
     generate_get_page_fn!(get_statefulsets_page, StatefulSet, "statefulset");
-    generate_start_reflector_fn!(
-        start_statefulset_reflector,
+    generate_event_handler_fn!(
+        statefulset_events,
+        "statefulset",
         StatefulSet,
-        "statefulsets",
-        "statefulset-update"
+        "statefulset-updated",
+        "statefulset-deleted"
     );
     generate_delete_fn!(delete_statefulset, StatefulSet, "statefulset");
     //Jobs
     generate_get_page_fn!(get_jobs_page, Job, "jobs");
-    generate_start_reflector_fn!(start_job_reflector, Job, "jobs", "job-update");
+    generate_event_handler_fn!(job_events, "job", Job, "job-updated", "job-deleted");
     generate_delete_fn!(delete_job, Job, "job");
     // CronJobs
     generate_get_page_fn!(get_cronjobs_page, CronJob, "cronjob");
-    generate_start_reflector_fn!(
-        start_cronjob_reflector,
+    generate_event_handler_fn!(
+        cronjob_events,
+        "cronjob",
         CronJob,
-        "cronjobs",
-        "cronjob-update"
+        "cronjob-updated",
+        "cronjob-deleted"
     );
     generate_delete_fn!(delete_cronjob, CronJob, "cronjob");
     // ConfigMaps
     generate_get_page_fn!(get_configmaps_page, ConfigMap, "configmap");
-    generate_start_reflector_fn!(
-        start_configmap_reflector,
+    generate_event_handler_fn!(
+        configmap_events,
+        "configmap",
         ConfigMap,
-        "configmaps",
-        "configmap-update"
+        "configmap-updated",
+        "configmap-deleted"
     );
     generate_delete_fn!(delete_configmap, ConfigMap, "configmap");
     // Secrets
     generate_get_page_fn!(get_secrets_page, Secret, "secret");
-    generate_start_reflector_fn!(start_secret_reflector, Secret, "secrets", "secret-update");
+    generate_event_handler_fn!(
+        secret_events,
+        "secret",
+        Secret,
+        "secret-updated",
+        "secret-deleted"
+    );
     generate_delete_fn!(delete_secret, Secret, "secret");
     // Services
     generate_get_page_fn!(get_services_page, Service, "service");
-    generate_start_reflector_fn!(
-        start_service_reflector,
+    generate_event_handler_fn!(
+        service_events,
+        "service",
         Service,
-        "services",
-        "service-update"
+        "service-updated",
+        "service-deleted"
     );
     generate_delete_fn!(delete_service, Service, "service");
     // Ingresses
     generate_get_page_fn!(get_ingresses_page, Ingress, "ingress");
-    generate_start_reflector_fn!(
-        start_ingress_reflector,
+    generate_event_handler_fn!(
+        ingress_events,
+        "ingress",
         Ingress,
-        "ingresses",
-        "ingress-update"
+        "ingress-updated",
+        "ingress-deleted"
     );
     generate_delete_fn!(delete_ingress, Ingress, "ingress");
     // NetworkPolicies
     generate_get_page_fn!(get_networkpolicies_page, NetworkPolicy, "networkpolicy");
-    generate_start_reflector_fn!(
-        start_networkpolicy_reflector,
+    generate_event_handler_fn!(
+        networkpolicy_events,
+        "networkpolicy",
         NetworkPolicy,
-        "networkpolicies",
-        "networkpolicy-update"
+        "networkpolicy-updated",
+        "networkpolicy-deleted"
     );
     generate_delete_fn!(delete_networkpolicy, NetworkPolicy, "networkpolicy");
     // StorageClasses
     generate_get_fn!(get_storageclasses, StorageClass);
     // ServiceAccounts
     generate_get_page_fn!(get_serviceaccounts_page, ServiceAccount, "serviceaccount");
-    generate_start_reflector_fn!(
-        start_serviceaccount_reflector,
+    generate_event_handler_fn!(
+        serviceaccount_events,
+        "serviceaccount",
         ServiceAccount,
-        "serviceaccounts",
-        "serviceaccount-update"
+        "serviceaccount-updated",
+        "serviceaccount-deleted"
     );
     generate_delete_fn!(delete_serviceaccount, ServiceAccount, "serviceaccount");
     // Roles
     generate_get_page_fn!(get_roles_page, Role, "role");
-    generate_start_reflector_fn!(start_role_reflector, Role, "roles", "role-update");
+    generate_event_handler_fn!(role_events, "role", Role, "role-updated", "role-deleted");
     generate_delete_fn!(delete_role, Role, "role");
 
     #[tauri::command]

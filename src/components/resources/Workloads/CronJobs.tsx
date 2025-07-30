@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { CronJob } from '@/types';
 
-const globalCronJobsState = async () => {
-  try {
-    await invoke('start_cronjob_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeCronJobEvents = async (rv: string) => {
+  await invoke('start_cronjob_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<CronJob[]>('cronjob-update', (event) => {
-    const cb = event.payload;
+const listenCronJobEvents = async () => {
+  await listen<CronJob>('cronjob-deleted', (event) => {
+    const cj = event.payload;
+    cronJobsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(cj.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<CronJob>('cronjob-updated', (event) => {
+    const cj = event.payload;
     cronJobsState.set(() => {
       const newMap = new Map();
-      cb.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(cj.metadata.uid, cj);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getCronJobsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[CronJob[], string | null]>('get_cronjobs_page', {
+  return await invoke<[CronJob[], string | null, string]>('get_cronjobs_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getCronJobsPage = async ({
 
 const CronJobs = () => {
   const cronjobsState = useCronJobsState();
-  globalCronJobsState();
+  listenCronJobEvents();
   return (
     <PaginatedTable<CronJob>
+      subscribeEvents={subscribeCronJobEvents}
       getPage={getCronJobsPage}
       state={() => cronjobsState.get() as Map<string, CronJob>}
       setState={cronjobsState.set}

@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { DaemonSet } from '@/types';
 
-const globalDaemonSetState = async () => {
-  try {
-    await invoke('start_daemonset_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeDaemonSetEvents = async (rv: string) => {
+  await invoke('start_daemonset_reflector', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<DaemonSet[]>('daemonset-update', (event) => {
+const listenDaemonSetEvents = async () => {
+  await listen<DaemonSet>('daemonset-deleted', (event) => {
     const ds = event.payload;
-    daemonSetsState.set(() => {
-      const newMap = new Map();
-      ds.forEach((p) => newMap.set(p.metadata.uid, p));
+    daemonSetsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ds.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<DaemonSet>('daemonset-updated', (event) => {
+    const ds = event.payload;
+    daemonSetsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(ds.metadata.uid, ds);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getDaemonSetsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[DaemonSet[], string | null]>('get_daemonsets_page', {
+  return await invoke<[DaemonSet[], string | null, string]>('get_daemonsets_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getDaemonSetsPage = async ({
 
 const DaemonSets = () => {
   const dsState = useDaemonSetsState();
-  globalDaemonSetState();
+  listenDaemonSetEvents();
   return (
     <PaginatedTable<DaemonSet>
+      subscribeEvents={subscribeDaemonSetEvents}
       getPage={getDaemonSetsPage}
       state={() => dsState.get() as Map<string, DaemonSet>}
       setState={dsState.set}

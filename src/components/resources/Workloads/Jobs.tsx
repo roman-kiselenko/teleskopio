@@ -6,21 +6,29 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Job } from '@/types';
 
-const globalJobsState = async () => {
-  try {
-    await invoke('start_job_reflector', {
-      path: currentClusterState.kube_config.get(),
-      context: currentClusterState.cluster.get(),
-    });
-  } catch (error: any) {
-    console.log('error start reflector ', error.message);
-  }
+const subscribeJobEvents = async (rv: string) => {
+  await invoke('job_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
 
-  await listen<Job[]>('job-update', (event) => {
-    const cj = event.payload;
+const listenJobEvents = async () => {
+  await listen<Job>('job-deleted', (event) => {
+    const job = event.payload;
+    jobsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(job.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Job>('job-updated', (event) => {
+    const job = event.payload;
     jobsState.set(() => {
       const newMap = new Map();
-      cj.forEach((p) => newMap.set(p.metadata.uid, p));
+      newMap.set(job.metadata.uid, job);
       return newMap;
     });
   });
@@ -35,7 +43,7 @@ const getJobsPage = async ({
   context: string;
   continueToken?: string;
 }) => {
-  return await invoke<[Job[], string | null]>('get_jobs_page', {
+  return await invoke<[Job[], string | null, string]>('get_jobs_page', {
     path,
     context,
     limit: 50,
@@ -45,9 +53,10 @@ const getJobsPage = async ({
 
 const Jobs = () => {
   const jobsState = useJobsState();
-  globalJobsState();
+  listenJobEvents();
   return (
     <PaginatedTable<Job>
+      subscribeEvents={subscribeJobEvents}
       getPage={getJobsPage}
       state={() => jobsState.get() as Map<string, Job>}
       setState={jobsState.set}
