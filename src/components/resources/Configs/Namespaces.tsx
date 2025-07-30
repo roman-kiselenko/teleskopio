@@ -26,8 +26,8 @@ const listenNamespaceEvents = async () => {
 
   await listen<Namespace>('namespace-updated', (event) => {
     const ns = event.payload;
-    namespacesState.set(() => {
-      const newMap = new Map();
+    namespacesState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(ns.metadata.uid, ns);
       return newMap;
     });

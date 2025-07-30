@@ -26,8 +26,8 @@ const listenRolesEvents = async () => {
 
   await listen<Role>('role-updated', (event) => {
     const ro = event.payload;
-    rolesState.set(() => {
-      const newMap = new Map();
+    rolesState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(ro.metadata.uid, ro);
       return newMap;
     });

@@ -15,10 +15,19 @@ const subscribeServiceAccountsEvents = async (rv: string) => {
 };
 
 const listenServiceAccountsEvents = async () => {
-  await listen<ServiceAccount>('serviceaccount-updated', (event) => {
+  await listen<ServiceAccount>('serviceaccount-deleted', (event) => {
     const sa = event.payload;
     serviceaccountsState.set(() => {
       const newMap = new Map();
+      newMap.delete(sa.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<ServiceAccount>('serviceaccount-updated', (event) => {
+    const sa = event.payload;
+    serviceaccountsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(sa.metadata.uid, sa);
       return newMap;
     });

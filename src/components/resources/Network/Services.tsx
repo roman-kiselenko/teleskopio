@@ -26,8 +26,8 @@ const listenServiceEvents = async () => {
 
   await listen<Service>('service-updated', (event) => {
     const se = event.payload;
-    servicesState.set(() => {
-      const newMap = new Map();
+    servicesState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(se.metadata.uid, se);
       return newMap;
     });

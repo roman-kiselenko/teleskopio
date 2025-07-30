@@ -26,8 +26,8 @@ const listenConfigMapsEvents = async () => {
 
   await listen<ConfigMap>('configmap-updated', (event) => {
     const cm = event.payload;
-    configmapsState.set(() => {
-      const newMap = new Map();
+    configmapsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(cm.metadata.uid, cm);
       return newMap;
     });

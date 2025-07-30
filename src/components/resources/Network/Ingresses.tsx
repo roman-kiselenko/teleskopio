@@ -26,8 +26,8 @@ const listenIngressEvents = async () => {
 
   await listen<Ingress>('ingress-updated', (event) => {
     const ing = event.payload;
-    ingressesState.set(() => {
-      const newMap = new Map();
+    ingressesState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(ing.metadata.uid, ing);
       return newMap;
     });

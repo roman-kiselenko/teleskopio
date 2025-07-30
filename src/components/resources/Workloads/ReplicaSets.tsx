@@ -26,8 +26,8 @@ const listenReplicaSetEvents = async () => {
 
   await listen<ReplicaSet>('replicaset-updated', (event) => {
     const rs = event.payload;
-    replicaSetsState.set(() => {
-      const newMap = new Map();
+    replicaSetsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(rs.metadata.uid, rs);
       return newMap;
     });

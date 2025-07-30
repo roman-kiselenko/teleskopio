@@ -26,8 +26,8 @@ const listenJobEvents = async () => {
 
   await listen<Job>('job-updated', (event) => {
     const job = event.payload;
-    jobsState.set(() => {
-      const newMap = new Map();
+    jobsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(job.metadata.uid, job);
       return newMap;
     });

@@ -54,6 +54,7 @@ pub fn run() {
             // Namespaces
             k8s::client::get_namespaces,
             k8s::client::get_namespaces_page,
+            k8s::client::namespace_events,
             k8s::client::delete_namespace,
             // Nodes
             k8s::client::get_nodes_page,

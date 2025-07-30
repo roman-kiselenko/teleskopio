@@ -26,8 +26,8 @@ const listenStatefulSetEvents = async () => {
 
   await listen<StatefulSet>('statefulset-updated', (event) => {
     const ss = event.payload;
-    statefulSetsState.set(() => {
-      const newMap = new Map();
+    statefulSetsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(ss.metadata.uid, ss);
       return newMap;
     });

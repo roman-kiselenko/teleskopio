@@ -26,8 +26,8 @@ const listenReplicaSetEvents = async () => {
 
   await listen<Secret>('secret-updated', (event) => {
     const ss = event.payload;
-    secretsState.set(() => {
-      const newMap = new Map();
+    secretsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(ss.metadata.uid, ss);
       return newMap;
     });

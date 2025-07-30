@@ -26,8 +26,8 @@ const listenCronJobEvents = async () => {
 
   await listen<CronJob>('cronjob-updated', (event) => {
     const cj = event.payload;
-    cronJobsState.set(() => {
-      const newMap = new Map();
+    cronJobsState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(cj.metadata.uid, cj);
       return newMap;
     });

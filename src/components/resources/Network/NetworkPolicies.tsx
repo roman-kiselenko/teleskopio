@@ -26,8 +26,8 @@ const listenNetworkPoliciesEvents = async () => {
 
   await listen<NetworkPolicy>('networkpolicy-updated', (event) => {
     const np = event.payload;
-    networkpoliciesState.set(() => {
-      const newMap = new Map();
+    networkpoliciesState.set((prev) => {
+      const newMap = new Map(prev);
       newMap.set(np.metadata.uid, np);
       return newMap;
     });
