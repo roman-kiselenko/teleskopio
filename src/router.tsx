@@ -7,7 +7,10 @@ import { NetworkPage } from './components/pages/Network';
 import { SettingsPage } from './components/pages/Settings';
 import { StoragePage } from './components/pages/Storage';
 import { AccessPage } from './components/pages/Access';
-import { Layout } from './components/Layout';
+import { PodsLayout } from '@/components/pages/PodsLayout';
+import { PodPage } from '@/components/pages/PodPage';
+
+import Layout from './components/Layout';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +28,11 @@ export const router = createBrowserRouter([
       {
         path: '/workloads',
         element: <WorkloadsPage />,
+        children: [
+          {
+            children: [{ path: 'pods/:uid', Component: PodPage }],
+          },
+        ],
       },
       {
         path: '/config',

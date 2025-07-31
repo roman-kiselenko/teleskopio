@@ -5,6 +5,7 @@ import {
   ClipboardCopy,
   ScrollText,
   SquareTerminal,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AgeCell from '@/components/ui/AgeCell';
@@ -16,6 +17,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import toast from 'react-hot-toast';
 import { memo } from 'react';
+import { useNavigate } from 'react-router';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +85,7 @@ const columns: ColumnDef<Pod>[] = [
     cell: memo(({ row }) => {
       const pod = row.original;
       const actionDisabled = pod?.is_terminating;
+      let navigate = useNavigate();
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -92,6 +95,13 @@ const columns: ColumnDef<Pod>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-xs"
+              onClick={() => navigate(`/workloads/pods/${pod.uid}`)}
+            >
+              <Eye size={8} />
+              View
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="text-xs"
               onClick={() => navigator.clipboard.writeText(pod.name)}
