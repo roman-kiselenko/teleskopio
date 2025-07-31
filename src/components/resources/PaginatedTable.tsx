@@ -81,9 +81,13 @@ export function PaginatedTable<T>({
   }, [nextToken, loading]);
 
   return (
-    <div>
-      <DataTable columns={columns} data={Array.from(state().values())} />
-      {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
+    <div className="flex flex-col flex-grow">
+      <div className="flex-grow overflow-auto">
+        <div className="grid grid-cols-1">
+          <DataTable columns={columns} data={Array.from(state().values())} />
+          {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
+        </div>
+      </div>
     </div>
   );
 }
