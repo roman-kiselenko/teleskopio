@@ -16,6 +16,7 @@ import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
 import { StartPage } from './components/pages/Start';
+import { SettingsPage } from '@/components/pages/Settings';
 
 import Layout from './components/Layout';
 
@@ -187,6 +188,16 @@ export const router = createBrowserRouter([
       {
         path: '/serviceaccounts',
         element: <ServiceAccounts />,
+      },
+    ],
+  },
+  {
+    path: '/settings',
+    element: <Layout />,
+    children: [
+      {
+        path: '/settings',
+        element: <SettingsPage />,
       },
     ],
   },

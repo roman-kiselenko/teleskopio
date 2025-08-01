@@ -1,5 +1,5 @@
 import { hookstate, useHookstate } from '@hookstate/core';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
 
 export const kubeConfigsState = hookstate<{ configs: Object[] }>({

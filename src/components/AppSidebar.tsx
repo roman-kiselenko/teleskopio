@@ -12,16 +12,15 @@ import {
   Network,
   GlobeLock,
   PersonStanding,
-  AlignJustify,
   Waypoints,
   Search,
   Package,
   Settings,
   ChevronDown,
 } from 'lucide-react';
-import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { NavLink } from 'react-router-dom';
+import { useVersionState } from '@/store/version';
 import { useLocation } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -94,10 +93,8 @@ const items = [
   {
     title: 'Settings',
     icon: Settings,
-    submenu: [
-      { title: 'Theme', icon: PaintRoller, url: '/themes' },
-      { title: 'Common', icon: PaintRoller, url: '/common' },
-    ],
+    url: '/settings',
+    submenu: [],
   },
 ];
 
@@ -130,7 +127,7 @@ export function AppSidebar() {
                       </NavLink>
                     </SidebarMenuButton>
                   ) : (
-                    <CollapsibleTrigger className="w-full">
+                    <CollapsibleTrigger className="w-full" asChild>
                       <SidebarMenuButton>
                         <div className="flex flex-row items-center">
                           <item.icon size={16} className="mr-2" />
@@ -147,7 +144,7 @@ export function AppSidebar() {
                     <SidebarMenuSub className="gap-0">
                       {item.submenu.map((i) => (
                         <SidebarMenuSubItem className="flex w-full" key={i.title}>
-                          <SidebarMenuButton isActive={location.pathname === i?.url} asChild>
+                          <SidebarMenuButton isActive={location.pathname === i?.url}>
                             <NavLink
                               to={i.url}
                               className="peer/menu-button flex flex-row w-full items-center gap-0 overflow-hidden rounded-md text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 px-2 text-xs !gap-0"

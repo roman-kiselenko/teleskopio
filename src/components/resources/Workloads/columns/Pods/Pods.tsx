@@ -15,7 +15,7 @@ import PodName from '@/components/ui/Table/ResourceName';
 import PodStatus from '@/components/resources/Workloads/columns/Pods/PodStatus';
 import { invoke } from '@tauri-apps/api/core';
 import { getKubeconfig, getCluster } from '@/store/cluster';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { memo } from 'react';
 import { useNavigate } from 'react-router';
 import {

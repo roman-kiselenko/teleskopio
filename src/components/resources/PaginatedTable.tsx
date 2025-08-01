@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { DataTable } from '@/components/ui/DataTable';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useCurrentClusterState } from '@/store/cluster';
 
 interface PaginatedTableProps<T> {

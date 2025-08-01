@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { invoke } from '@tauri-apps/api/core';
 

@@ -5,7 +5,7 @@ import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Cluster } from '@/types';
 import { useNavigate } from 'react-router';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
 import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';

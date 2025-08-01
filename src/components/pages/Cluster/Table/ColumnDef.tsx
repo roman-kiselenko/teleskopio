@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import Actions from '@/components/ui/Table/Actions';
 import { cn } from '@/util';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner'
 import { memo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
