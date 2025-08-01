@@ -81,12 +81,10 @@ export function PaginatedTable<T>({
   }, [nextToken, loading]);
 
   return (
-    <div className="flex flex-col flex-grow">
-      <div className="flex-grow overflow-auto">
-        <div className="grid grid-cols-1">
-          <DataTable columns={columns} data={Array.from(state().values())} />
-          {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
-        </div>
+    <div className="h-screen">
+      <div className="grid grid-cols-1 h-full overflow-y-auto">
+        <DataTable columns={columns} data={Array.from(state().values())} />
+        {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
       </div>
     </div>
   );

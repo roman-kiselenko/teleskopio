@@ -26,7 +26,7 @@ const columns: ColumnDef<Deployment>[] = [
     header: memo(({ column }) => <HeaderAction column={column} name={'Replicas'} />),
     cell: ({ row }) => {
       const replicas = row.original.spec.replicas;
-      const availableReplicas = row.original.status.availableReplicas;
+      const availableReplicas = row.original.status.availableReplicas || 0;
       return (
         <div>
           {replicas}/{availableReplicas}

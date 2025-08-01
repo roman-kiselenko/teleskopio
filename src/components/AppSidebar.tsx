@@ -3,6 +3,7 @@ import {
   Box,
   ShieldAlert,
   EthernetPort,
+  Telescope,
   Share2,
   PaintRoller,
   VenetianMask,
@@ -21,9 +22,11 @@ import {
 import { useVersionState } from '~/store/version';
 import { useCurrentClusterState } from '@/store/cluster';
 import { NavLink } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Sidebar,
+  SidebarFooter,
   SidebarContent,
   SidebarGroup,
   SidebarMenuSub,
@@ -32,7 +35,9 @@ import {
   SidebarMenuItem,
   SidebarMenuSubItem,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
+import { cn } from '@/util';
 
 const items = [
   {
@@ -99,6 +104,8 @@ const items = [
 export function AppSidebar() {
   const cv = useVersionState();
   const cc = useCurrentClusterState();
+  let location = useLocation();
+  const { state } = useSidebar();
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -109,46 +116,46 @@ export function AppSidebar() {
               <Collapsible key={item.title} className="group/collapsible">
                 <SidebarMenuItem
                   className={
-                    item.title !== 'Main' && cc.cluster.get() === ''
+                    item.title !== 'Main' && item.title !== 'Settings' && cc.cluster.get() === ''
                       ? 'pointer-events-none opacity-50'
                       : ''
                   }
                   key={item.title}
                 >
-                  <SidebarMenuButton asChild>
-                    <CollapsibleTrigger>
-                      {item?.url ? (
-                        <NavLink to={item.url} className="flex flex-row items-center">
-                          <item.icon size={16} className="mr-2" />
-                          <div className="text-xs">{item.title}</div>
-                        </NavLink>
-                      ) : (
+                  {item?.url ? (
+                    <SidebarMenuButton isActive={location.pathname === item?.url}>
+                      <NavLink to={item.url} className="flex flex-row items-center">
+                        <item.icon size={16} className="mr-2" />
+                        <div className="text-xs">{item.title}</div>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  ) : (
+                    <CollapsibleTrigger className="w-full">
+                      <SidebarMenuButton>
                         <div className="flex flex-row items-center">
                           <item.icon size={16} className="mr-2" />
                           <div className="text-xs">{item.title}</div>
                         </div>
-                      )}
-                      {item?.url ? (
-                        <></>
-                      ) : (
                         <ChevronDown
                           size={20}
                           className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180"
                         />
-                      )}
+                      </SidebarMenuButton>
                     </CollapsibleTrigger>
-                  </SidebarMenuButton>
+                  )}
                   <CollapsibleContent>
                     <SidebarMenuSub className="gap-0">
                       {item.submenu.map((i) => (
                         <SidebarMenuSubItem className="flex w-full" key={i.title}>
-                          <NavLink
-                            to={i.url}
-                            className="peer/menu-button flex flex-row w-full items-center gap-0 overflow-hidden rounded-md text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 px-2 text-xs"
-                          >
-                            <i.icon size={16} className="mr-2" />
-                            <div className="text-xs">{i.title}</div>
-                          </NavLink>
+                          <SidebarMenuButton isActive={location.pathname === i?.url} asChild>
+                            <NavLink
+                              to={i.url}
+                              className="peer/menu-button flex flex-row w-full items-center gap-0 overflow-hidden rounded-md text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 px-2 text-xs !gap-0"
+                            >
+                              <i.icon size={16} className="mr-2" />
+                              <div className="text-xs">{i.title}</div>
+                            </NavLink>
+                          </SidebarMenuButton>
                         </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>
@@ -159,6 +166,20 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton>
+              <div className="flex flex-row items-center ms:invisible">
+                <Telescope size={16} className="mr-2" />
+                <a href="#" className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}>
+                  telekopio v0.0.1
+                </a>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

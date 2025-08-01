@@ -1,18 +1,23 @@
 import { Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { SearchField } from '@/components/SearchField';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 
-export default function Layout({ children }: { children?: React.ReactNode }) {
+export default function Layout() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="teleskopio-ui-theme">
-      <div>
+      <div className="group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full">
         <SidebarProvider>
           <AppSidebar />
-          <main>{children}</main>
-          <Outlet />
         </SidebarProvider>
+        <main className="bg-background relative flex w-full flex-col">
+          <div className="flex flex-col w-full border-b border-gray-300">
+            <SearchField />
+          </div>
+          <Outlet />
+        </main>
         <Toaster
           toastOptions={{ className: '!font-medium !text-xs' }}
           containerStyle={{
