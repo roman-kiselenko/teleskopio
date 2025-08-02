@@ -1,4 +1,4 @@
-import AgeCell from '@/components/ui/AgeCell';
+import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';

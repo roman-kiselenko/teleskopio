@@ -15,6 +15,8 @@ import Ingresses from '@/components/resources/Network/Ingresses';
 import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
+import { ResourceEditor } from '@/components/resources/Workloads/ResourceEditor';
+import { LoadPod, LoadDeployment } from '@/loaders';
 import { StartPage } from './components/pages/Start';
 import { SettingsPage } from '@/components/pages/Settings';
 
@@ -49,6 +51,13 @@ export const router = createBrowserRouter([
         path: '/pods',
         element: <Pods />,
       },
+      {
+        path: '/pods/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return { data: await LoadPod(params.namespace, params.name) };
+        },
+        element: <ResourceEditor resource="pod" />,
+      },
     ],
   },
   {
@@ -58,6 +67,13 @@ export const router = createBrowserRouter([
       {
         path: '/deployments',
         element: <Deployments />,
+      },
+      {
+        path: '/deployments/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return { data: await LoadDeployment(params.namespace, params.name) };
+        },
+        element: <ResourceEditor resource="deployment" />,
       },
     ],
   },

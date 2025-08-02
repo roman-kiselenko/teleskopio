@@ -12,11 +12,14 @@ pub mod client {
     use k8s_openapi::api::storage::v1::StorageClass;
     use kube::api::{DeleteParams, ListParams, Patch, PatchParams, WatchEvent, WatchParams};
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
-    use kube::{api::Api, Client, Config, Error};
+    use kube::core::{DynamicObject, GroupVersionKind};
+    use kube::discovery::{Discovery, Scope};
+    use kube::{api::Api, Client, Config, Error, ResourceExt};
     use lazy_static::lazy_static;
     use serde::Serialize;
     use serde_json::json;
     use serde_json::Value;
+    use serde_yaml;
     use std::collections::HashMap;
     use std::fmt;
     use std::fs;
@@ -261,6 +264,59 @@ pub mod client {
     pub fn remove_reflector(path: &str, context: &str, resource: &str) {
         let mut map = REFLECTOR_HANDLES.lock().unwrap();
         map.remove(&(path.to_string(), context.to_string(), resource.to_string()));
+    }
+
+    #[tauri::command]
+    pub async fn update_kube_object(
+        path: &str,
+        context: &str,
+        yaml: String,
+    ) -> Result<(), GenericError> {
+        let dyn_obj: DynamicObject = serde_yaml::from_str(&yaml)
+            .map_err(|e| GenericError::new(format!("YAML parse error: {e}")))?;
+
+        let name = dyn_obj.name_any();
+        let namespace = dyn_obj.namespace();
+
+        let client = get_client(&path, context).await?;
+
+        let discovery = Discovery::new(client.clone())
+            .run()
+            .await
+            .map_err(|e| GenericError::new(format!("discovery error: {e}")))?;
+
+        let type_meta = dyn_obj.types.clone().unwrap();
+        let api_version = type_meta.api_version;
+        let kind = type_meta.kind;
+
+        let (group, version) = match api_version.split_once('/') {
+            Some((g, v)) => (g.to_string(), v.to_string()),
+            None => ("".to_string(), api_version), // core group
+        };
+
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+
+        let (ar, caps) = discovery
+            .resolve_gvk(&gvk)
+            .ok_or(GenericError::new(format!("GVK not found in discovery")))?;
+
+        let api: Api<DynamicObject> = match caps.scope {
+            Scope::Namespaced => {
+                let ns = namespace.unwrap_or_else(|| "default".into());
+                Api::namespaced_with(client, &ns, &ar)
+            }
+            Scope::Cluster => Api::all_with(client, &ar),
+        };
+
+        api.replace(&name, &Default::default(), &dyn_obj)
+            .await
+            .map_err(|e| GenericError::new(format!("kubernetes update error: {e}")))?;
+
+        Ok(())
     }
 
     #[tauri::command]
@@ -728,8 +784,37 @@ pub mod client {
         };
     }
 
+    macro_rules! generate_get_one_fn {
+        ($fn_name:ident, $type:ty) => {
+            #[tauri::command]
+            pub async fn $fn_name(
+                path: &str,
+                context: &str,
+                name: &str,
+                ns: &str,
+            ) -> Result<String, GenericError> {
+                log::info!(
+                    "{} path={:?} context={:?} name={:?} ns={:?}",
+                    stringify!($fn_name),
+                    path,
+                    context,
+                    name,
+                    ns
+                );
+                let client = get_client(&path, context).await?;
+                let api: Api<$type> = Api::namespaced(client, ns);
+                let obj = api.get(name).await.map_err(GenericError::from)?;
+                let yaml = serde_yaml::to_string(&obj)
+                    .map_err(|e| GenericError::new(format!("YAML serialization error: {}", e)))?;
+
+                Ok(yaml)
+            }
+        };
+    }
+
     generate_get_page_fn!(get_nodes_page, Node, "nodes");
     generate_event_handler_fn!(node_events, "node", Node, "node-updated", "node-deleted");
+    generate_get_one_fn!(get_one_pod, Pod);
     generate_delete_fn!(delete_pod, Pod, "pod");
     // Namespaces
     generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");
@@ -742,6 +827,7 @@ pub mod client {
     );
     // Deployments
     generate_get_page_fn!(get_deployments_page, Deployment, "deployments");
+    generate_get_one_fn!(get_one_deployment, Deployment);
     generate_event_handler_fn!(
         deployment_events,
         "deployment",

@@ -51,6 +51,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             k8s::client::lookup_configs,
             k8s::client::get_version,
+            k8s::client::update_kube_object,
             // Namespaces
             k8s::client::get_namespaces,
             k8s::client::get_namespaces_page,
@@ -63,10 +64,12 @@ pub fn run() {
             k8s::client::uncordon_node,
             // Pods
             k8s::client::get_pods_page,
+            k8s::client::get_one_pod,
             k8s::client::pod_events,
             k8s::client::delete_pod,
             // Deployments
             k8s::client::get_deployments_page,
+            k8s::client::get_one_deployment,
             k8s::client::deployment_events,
             k8s::client::delete_deployment,
             // DaemonSets

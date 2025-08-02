@@ -121,7 +121,7 @@ export function AppSidebar() {
                 >
                   {item?.url ? (
                     <SidebarMenuButton isActive={location.pathname === item?.url}>
-                      <NavLink to={item.url} className="flex flex-row items-center">
+                      <NavLink to={item.url} className="flex flex-row w-full items-center">
                         <item.icon size={16} className="mr-2" />
                         <div className="text-xs">{item.title}</div>
                       </NavLink>

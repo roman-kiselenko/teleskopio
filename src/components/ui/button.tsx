@@ -21,7 +21,7 @@ const buttonVariants = cva(
         linkactive: 'text-primary underline-offset-4 underline',
       },
       size: {
-        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        default: 'h-6 px-4 py-2 has-[>svg]:px-3',
         sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
         table: '',
         lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',

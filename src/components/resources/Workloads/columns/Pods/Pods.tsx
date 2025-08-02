@@ -1,14 +1,13 @@
 import {
   MoreHorizontal,
   Trash,
-  Pencil,
   ClipboardCopy,
   ScrollText,
   SquareTerminal,
-  Eye,
+  SquareMousePointer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import AgeCell from '@/components/ui/AgeCell';
+import AgeCell from '@/components/ui/Table/AgeCell';
 import ContainerIcon from '@/components/resources/Workloads/columns/Pods/ContainerIcon';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import PodName from '@/components/ui/Table/ResourceName';
@@ -97,10 +96,10 @@ const columns: ColumnDef<Pod>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigate(`/workloads/pods/${pod.uid}`)}
+              onClick={() => navigate(`/pods/${pod.namespace}/${pod.name}`)}
             >
-              <Eye size={8} />
-              View
+              <SquareMousePointer size={8} />
+              Open
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-xs"
@@ -108,10 +107,6 @@ const columns: ColumnDef<Pod>[] = [
             >
               <ClipboardCopy size={8} />
               Copy name
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={actionDisabled} className="text-xs">
-              <Pencil size={8} />
-              Edit
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={actionDisabled}

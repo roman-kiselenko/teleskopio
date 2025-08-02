@@ -1,4 +1,4 @@
-import { MoreHorizontal, ClipboardCopy, Pencil, Trash } from 'lucide-react';
+import { SquareMousePointer, MoreHorizontal, ClipboardCopy, Pencil, Trash } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { invoke } from '@tauri-apps/api/core';
+import { useNavigate } from 'react-router';
 
 function Actions({
   resource,
@@ -23,6 +24,7 @@ function Actions({
   payload: any;
   children?: any;
 }) {
+  let navigate = useNavigate();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,6 +34,17 @@ function Actions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          className="text-xs"
+          onClick={() =>
+            navigate(
+              `/${resource.kind.toLowerCase()}s/${resource.metadata.namespace}/${resource.metadata.name}`,
+            )
+          }
+        >
+          <SquareMousePointer size={8} />
+          Open
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="text-xs"
           onClick={() => navigator.clipboard.writeText(resource.metadata.name)}

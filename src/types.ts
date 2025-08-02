@@ -86,6 +86,7 @@ type StatefulSet = {
 };
 
 type Deployment = {
+  kind: string;
   metadata: {
     name: string;
     namespace: string;
@@ -102,6 +103,7 @@ type Deployment = {
 };
 
 type DaemonSet = {
+  kind: string;
   metadata: {
     name: string;
     namespace: string;
@@ -134,6 +136,7 @@ type Job = {
 };
 
 type CronJob = {
+  kind: string;
   metadata: {
     name: string;
     namespace: string;
