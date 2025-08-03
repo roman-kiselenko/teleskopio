@@ -54,7 +54,11 @@ export const router = createBrowserRouter([
       {
         path: '/pods/:namespace/:name',
         loader: async ({ params }: { params: any }) => {
-          return { data: await LoadPod(params.namespace, params.name) };
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadPod(params.namespace, params.name),
+          };
         },
         element: <ResourceEditor resource="pod" />,
       },
@@ -71,7 +75,11 @@ export const router = createBrowserRouter([
       {
         path: '/deployments/:namespace/:name',
         loader: async ({ params }: { params: any }) => {
-          return { data: await LoadDeployment(params.namespace, params.name) };
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadDeployment(params.namespace, params.name),
+          };
         },
         element: <ResourceEditor resource="deployment" />,
       },

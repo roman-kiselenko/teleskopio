@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, VariantProps } from 'class-variance-authority';
-import { PanelLeftIcon } from 'lucide-react';
+import { PanelLeftClose } from 'lucide-react';
 
 import { useIsMobile } from '@/components/hooks/use-mobile';
 import { cn } from '@/util';
@@ -128,10 +128,7 @@ function SidebarProvider({
               ...style,
             } as React.CSSProperties
           }
-          className={cn(
-            'group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar',
-            className,
-          )}
+          className={cn('group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar', className)}
           {...props}
         >
           {children}
@@ -259,7 +256,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <PanelLeftClose />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
