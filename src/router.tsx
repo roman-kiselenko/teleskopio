@@ -15,8 +15,25 @@ import Ingresses from '@/components/resources/Network/Ingresses';
 import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
-import { ResourceEditor } from '@/components/resources/Workloads/ResourceEditor';
-import { LoadPod, LoadDeployment } from '@/loaders';
+import { ResourceEditor } from '@/components/resources/ResourceEditor';
+import {
+  LoadNode,
+  LoadPod,
+  LoadDeployment,
+  LoadDaemonSet,
+  LoadReplicaSet,
+  LoadStatefulSet,
+  LoadJob,
+  LoadCronJob,
+  LoadConfigMap,
+  LoadSecret,
+  LoadNamespace,
+  LoadService,
+  LoadIngress,
+  LoadNetworkPolicy,
+  LoadRole,
+  LoadServiceAccount,
+} from '@/loaders';
 import { StartPage } from './components/pages/Start';
 import { SettingsPage } from '@/components/pages/Settings';
 
@@ -40,6 +57,16 @@ export const router = createBrowserRouter([
       {
         path: '/cluster',
         element: <ClusterPage />,
+      },
+      {
+        path: '/cluster/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            data: await LoadNode(params.name),
+          };
+        },
+        element: <ResourceEditor resource="node" />,
       },
     ],
   },
@@ -93,6 +120,17 @@ export const router = createBrowserRouter([
         path: '/daemonsets',
         element: <DaemonSets />,
       },
+      {
+        path: '/daemonsets/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadDaemonSet(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="daemonset" />,
+      },
     ],
   },
   {
@@ -102,6 +140,17 @@ export const router = createBrowserRouter([
       {
         path: '/statefulsets',
         element: <StatefulSets />,
+      },
+      {
+        path: '/statefulsets/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadStatefulSet(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="statefulset" />,
       },
     ],
   },
@@ -113,6 +162,17 @@ export const router = createBrowserRouter([
         path: '/replicasets',
         element: <ReplicaSets />,
       },
+      {
+        path: '/replicasets/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadReplicaSet(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="replicaset" />,
+      },
     ],
   },
   {
@@ -122,6 +182,17 @@ export const router = createBrowserRouter([
       {
         path: '/jobs',
         element: <Jobs />,
+      },
+      {
+        path: '/jobs/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadJob(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="job" />,
       },
     ],
   },
@@ -133,6 +204,17 @@ export const router = createBrowserRouter([
         path: '/cronjobs',
         element: <CronJobs />,
       },
+      {
+        path: '/cronjobs/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadCronJob(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="cronjob" />,
+      },
     ],
   },
   {
@@ -142,6 +224,17 @@ export const router = createBrowserRouter([
       {
         path: '/configmaps',
         element: <ConfigMaps />,
+      },
+      {
+        path: '/configmaps/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadConfigMap(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="configmap" />,
       },
     ],
   },
@@ -153,6 +246,17 @@ export const router = createBrowserRouter([
         path: '/secrets',
         element: <Secrets />,
       },
+      {
+        path: '/secrets/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadSecret(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="secret" />,
+      },
     ],
   },
   {
@@ -162,6 +266,17 @@ export const router = createBrowserRouter([
       {
         path: '/namespaces',
         element: <Namespaces />,
+      },
+      {
+        path: '/namespaces/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadNamespace(params.name),
+          };
+        },
+        element: <ResourceEditor resource="namespace" />,
       },
     ],
   },
@@ -173,6 +288,17 @@ export const router = createBrowserRouter([
         path: '/services',
         element: <Services />,
       },
+      {
+        path: '/services/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadService(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="service" />,
+      },
     ],
   },
   {
@@ -182,6 +308,17 @@ export const router = createBrowserRouter([
       {
         path: '/ingresses',
         element: <Ingresses />,
+      },
+      {
+        path: '/ingresses/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadIngress(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="ingress" />,
       },
     ],
   },
@@ -193,6 +330,17 @@ export const router = createBrowserRouter([
         path: '/networkpolicies',
         element: <NetworkPolicies />,
       },
+      {
+        path: '/networkpolicies/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadNetworkPolicy(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="networkpolicy" />,
+      },
     ],
   },
   {
@@ -203,6 +351,17 @@ export const router = createBrowserRouter([
         path: '/roles',
         element: <Roles />,
       },
+      {
+        path: '/roles/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadRole(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="role" />,
+      },
     ],
   },
   {
@@ -212,6 +371,17 @@ export const router = createBrowserRouter([
       {
         path: '/serviceaccounts',
         element: <ServiceAccounts />,
+      },
+      {
+        path: '/serviceaccounts/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadServiceAccount(params.namespace, params.name),
+          };
+        },
+        element: <ResourceEditor resource="serviceaccount" />,
       },
     ],
   },

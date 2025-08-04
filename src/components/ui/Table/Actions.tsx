@@ -25,6 +25,17 @@ function Actions({
   children?: any;
 }) {
   let navigate = useNavigate();
+  let full_path = `/${resource.kind.toLowerCase()}s/${resource.metadata.namespace}/${resource.metadata.name}`;
+  // TODO fixme
+  if (resource.kind === 'Node') {
+    full_path = `/cluster/${resource.metadata.name}`;
+  }
+  if (resource.kind === 'Namespace') {
+    full_path = `/namespaces/${resource.metadata.name}`;
+  }
+  if (resource.kind === 'StorageClass') {
+    full_path = `/storageclasses/${resource.metadata.name}`;
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,14 +45,7 @@ function Actions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          className="text-xs"
-          onClick={() =>
-            navigate(
-              `/${resource.kind.toLowerCase()}s/${resource.metadata.namespace}/${resource.metadata.name}`,
-            )
-          }
-        >
+        <DropdownMenuItem className="text-xs" onClick={() => navigate(full_path)}>
           <SquareMousePointer size={8} />
           Open
         </DropdownMenuItem>
@@ -51,10 +55,6 @@ function Actions({
         >
           <ClipboardCopy size={8} />
           Copy name
-        </DropdownMenuItem>
-        <DropdownMenuItem className="text-xs">
-          <Pencil size={8} />
-          Edit
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={resource.metadata?.deletionTimestamp !== undefined}

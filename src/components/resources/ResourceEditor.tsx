@@ -1,9 +1,10 @@
 import Editor, { useMonaco } from '@monaco-editor/react';
-import { Save, ArrowBigLeft, Shredder, Plus, Minus } from 'lucide-react';
+import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import podschema from '@/schema/pod.json';
 import deploymentschema from '@/schema/deployment.json';
+import daemonsetschema from '@/schema/daemonset.json';
 import { useLoaderData } from 'react-router';
 import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution';
 import 'monaco-editor/esm/vs/language/json/monaco.contribution';
@@ -13,6 +14,9 @@ import { currentClusterState } from '@/store/cluster';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/components/ThemeProvider';
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+loader.config({ monaco });
 import yaml from 'js-yaml';
 
 export function ResourceEditor({ resource }: { resource: string }) {
@@ -24,6 +28,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
   const [original, setOriginal] = useState(data);
   const [hasErrors, setHasErrors] = useState(false);
   const [fontSize, setFontsize] = useState(14);
+  const [minimap, setMinimap] = useState(true);
   const [stripManagedFields, setStripManagedFields] = useState(false);
 
   useEffect(() => {
@@ -55,6 +60,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
 
   const onSave = async () => {
     const editor = editorRef.current;
+    if (!editor) return;
     const model = editor?.getModel();
     const markers = monaco?.editor.getModelMarkers({ resource: model.uri });
 
@@ -126,8 +132,10 @@ export function ResourceEditor({ resource }: { resource: string }) {
     let schema;
     if (resource === 'pod') {
       schema = podschema;
-    } else {
+    } else if (resource === 'deployment') {
       schema = deploymentschema;
+    } else if (resource === 'daemonset') {
+      schema = daemonsetschema;
     }
     configureMonacoYaml(monaco, {
       enableSchemaRequest: false,
@@ -147,32 +155,46 @@ export function ResourceEditor({ resource }: { resource: string }) {
   return (
     <div className="h-screen p-2 flex flex-col">
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
-        <Button className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
+        <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />
-          Close
         </Button>
         <Button className="text-xs">
-          Editing: {ns}/{name}
+          <Pencil />
+          {ns ? `${ns}/${name}` : name}
         </Button>
-        <Button className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
+        <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
           <Save />
-          Save
         </Button>
-        <Button className="text-xs bg-orange-500" disabled={hasErrors} onClick={handleToggle}>
+        <Button
+          title="strip managedFields"
+          className="text-xs bg-orange-500"
+          disabled={hasErrors}
+          onClick={handleToggle}
+        >
           <Shredder />
-          Strip managedFields
         </Button>
-        <Button className="text-xs" onClick={() => changeFont(-1)}>
+        <Button
+          title="toggle minimap"
+          className="text-xs bg-gray-500"
+          onClick={() => setMinimap(!minimap)}
+        >
+          <Map />
+        </Button>
+        <Button
+          title="decrease font"
+          className="text-xs bg-gray-500"
+          onClick={() => changeFont(-1)}
+        >
           <Minus />
         </Button>
-        <Button className="text-xs" onClick={() => changeFont(1)}>
+        <Button title="increase font" className="text-xs bg-gray-500" onClick={() => changeFont(1)}>
           <Plus />
         </Button>
       </div>
 
       <Editor
         language="yaml"
-        options={{ fontSize: fontSize }}
+        options={{ minimap: { enabled: minimap }, fontSize: fontSize, automaticLayout: true }}
         value={original}
         theme={theme === 'dark' ? 'vs-dark' : 'light'}
         onMount={handleEditorDidMount}

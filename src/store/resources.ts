@@ -7,6 +7,7 @@ import {
   StatefulSet,
   Job,
   Node,
+  Event,
   CronJob,
   Secret,
   StorageClass,
@@ -119,4 +120,10 @@ export const nodesState = hookstate<Map<string, Node>>(new Map());
 
 export function useNodesState() {
   return useHookstate(nodesState);
+}
+
+export const eventsState = hookstate<Map<string, Event>>(new Map());
+
+export function useEventsState() {
+  return useHookstate(eventsState);
 }

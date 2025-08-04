@@ -172,7 +172,36 @@ const columns: ColumnDef<Node>[] = [
             </div>
           )}
         </DropdownMenuItem>,
-        <DropdownMenuItem key={node.metadata.uid} className="text-xs">
+        <DropdownMenuItem
+          key={node.metadata.uid}
+          className="text-xs"
+          onClick={async () => {
+            toast.promise(
+              invoke<any>('drain_node', {
+                path: getKubeconfig(),
+                context: getCluster(),
+                resourceName: node.metadata.name,
+              }),
+              {
+                loading: 'Draining...',
+                success: () => {
+                  return (
+                    <span>
+                      Node <b>{node.metadata.name}</b> drained
+                    </span>
+                  );
+                },
+                error: (err) => (
+                  <span>
+                    Cant drain <b>{node.metadata.name}</b>
+                    <br />
+                    {err.message}
+                  </span>
+                ),
+              },
+            );
+          }}
+        >
           <BrushCleaning />
           Drain
         </DropdownMenuItem>,

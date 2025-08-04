@@ -1,7 +1,7 @@
 {
   "name": "teleskopio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -52,6 +52,7 @@
     "postcss": "^8.5.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-resizable-panels": "^3.0.4",
     "react-router": "^7.6.3",
     "react-router-dom": "^7.6.3",
     "react-svg": "^16.3.0",
@@ -64,6 +65,7 @@
   "devDependencies": {
     "@react-router/dev": "^7.6.3",
     "@tauri-apps/cli": "^2",
+    "@tomjs/vite-plugin-monaco-editor": "^1.1.1",
     "@types/lodash": "^4.17.20",
     "@types/node": "^24.0.10",
     "@types/react": "^18.3.1",

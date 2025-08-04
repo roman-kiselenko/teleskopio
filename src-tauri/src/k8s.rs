@@ -5,18 +5,25 @@ pub mod client {
     use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
     use k8s_openapi::api::batch::v1::{CronJob, Job};
     use k8s_openapi::api::core::v1::{
-        ConfigMap, ContainerStatus, Namespace, Node, Pod, Secret, Service, ServiceAccount,
+        ConfigMap, ContainerStatus, Event, Namespace, Node, Pod, Secret, Service, ServiceAccount,
     };
     use k8s_openapi::api::networking::v1::{Ingress, NetworkPolicy};
+    use k8s_openapi::api::policy::v1::Eviction;
     use k8s_openapi::api::rbac::v1::Role;
     use k8s_openapi::api::storage::v1::StorageClass;
-    use kube::api::{DeleteParams, ListParams, Patch, PatchParams, WatchEvent, WatchParams};
+    use k8s_openapi::apimachinery::pkg::apis::meta::v1::DeleteOptions;
+    use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
+    use k8s_openapi::apimachinery::pkg::apis::meta::v1::Status;
+    use kube::api::{
+        DeleteParams, ListParams, Patch, PatchParams, PostParams, WatchEvent, WatchParams,
+    };
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
     use kube::core::{DynamicObject, GroupVersionKind};
     use kube::discovery::{Discovery, Scope};
     use kube::{api::Api, Client, Config, Error, ResourceExt};
     use lazy_static::lazy_static;
     use serde::Serialize;
+    use serde_json;
     use serde_json::json;
     use serde_json::Value;
     use serde_yaml;
@@ -167,6 +174,17 @@ pub mod client {
 
     impl std::error::Error for GenericError {}
 
+    impl From<serde_json::Error> for GenericError {
+        fn from(err: serde_json::Error) -> Self {
+            GenericError {
+                message: err.to_string(),
+                code: None,
+                reason: None,
+                details: None,
+            }
+        }
+    }
+
     impl From<KubeconfigError> for GenericError {
         fn from(error: KubeconfigError) -> Self {
             return GenericError {
@@ -283,7 +301,7 @@ pub mod client {
         let discovery = Discovery::new(client.clone())
             .run()
             .await
-            .map_err(|e| GenericError::new(format!("discovery error: {e}")))?;
+            .map_err(|e| GenericError::from(e))?;
 
         let type_meta = dyn_obj.types.clone().unwrap();
         let api_version = type_meta.api_version;
@@ -314,7 +332,7 @@ pub mod client {
 
         api.replace(&name, &Default::default(), &dyn_obj)
             .await
-            .map_err(|e| GenericError::new(format!("kubernetes update error: {e}")))?;
+            .map_err(|e| GenericError::from(e))?;
 
         Ok(())
     }
@@ -403,6 +421,91 @@ pub mod client {
             )
             .await?;
         Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn drain_node(
+        path: &str,
+        context: &str,
+        resource_name: &str,
+    ) -> Result<(), GenericError> {
+        log::info!("drain_node {:?} {:?}", path, context);
+        let client = get_client(&path, context).await?;
+        let nodes: Api<Node> = Api::all(client.clone());
+        let patch = json!({
+            "spec": {
+                "unschedulable": true
+            }
+        });
+
+        nodes
+            .patch(
+                resource_name,
+                &PatchParams::apply("teleskopio-cordon"),
+                &Patch::Merge(&patch),
+            )
+            .await?;
+
+        let pods: Api<Pod> = Api::all(client.clone());
+        let pod_list = pods.list(&Default::default()).await?;
+
+        for pod in &pod_list.items {
+            if let Some(pod_node_name) = pod.spec.as_ref().and_then(|s| s.node_name.clone()) {
+                if pod_node_name == resource_name {
+                    if is_mirror_or_daemonset(&pod) {
+                        continue;
+                    }
+
+                    let namespace = pod.namespace().unwrap_or_else(|| "default".to_string());
+                    let name = pod.name_any();
+
+                    evict_pod(client.clone(), namespace, name).await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn evict_pod(
+        client: Client,
+        namespace: String,
+        pod_name: String,
+    ) -> Result<(), GenericError> {
+        let pods: Api<Pod> = Api::namespaced(client.clone(), &namespace);
+
+        let eviction = Eviction {
+            metadata: ObjectMeta {
+                name: Some(pod_name.to_string()),
+                namespace: Some(namespace.clone()),
+                ..Default::default()
+            },
+            delete_options: Some(DeleteOptions::default()),
+        };
+        log::debug!("evict_pod {:?} {:?}", pod_name, namespace);
+        let body = serde_json::to_vec(&eviction).map_err(GenericError::from)?;
+        let status: Status = pods
+            .create_subresource("eviction", &pod_name, &PostParams::default(), body)
+            .await?;
+        log::info!("eviction status {:?}", status);
+
+        Ok(())
+    }
+
+    fn is_mirror_or_daemonset(pod: &Pod) -> bool {
+        if let Some(owner_refs) = &pod.metadata.owner_references {
+            for owner in owner_refs {
+                if owner.kind == "DaemonSet" {
+                    return true;
+                }
+            }
+        }
+
+        if let Some(annotations) = &pod.metadata.annotations {
+            return annotations.contains_key("kubernetes.io/config.mirror");
+        }
+
+        false
     }
 
     #[tauri::command]
@@ -785,6 +888,29 @@ pub mod client {
     }
 
     macro_rules! generate_get_one_fn {
+        ($fn_name:ident, $type:ty, cluster_scoped) => {
+            #[tauri::command]
+            pub async fn $fn_name(
+                path: &str,
+                context: &str,
+                name: &str,
+            ) -> Result<String, GenericError> {
+                log::info!(
+                    "{} path={:?} context={:?} name={:?}",
+                    stringify!($fn_name),
+                    path,
+                    context,
+                    name,
+                );
+                let client = get_client(&path, context).await?;
+                let api: Api<$type> = Api::all(client);
+                let obj = api.get(name).await.map_err(GenericError::from)?;
+                let yaml = serde_yaml::to_string(&obj)
+                    .map_err(|e| GenericError::new(format!("YAML serialization error: {}", e)))?;
+
+                Ok(yaml)
+            }
+        };
         ($fn_name:ident, $type:ty) => {
             #[tauri::command]
             pub async fn $fn_name(
@@ -799,7 +925,7 @@ pub mod client {
                     path,
                     context,
                     name,
-                    ns
+                    ns,
                 );
                 let client = get_client(&path, context).await?;
                 let api: Api<$type> = Api::namespaced(client, ns);
@@ -813,11 +939,22 @@ pub mod client {
     }
 
     generate_get_page_fn!(get_nodes_page, Node, "nodes");
+    generate_get_one_fn!(get_one_node, Node, cluster_scoped);
     generate_event_handler_fn!(node_events, "node", Node, "node-updated", "node-deleted");
     generate_get_one_fn!(get_one_pod, Pod);
     generate_delete_fn!(delete_pod, Pod, "pod");
+    // Events
+    generate_get_page_fn!(get_events_page, Event, "events");
+    generate_event_handler_fn!(
+        event_events,
+        "event",
+        Event,
+        "event-updated",
+        "event-deleted"
+    );
     // Namespaces
     generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");
+    generate_get_one_fn!(get_one_namespace, Namespace, cluster_scoped);
     generate_event_handler_fn!(
         namespace_events,
         "namespace",
@@ -838,6 +975,7 @@ pub mod client {
     generate_delete_fn!(delete_deployment, Deployment, "deployment");
     // DaemonSets
     generate_get_page_fn!(get_daemonsets_page, DaemonSet, "daemonsets");
+    generate_get_one_fn!(get_one_daemonset, DaemonSet);
     generate_event_handler_fn!(
         daemonset_events,
         "daemonset",
@@ -848,6 +986,7 @@ pub mod client {
     generate_delete_fn!(delete_daemonset, DaemonSet, "daemonset");
     // ReplicaSets
     generate_get_page_fn!(get_replicasets_page, ReplicaSet, "replicasets");
+    generate_get_one_fn!(get_one_replicaset, ReplicaSet);
     generate_event_handler_fn!(
         replicaset_events,
         "replicaset",
@@ -858,6 +997,7 @@ pub mod client {
     generate_delete_fn!(delete_replicaset, ReplicaSet, "replicaset");
     // StatefulSets
     generate_get_page_fn!(get_statefulsets_page, StatefulSet, "statefulset");
+    generate_get_one_fn!(get_one_statefulset, StatefulSet);
     generate_event_handler_fn!(
         statefulset_events,
         "statefulset",
@@ -868,10 +1008,12 @@ pub mod client {
     generate_delete_fn!(delete_statefulset, StatefulSet, "statefulset");
     //Jobs
     generate_get_page_fn!(get_jobs_page, Job, "jobs");
+    generate_get_one_fn!(get_one_job, Job);
     generate_event_handler_fn!(job_events, "job", Job, "job-updated", "job-deleted");
     generate_delete_fn!(delete_job, Job, "job");
     // CronJobs
     generate_get_page_fn!(get_cronjobs_page, CronJob, "cronjob");
+    generate_get_one_fn!(get_one_cronjob, CronJob);
     generate_event_handler_fn!(
         cronjob_events,
         "cronjob",
@@ -882,6 +1024,7 @@ pub mod client {
     generate_delete_fn!(delete_cronjob, CronJob, "cronjob");
     // ConfigMaps
     generate_get_page_fn!(get_configmaps_page, ConfigMap, "configmap");
+    generate_get_one_fn!(get_one_configmap, ConfigMap);
     generate_event_handler_fn!(
         configmap_events,
         "configmap",
@@ -892,6 +1035,7 @@ pub mod client {
     generate_delete_fn!(delete_configmap, ConfigMap, "configmap");
     // Secrets
     generate_get_page_fn!(get_secrets_page, Secret, "secret");
+    generate_get_one_fn!(get_one_secret, Secret);
     generate_event_handler_fn!(
         secret_events,
         "secret",
@@ -902,6 +1046,7 @@ pub mod client {
     generate_delete_fn!(delete_secret, Secret, "secret");
     // Services
     generate_get_page_fn!(get_services_page, Service, "service");
+    generate_get_one_fn!(get_one_service, Service);
     generate_event_handler_fn!(
         service_events,
         "service",
@@ -912,6 +1057,7 @@ pub mod client {
     generate_delete_fn!(delete_service, Service, "service");
     // Ingresses
     generate_get_page_fn!(get_ingresses_page, Ingress, "ingress");
+    generate_get_one_fn!(get_one_ingress, Ingress);
     generate_event_handler_fn!(
         ingress_events,
         "ingress",
@@ -922,6 +1068,7 @@ pub mod client {
     generate_delete_fn!(delete_ingress, Ingress, "ingress");
     // NetworkPolicies
     generate_get_page_fn!(get_networkpolicies_page, NetworkPolicy, "networkpolicy");
+    generate_get_one_fn!(get_one_networkpolicy, NetworkPolicy);
     generate_event_handler_fn!(
         networkpolicy_events,
         "networkpolicy",
@@ -932,8 +1079,10 @@ pub mod client {
     generate_delete_fn!(delete_networkpolicy, NetworkPolicy, "networkpolicy");
     // StorageClasses
     generate_get_fn!(get_storageclasses, StorageClass);
+    generate_get_one_fn!(get_one_storageclass, StorageClass, cluster_scoped);
     // ServiceAccounts
     generate_get_page_fn!(get_serviceaccounts_page, ServiceAccount, "serviceaccount");
+    generate_get_one_fn!(get_one_serviceaccount, ServiceAccount);
     generate_event_handler_fn!(
         serviceaccount_events,
         "serviceaccount",
@@ -944,6 +1093,7 @@ pub mod client {
     generate_delete_fn!(delete_serviceaccount, ServiceAccount, "serviceaccount");
     // Roles
     generate_get_page_fn!(get_roles_page, Role, "role");
+    generate_get_one_fn!(get_one_role, Role);
     generate_event_handler_fn!(role_events, "role", Role, "role-updated", "role-deleted");
     generate_delete_fn!(delete_role, Role, "role");
 

@@ -1,14 +1,23 @@
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { useVersionState } from '@/store/version';
-import { useCurrentClusterState, currentClusterState } from '@/store/cluster';
-import { useNodesState, nodesState } from '@/store/resources';
+import { currentClusterState } from '@/store/cluster';
+import { useNodesState, useEventsState, nodesState, eventsState } from '@/store/resources';
 import columns from '@/components/pages/Cluster/Table/ColumnDef';
+import eventsColumns from '@/components/pages/Cluster/Table/EventsColumnDef';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Node } from '@/types';
+import { Node, Event } from '@/types';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 const subscribeNodeEvents = async (rv: string) => {
   await invoke('node_events', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    rv: rv,
+  });
+};
+
+const subscribeEventEvents = async (rv: string) => {
+  await invoke('event_events', {
     path: currentClusterState.kube_config.get(),
     context: currentClusterState.cluster.get(),
     rv: rv,
@@ -35,6 +44,26 @@ const listenNodeEvents = async () => {
   });
 };
 
+const listenEventEvents = async () => {
+  await listen<Event>('event-deleted', (event) => {
+    const ev = event.payload;
+    eventsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ev.metadata.uid);
+      return newMap;
+    });
+  });
+
+  await listen<Event>('event-updated', (event) => {
+    const ev = event.payload;
+    eventsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(ev.metadata.uid, ev);
+      return newMap;
+    });
+  });
+};
+
 const getNodesPage = async ({
   path,
   context,
@@ -52,28 +81,63 @@ const getNodesPage = async ({
   });
 };
 
+const getEventsPage = async ({
+  path,
+  context,
+  continueToken,
+}: {
+  path: string;
+  context: string;
+  continueToken?: string;
+}) => {
+  return await invoke<[Event[], string | null, string]>('get_events_page', {
+    path,
+    context,
+    limit: 50,
+    continueToken,
+  });
+};
+
 export function ClusterPage() {
-  const cv = useVersionState();
-  const cc = useCurrentClusterState();
   const nodesState = useNodesState();
+  const eventsState = useEventsState();
   listenNodeEvents();
+  listenEventEvents();
 
   return (
-    <div className="flex flex-col flex-grow">
-      <div className="flex-grow overflow-auto">
-        <div className="grid grid-cols-1">
-          <div className="h-24 col-span-2">
-            <PaginatedTable<Node>
-              subscribeEvents={subscribeNodeEvents}
-              getPage={getNodesPage}
-              state={() => nodesState.get() as Map<string, Node>}
-              setState={nodesState.set}
-              extractKey={(p) => p.metadata.uid}
-              columns={columns}
-            />
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col flex-grow overflow-auto">
+      <ResizablePanelGroup direction="horizontal" className="rounded-l">
+        <ResizableHandle />
+        <ResizablePanel defaultSize={100}>
+          <ResizablePanelGroup direction="vertical">
+            <ResizablePanel defaultSize={50}>
+              <div className="flex h-full flex-col">
+                <PaginatedTable<Node>
+                  subscribeEvents={subscribeNodeEvents}
+                  getPage={getNodesPage}
+                  state={() => nodesState.get() as Map<string, Node>}
+                  setState={nodesState.set}
+                  extractKey={(p) => p.metadata.uid}
+                  columns={columns}
+                />
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={50}>
+              <div className="flex h-full flex-col">
+                <PaginatedTable<Event>
+                  subscribeEvents={subscribeEventEvents}
+                  getPage={getEventsPage}
+                  state={() => eventsState.get() as Map<string, Event>}
+                  setState={eventsState.set}
+                  extractKey={(p) => p.metadata.uid}
+                  columns={eventsColumns}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

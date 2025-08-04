@@ -54,6 +54,20 @@ type Node = {
   };
 };
 
+type Event = {
+  action: string;
+  count: number;
+  message: string;
+  type: string;
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    creationTimestamp: string;
+    deletionTimestamp: string;
+  };
+};
+
 type Taint = {
   effect: string;
   key: string;
@@ -282,6 +296,7 @@ export type {
   Container,
   Cluster,
   Node,
+  Event,
   StatefulSet,
   Deployment,
   DaemonSet,

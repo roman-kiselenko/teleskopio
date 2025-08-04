@@ -1,4 +1,4 @@
-import YamlWorker from './yaml.worker.js?worker';
+import YamlWorker from '@/yaml.worker.js?worker';
 
 // @ts-ignore
 window.MonacoEnvironment = {
