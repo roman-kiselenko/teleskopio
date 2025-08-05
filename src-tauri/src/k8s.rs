@@ -1,7 +1,10 @@
 pub mod client {
     use dirs::home_dir;
     use either::Either;
-    use futures::StreamExt;
+    use once_cell::sync::Lazy;
+    // use futures::StreamExt;
+    use futures_util::io::{AsyncBufReadExt, BufReader};
+    use futures_util::stream::StreamExt;
     use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
     use k8s_openapi::api::batch::v1::{CronJob, Job};
     use k8s_openapi::api::core::v1::{
@@ -15,7 +18,8 @@ pub mod client {
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::Status;
     use kube::api::{
-        DeleteParams, ListParams, Patch, PatchParams, PostParams, WatchEvent, WatchParams,
+        DeleteParams, ListParams, LogParams, Patch, PatchParams, PostParams, WatchEvent,
+        WatchParams,
     };
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
     use kube::core::{DynamicObject, GroupVersionKind};
@@ -44,6 +48,13 @@ pub mod client {
         server: Option<String>,
     }
 
+    #[derive(Clone, serde::Serialize)]
+    struct LogLineEvent {
+        container: String,
+        pod: String,
+        namespace: String,
+        line: String,
+    }
     #[derive(Debug, Serialize)]
     pub struct PodData {
         uid: String,
@@ -263,6 +274,9 @@ pub mod client {
         static ref REFLECTOR_HANDLES: Mutex<HashMap<Key, JoinHandle<()>>> =
             Mutex::new(HashMap::new());
     }
+
+    static ACTIVE_STREAMS: Lazy<Mutex<HashMap<String, ()>>> =
+        Lazy::new(|| Mutex::new(HashMap::new()));
 
     pub fn has_reflector(path: &str, context: &str, resource: &str) -> bool {
         let map = REFLECTOR_HANDLES.lock().unwrap();
@@ -685,6 +699,111 @@ pub mod client {
 
             handles.insert(key_clone, handle);
         }
+
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn get_pod_logs(
+        path: &str,
+        context: &str,
+        name: &str,
+        ns: &str,
+        container: &str,
+        tail_lines: Option<i64>,
+    ) -> Result<Vec<String>, GenericError> {
+        log::info!(
+            "get_pod_logs path={:?} context={:?} name={:?} ns={:?} container={:?} tail_lines={:?}",
+            path,
+            context,
+            name,
+            ns,
+            container,
+            tail_lines,
+        );
+
+        let client = get_client(path, context).await?;
+        let pods: Api<Pod> = Api::namespaced(client, ns);
+        let mut lp = LogParams {
+            ..Default::default()
+        };
+        lp.container = Some(container.to_string());
+        let logs = pods
+            .logs(name, &lp)
+            .await
+            .map_err(|e| GenericError::from(e))?;
+
+        Ok(logs.lines().map(|s| s.to_string()).collect())
+    }
+
+    #[tauri::command]
+    pub async fn stream_pod_logs(
+        app: AppHandle,
+        path: &str,
+        context: &str,
+        name: &str,
+        ns: &str,
+        container: &str,
+    ) -> Result<(), GenericError> {
+        let key = format!("{}/{}/{}/{}/{}", path, context, ns, name, container,);
+
+        {
+            let streams = ACTIVE_STREAMS.lock().unwrap();
+            if streams.contains_key(&key) {
+                log::warn!("Stream already active for {}", key);
+                return Ok(());
+            }
+        }
+
+        let client = get_client(path, context).await?;
+
+        let pods: Api<Pod> = Api::namespaced(client, ns);
+
+        let mut lp = LogParams {
+            follow: true,
+            ..Default::default()
+        };
+        lp.container = Some(container.to_string());
+
+        let reader = pods
+            .log_stream(name, &lp)
+            .await
+            .map_err(|e| GenericError::from(e))?;
+
+        let mut lines = BufReader::new(reader).lines();
+
+        let pod_name = name.to_string();
+        let ns = ns.to_string();
+        let app_clone = app.clone();
+        {
+            let mut streams = ACTIVE_STREAMS.lock().unwrap();
+            streams.insert(key.clone(), ());
+        }
+        tokio::spawn(async move {
+            while let Some(line) = lines.next().await {
+                match line {
+                    Ok(line) => {
+                        let _ = app_clone.emit(
+                            "pod_log_line",
+                            LogLineEvent {
+                                container: lp.container.clone().unwrap_or_default(),
+                                pod: pod_name.clone(),
+                                namespace: ns.clone(),
+                                line,
+                            },
+                        );
+                    }
+                    Err(err) => {
+                        log::error!("Error reading log line: {}", err);
+                        break;
+                    }
+                }
+            }
+
+            let mut streams = ACTIVE_STREAMS.lock().unwrap();
+            streams.remove(&key);
+            log::info!("Stream closed for {}", key);
+        });
 
         Ok(())
     }

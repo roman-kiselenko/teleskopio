@@ -3,6 +3,7 @@ import { ClusterPage } from './components/pages/Cluster';
 import Pods from '@/components/resources/Workloads/Pods';
 import Deployments from '@/components/resources/Workloads/Deployments';
 import DaemonSets from '@/components/resources/Workloads/DaemonSets';
+import { PodLogs } from '@/components/resources/Workloads/PodLogs';
 import ReplicaSets from '@/components/resources/Workloads/ReplicaSets';
 import StatefulSets from '@/components/resources/Workloads/StatefulSets';
 import Jobs from '@/components/resources/Workloads/Jobs';
@@ -88,6 +89,17 @@ export const router = createBrowserRouter([
           };
         },
         element: <ResourceEditor resource="pod" />,
+      },
+      {
+        path: '/pods/logs/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            ns: params.namespace,
+            data: await LoadPod(params.namespace, params.name),
+          };
+        },
+        element: <PodLogs />,
       },
     ],
   },

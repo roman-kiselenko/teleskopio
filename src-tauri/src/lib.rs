@@ -71,6 +71,8 @@ pub fn run() {
             // Pods
             k8s::client::get_pods_page,
             k8s::client::get_one_pod,
+            k8s::client::get_pod_logs,
+            k8s::client::stream_pod_logs,
             k8s::client::pod_events,
             k8s::client::delete_pod,
             // Deployments

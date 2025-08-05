@@ -143,7 +143,11 @@ const columns: ColumnDef<Pod>[] = [
               <Trash size={8} /> Delete
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled className="text-xs">
+            <DropdownMenuItem
+              onClick={() => navigate(`/pods/logs/${pod.namespace}/${pod.name}`)}
+              disabled={actionDisabled}
+              className="text-xs"
+            >
               <ScrollText />
               Logs
             </DropdownMenuItem>
