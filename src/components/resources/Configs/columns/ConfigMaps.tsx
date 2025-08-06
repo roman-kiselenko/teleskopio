@@ -12,13 +12,13 @@ const columns: ColumnDef<ConfigMap>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     id: 'creationTimestamp',
@@ -33,11 +33,17 @@ const columns: ColumnDef<ConfigMap>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: cm.metadata.namespace,
-        resourceName: cm.metadata.name,
+        resourceNamespace: cm.metadata?.namespace,
+        resourceName: cm.metadata?.name,
       };
       return (
-        <Actions resource={cm} name={'ConfigMap'} action={'delete_configmap'} payload={payload} />
+        <Actions
+          url={`/configmaps/${cm.metadata?.namespace}/${cm?.metadata?.name}`}
+          resource={cm}
+          name={'ConfigMap'}
+          action={'delete_configmap'}
+          payload={payload}
+        />
       );
     },
   },

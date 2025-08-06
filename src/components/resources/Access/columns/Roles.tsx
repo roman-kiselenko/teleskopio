@@ -12,17 +12,17 @@ const columns: ColumnDef<Role>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -33,10 +33,18 @@ const columns: ColumnDef<Role>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: role.metadata.name,
-        resourceNamespace: role.metadata.namespace,
+        resourceName: role.metadata?.name,
+        resourceNamespace: role.metadata?.namespace,
       };
-      return <Actions resource={role} name={'Role'} action={'delete_role'} payload={payload} />;
+      return (
+        <Actions
+          url={`/roles/${role.metadata?.namespace}/${role?.metadata?.name}`}
+          resource={role}
+          name={'Role'}
+          action={'delete_role'}
+          payload={payload}
+        />
+      );
     },
   },
 ];

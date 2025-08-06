@@ -12,21 +12,21 @@ const columns: ColumnDef<Job>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'status.ready',
     id: 'replicase',
     header: memo(({ column }) => <HeaderAction column={column} name={'Ready'} />),
     cell: ({ row }) => {
-      const ready = row.original.status.ready;
-      const succeeded = row.original.status.succeeded;
+      const ready = row.original.status?.ready;
+      const succeeded = row.original.status?.succeeded;
       return (
         <div>
           {ready}/{succeeded}
@@ -41,7 +41,7 @@ const columns: ColumnDef<Job>[] = [
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -52,10 +52,18 @@ const columns: ColumnDef<Job>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: job.metadata.namespace,
-        resourceName: job.metadata.name,
+        resourceNamespace: job.metadata?.namespace,
+        resourceName: job.metadata?.name,
       };
-      return <Actions resource={job} name={'Job'} action={'delete_job'} payload={payload} />;
+      return (
+        <Actions
+          url={`/jobs/${job.metadata?.namespace}/${job?.metadata?.name}`}
+          resource={job}
+          name={'Job'}
+          action={'delete_job'}
+          payload={payload}
+        />
+      );
     },
   },
 ];

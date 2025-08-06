@@ -19,7 +19,7 @@ const listenDeploymentEvents = async () => {
     const dp = event.payload;
     deploymentsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(dp.metadata.uid);
+      newMap.delete(dp.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenDeploymentEvents = async () => {
     const dp = event.payload;
     deploymentsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(dp.metadata.uid, dp);
+      newMap.set(dp.metadata?.uid as string, dp);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Deployments = () => {
       subscribeEvents={subscribeDeploymentEvents}
       state={() => dpState.get() as Map<string, Deployment>}
       setState={dpState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

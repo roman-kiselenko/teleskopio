@@ -19,7 +19,7 @@ const listenServiceEvents = async () => {
     const se = event.payload;
     servicesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(se.metadata.uid);
+      newMap.delete(se.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenServiceEvents = async () => {
     const se = event.payload;
     servicesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(se.metadata.uid, se);
+      newMap.set(se.metadata?.uid as string, se);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Services = () => {
       getPage={getServicesPage}
       state={() => servicesState.get() as Map<string, Service>}
       setState={servicesState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

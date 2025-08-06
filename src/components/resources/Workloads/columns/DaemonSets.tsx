@@ -12,17 +12,17 @@ const columns: ColumnDef<DaemonSet>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <DsName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <DsName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -33,11 +33,17 @@ const columns: ColumnDef<DaemonSet>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: ds.metadata.namespace,
-        resourceName: ds.metadata.name,
+        resourceNamespace: ds.metadata?.namespace,
+        resourceName: ds.metadata?.name,
       };
       return (
-        <Actions resource={ds} name={'DaemonSet'} action={'delete_daemonset'} payload={payload} />
+        <Actions
+          url={`/daemonsets/${ds.metadata?.namespace}/${ds?.metadata?.name}`}
+          resource={ds}
+          name={'DaemonSet'}
+          action={'delete_daemonset'}
+          payload={payload}
+        />
       );
     },
   },

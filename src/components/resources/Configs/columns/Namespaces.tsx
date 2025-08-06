@@ -11,11 +11,11 @@ const columns: ColumnDef<Namespace>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.name}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.name}</div>),
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -26,11 +26,16 @@ const columns: ColumnDef<Namespace>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: ns.metadata.namespace,
-        resourceName: ns.metadata.name,
+        resourceName: ns.metadata?.name,
       };
       return (
-        <Actions resource={ns} name={'Namespace'} action={'delete_namespace'} payload={payload} />
+        <Actions
+          url={`/namespaces/${ns?.metadata?.name}`}
+          resource={ns}
+          name={'Namespace'}
+          action={'delete_namespace'}
+          payload={payload}
+        />
       );
     },
   },

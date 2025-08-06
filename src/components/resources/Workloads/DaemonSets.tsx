@@ -19,7 +19,7 @@ const listenDaemonSetEvents = async () => {
     const ds = event.payload;
     daemonSetsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(ds.metadata.uid);
+      newMap.delete(ds.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenDaemonSetEvents = async () => {
     const ds = event.payload;
     daemonSetsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ds.metadata.uid, ds);
+      newMap.set(ds.metadata?.uid as string, ds);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const DaemonSets = () => {
       getPage={getDaemonSetsPage}
       state={() => dsState.get() as Map<string, DaemonSet>}
       setState={dsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

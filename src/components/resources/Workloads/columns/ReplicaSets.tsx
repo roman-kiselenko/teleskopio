@@ -12,13 +12,13 @@ const columns: ColumnDef<ReplicaSet>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <RsName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <RsName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'spec.replicas',
@@ -27,14 +27,14 @@ const columns: ColumnDef<ReplicaSet>[] = [
     cell: ({ row }) => {
       return (
         <div>
-          {row.original.spec.replicas}/{row.original.status.readyReplicas}
+          {row.original.spec?.replicas}/{row.original.status?.readyReplicas}
         </div>
       );
     },
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -45,11 +45,17 @@ const columns: ColumnDef<ReplicaSet>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: rs.metadata.namespace,
-        resourceName: rs.metadata.name,
+        resourceNamespace: rs.metadata?.namespace,
+        resourceName: rs.metadata?.name,
       };
       return (
-        <Actions resource={rs} name={'ReplicaSet'} action={'delete_replicaset'} payload={payload} />
+        <Actions
+          url={`/replicasets/${rs.metadata?.namespace}/${rs?.metadata?.name}`}
+          resource={rs}
+          name={'ReplicaSet'}
+          action={'delete_replicaset'}
+          payload={payload}
+        />
       );
     },
   },

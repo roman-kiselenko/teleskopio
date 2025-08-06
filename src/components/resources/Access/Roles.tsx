@@ -17,9 +17,9 @@ const subscribeRolesEvents = async (rv: string) => {
 const listenRolesEvents = async () => {
   await listen<Role>('role-deleted', (event) => {
     const ro = event.payload;
-    rolesState.set(() => {
-      const newMap = new Map();
-      newMap.delete(ro.metadata.uid);
+    rolesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ro.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenRolesEvents = async () => {
     const ro = event.payload;
     rolesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ro.metadata.uid, ro);
+      newMap.set(ro.metadata?.uid as string, ro);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Roles = () => {
       getPage={getRolesPage}
       state={() => rolesState.get() as Map<string, Role>}
       setState={rolesState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

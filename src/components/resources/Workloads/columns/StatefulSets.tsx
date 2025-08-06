@@ -12,21 +12,21 @@ const columns: ColumnDef<StatefulSet>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <SsName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <SsName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'replicas',
     id: 'replicas',
     header: memo(({ column }) => <HeaderAction column={column} name={'Replicas'} />),
     cell: ({ row }) => {
-      const currentReplicas = row.original.status.currentReplicas;
-      const availableReplicas = row.original.status.availableReplicas;
+      const currentReplicas = row.original.status?.currentReplicas;
+      const availableReplicas = row.original.status?.availableReplicas;
       return (
         <div>
           {currentReplicas}/{availableReplicas}
@@ -36,7 +36,7 @@ const columns: ColumnDef<StatefulSet>[] = [
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -47,11 +47,12 @@ const columns: ColumnDef<StatefulSet>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: ss.metadata.namespace,
-        resourceName: ss.metadata.name,
+        resourceNamespace: ss.metadata?.namespace,
+        resourceName: ss.metadata?.name,
       };
       return (
         <Actions
+          url={`/statefulsets/${ss.metadata?.namespace}/${ss?.metadata?.name}`}
           resource={ss}
           name={'StatefulSet'}
           action={'delete_statefulset'}

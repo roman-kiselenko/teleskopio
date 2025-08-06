@@ -19,7 +19,7 @@ const listenCronJobEvents = async () => {
     const cj = event.payload;
     cronJobsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(cj.metadata.uid);
+      newMap.delete(cj.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenCronJobEvents = async () => {
     const cj = event.payload;
     cronJobsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(cj.metadata.uid, cj);
+      newMap.set(cj.metadata?.uid as string, cj);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const CronJobs = () => {
       getPage={getCronJobsPage}
       state={() => cronjobsState.get() as Map<string, CronJob>}
       setState={cronjobsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

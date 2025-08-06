@@ -14,28 +14,19 @@ import { useNavigate } from 'react-router';
 function Actions({
   resource,
   name,
+  url,
   action,
   payload,
   children,
 }: {
   resource: any;
+  url: string;
   name: string;
   action: string;
   payload: any;
   children?: any;
 }) {
   let navigate = useNavigate();
-  let full_path = `/${resource.kind.toLowerCase()}s/${resource.metadata.namespace}/${resource.metadata.name}`;
-  // TODO fixme
-  if (resource.kind === 'Node') {
-    full_path = `/cluster/${resource.metadata.name}`;
-  }
-  if (resource.kind === 'Namespace') {
-    full_path = `/namespaces/${resource.metadata.name}`;
-  }
-  if (resource.kind === 'StorageClass') {
-    full_path = `/storageclasses/${resource.metadata.name}`;
-  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -45,7 +36,7 @@ function Actions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem className="text-xs" onClick={() => navigate(full_path)}>
+        <DropdownMenuItem className="text-xs" onClick={() => navigate(url)}>
           <SquareMousePointer size={8} />
           Open
         </DropdownMenuItem>

@@ -50,6 +50,7 @@ const columns: ColumnDef<StorageClass>[] = [
       return (
         <Actions
           resource={sc}
+          url={`/storageclasses/${sc?.metadata?.name}`}
           name={'StorageClass'}
           action={'delete_storageclass'}
           payload={payload}

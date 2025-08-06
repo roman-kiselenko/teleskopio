@@ -17,9 +17,9 @@ const subscribeNamespacesEvents = async (rv: string) => {
 const listenNamespaceEvents = async () => {
   await listen<Namespace>('namespace-deleted', (event) => {
     const ns = event.payload;
-    namespacesState.set(() => {
-      const newMap = new Map();
-      newMap.delete(ns.metadata.uid);
+    namespacesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ns.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenNamespaceEvents = async () => {
     const ns = event.payload;
     namespacesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ns.metadata.uid, ns);
+      newMap.set(ns.metadata?.uid as string, ns);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Namespaces = () => {
       getPage={getNamespacesPage}
       state={() => nsState.get() as Map<string, Namespace>}
       setState={nsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

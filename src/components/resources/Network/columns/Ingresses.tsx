@@ -12,23 +12,23 @@ const columns: ColumnDef<Ingress>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'spec.ingressClassName',
     id: 'ingressClassName',
     header: memo(({ column }) => <HeaderAction column={column} name={'IngressClassName'} />),
-    cell: memo(({ row }) => <div>{row.original.spec.ingressClassName}</div>),
+    cell: memo(({ row }) => <div>{row.original.spec?.ingressClassName}</div>),
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -39,11 +39,17 @@ const columns: ColumnDef<Ingress>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: ingress.metadata.namespace,
-        resourceName: ingress.metadata.name,
+        resourceNamespace: ingress.metadata?.namespace,
+        resourceName: ingress.metadata?.name,
       };
       return (
-        <Actions resource={ingress} name={'Ingress'} action={'delete_ingress'} payload={payload} />
+        <Actions
+          url={`/ingresses/${ingress.metadata?.namespace}/${ingress?.metadata?.name}`}
+          resource={ingress}
+          name={'Ingress'}
+          action={'delete_ingress'}
+          payload={payload}
+        />
       );
     },
   },

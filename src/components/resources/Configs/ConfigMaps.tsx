@@ -17,9 +17,9 @@ const subscribeConfigmapsEvents = async (rv: string) => {
 const listenConfigMapsEvents = async () => {
   await listen<ConfigMap>('configmap-deleted', (event) => {
     const cm = event.payload;
-    configmapsState.set(() => {
-      const newMap = new Map();
-      newMap.delete(cm.metadata.uid);
+    configmapsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(cm.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenConfigMapsEvents = async () => {
     const cm = event.payload;
     configmapsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(cm.metadata.uid, cm);
+      newMap.set(cm.metadata?.uid as string, cm);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const ConfigMaps = () => {
       getPage={getConfigmapsPage}
       state={() => configmapsState.get() as Map<string, ConfigMap>}
       setState={configmapsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

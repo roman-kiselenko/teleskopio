@@ -19,7 +19,7 @@ const listenReplicaSetEvents = async () => {
     const rs = event.payload;
     replicaSetsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(rs.metadata.uid);
+      newMap.delete(rs.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenReplicaSetEvents = async () => {
     const rs = event.payload;
     replicaSetsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(rs.metadata.uid, rs);
+      newMap.set(rs.metadata?.uid as string, rs);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const ReplicaSets = () => {
       getPage={getReplicaSetsPage}
       state={() => rsState.get() as Map<string, ReplicaSet>}
       setState={rsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

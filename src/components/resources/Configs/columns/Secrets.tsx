@@ -12,13 +12,13 @@ const columns: ColumnDef<Secret>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'type',
@@ -28,7 +28,7 @@ const columns: ColumnDef<Secret>[] = [
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -39,11 +39,17 @@ const columns: ColumnDef<Secret>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: secret.metadata.namespace,
-        resourceName: secret.metadata.name,
+        resourceNamespace: secret.metadata?.namespace,
+        resourceName: secret.metadata?.name,
       };
       return (
-        <Actions resource={secret} name={'Secret'} action={'delete_secret'} payload={payload} />
+        <Actions
+          url={`/secrets/${secret.metadata?.namespace}/${secret?.metadata?.name}`}
+          resource={secret}
+          name={'Secret'}
+          action={'delete_secret'}
+          payload={payload}
+        />
       );
     },
   },

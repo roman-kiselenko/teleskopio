@@ -34,12 +34,12 @@ const columns: ColumnDef<Event>[] = [
     id: 'namespace',
     header: 'Namespace',
     cell: ({ row }) => {
-      return <div>{row.original.metadata.namespace}</div>;
+      return <div>{row.original.metadata?.namespace}</div>;
     },
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },

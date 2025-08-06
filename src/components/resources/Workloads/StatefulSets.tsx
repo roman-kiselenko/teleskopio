@@ -19,7 +19,7 @@ const listenStatefulSetEvents = async () => {
     const ss = event.payload;
     statefulSetsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(ss.metadata.uid);
+      newMap.delete(ss.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenStatefulSetEvents = async () => {
     const ss = event.payload;
     statefulSetsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ss.metadata.uid, ss);
+      newMap.set(ss.metadata?.uid as string, ss);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const StatefulSets = () => {
       getPage={getStatefulSetsPage}
       state={() => ssState.get() as Map<string, StatefulSet>}
       setState={ssState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

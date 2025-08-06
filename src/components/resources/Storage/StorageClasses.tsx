@@ -17,9 +17,9 @@ const subscribeStorageClassEvents = async (rv: string) => {
 const listenStorageClassEvents = async () => {
   await listen<StorageClass>('storageclass-deleted', (event) => {
     const ns = event.payload;
-    storageclassesState.set(() => {
-      const newMap = new Map();
-      newMap.delete(ns?.metadata?.uid);
+    storageclassesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ns.metadata?.uid as string);
       return newMap;
     });
   });

@@ -19,7 +19,7 @@ const listenIngressEvents = async () => {
     const ing = event.payload;
     ingressesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(ing.metadata.uid);
+      newMap.delete(ing.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenIngressEvents = async () => {
     const ing = event.payload;
     ingressesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ing.metadata.uid, ing);
+      newMap.set(ing.metadata?.uid as string, ing);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Ingresses = () => {
       subscribeEvents={subscribeIngressesEvents}
       state={() => ingState.get() as Map<string, Ingress>}
       setState={ingState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

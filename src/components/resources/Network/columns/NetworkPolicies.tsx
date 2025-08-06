@@ -12,23 +12,23 @@ const columns: ColumnDef<NetworkPolicy>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row?.original?.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row?.original?.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'spec.policyTypes',
     id: 'PolicyType',
     header: memo(({ column }) => <HeaderAction column={column} name={'PolicyTypes'} />),
-    cell: memo(({ row }) => <div>{row.original.spec.policyTypes}</div>),
+    cell: memo(({ row }) => <div>{row?.original?.spec?.policyTypes}</div>),
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -39,12 +39,13 @@ const columns: ColumnDef<NetworkPolicy>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: np.metadata.namespace,
-        resourceName: np.metadata.name,
+        resourceNamespace: np?.metadata?.namespace,
+        resourceName: np?.metadata?.name,
       };
       return (
         <Actions
           resource={np}
+          url={`/networkpolicies/${np?.metadata?.namespace}/${np?.metadata?.name}`}
           name={'NetworkPolicy'}
           action={'delete_networkpolicy'}
           payload={payload}

@@ -14,13 +14,13 @@ const columns: ColumnDef<CronJob>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'spec.schedule',
@@ -31,9 +31,11 @@ const columns: ColumnDef<CronJob>[] = [
         <div className="flex flex-row items-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="font-bold">{row.original.spec.schedule}</div>
+              <div className="font-bold">{row.original.spec?.schedule}</div>
             </TooltipTrigger>
-            <TooltipContent>{cronstrue.toString(row.original.spec.schedule)}</TooltipContent>
+            <TooltipContent>
+              {cronstrue.toString(row.original.spec?.schedule as string)}
+            </TooltipContent>
           </Tooltip>
         </div>
       );
@@ -41,7 +43,7 @@ const columns: ColumnDef<CronJob>[] = [
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -52,11 +54,17 @@ const columns: ColumnDef<CronJob>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: cronjob.metadata.namespace,
-        resourceName: cronjob.metadata.name,
+        resourceNamespace: cronjob.metadata?.namespace,
+        resourceName: cronjob.metadata?.name,
       };
       return (
-        <Actions resource={cronjob} name={'CronJob'} action={'delete_cronjob'} payload={payload} />
+        <Actions
+          url={`/cronjobs/${cronjob.metadata?.namespace}/${cronjob.metadata?.name}`}
+          resource={cronjob}
+          name={'CronJob'}
+          action={'delete_cronjob'}
+          payload={payload}
+        />
       );
     },
   },

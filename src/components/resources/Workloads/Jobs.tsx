@@ -19,7 +19,7 @@ const listenJobEvents = async () => {
     const job = event.payload;
     jobsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(job.metadata.uid);
+      newMap.delete(job.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenJobEvents = async () => {
     const job = event.payload;
     jobsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(job.metadata.uid, job);
+      newMap.set(job.metadata?.uid as string, job);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Jobs = () => {
       getPage={getJobsPage}
       state={() => jobsState.get() as Map<string, Job>}
       setState={jobsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

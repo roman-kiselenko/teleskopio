@@ -18,7 +18,7 @@ const columns: ColumnDef<Node>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.name}</div>),
+    cell: memo(({ row }) => <div>{row.original.metadata?.name}</div>),
   },
   {
     accessorFn: (row) => row.metadata?.labels,
@@ -30,12 +30,12 @@ const columns: ColumnDef<Node>[] = [
           <Badge
             className="text-xs"
             variant={
-              row.original.metadata.labels.hasOwnProperty('node-role.kubernetes.io/control-plane')
+              row.original.metadata?.labels?.hasOwnProperty('node-role.kubernetes.io/control-plane')
                 ? 'destructive'
                 : 'default'
             }
           >
-            {row.original.metadata.labels.hasOwnProperty('node-role.kubernetes.io/control-plane')
+            {row.original.metadata?.labels?.hasOwnProperty('node-role.kubernetes.io/control-plane')
               ? 'control plane'
               : 'worker'}
           </Badge>
@@ -47,14 +47,14 @@ const columns: ColumnDef<Node>[] = [
     accessorKey: 'spec.podCIDR',
     id: 'podCIDR',
     header: memo(({ column }) => <HeaderAction column={column} name={'PodCIDR'} />),
-    cell: memo(({ row }) => <div>{row.original.spec.podCIDR}</div>),
+    cell: memo(({ row }) => <div>{row.original.spec?.podCIDR}</div>),
   },
   {
-    accessorFn: (row) => row.status.addresses?.find((a) => a.type === 'InternalIP'),
+    accessorFn: (row) => row.status?.addresses?.find((a) => a.type === 'InternalIP'),
     id: 'InternalIP',
     header: memo(({ column }) => <HeaderAction column={column} name={'InternalIP'} />),
     cell: ({ row }) => {
-      const address = row.original.status.addresses?.find((a) => a.type === 'InternalIP');
+      const address = row.original.status?.addresses?.find((a) => a.type === 'InternalIP');
       return <div>{address?.address}</div>;
     },
   },
@@ -63,7 +63,7 @@ const columns: ColumnDef<Node>[] = [
     id: 'kubeletVersion',
     header: 'Kubelet',
     cell: ({ row }) => {
-      const name = row.original.status.nodeInfo.kubeletVersion;
+      const name = row.original.status?.nodeInfo?.kubeletVersion;
       return (
         <div className="flex flex-row items-center">
           <Tooltip>
@@ -71,7 +71,7 @@ const columns: ColumnDef<Node>[] = [
               <div>{name}</div>
             </TooltipTrigger>
             <TooltipContent>
-              CRI {row.original.status.nodeInfo.containerRuntimeVersion}
+              CRI {row.original.status?.nodeInfo?.containerRuntimeVersion}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -109,7 +109,7 @@ const columns: ColumnDef<Node>[] = [
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -123,31 +123,31 @@ const columns: ColumnDef<Node>[] = [
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: node.metadata.name,
+        resourceName: node.metadata?.name,
       };
       const additional = [
         <DropdownMenuItem
-          key={node.metadata.uid}
+          key={node.metadata?.uid}
           className="text-xs"
           onClick={async () => {
             toast.promise(
               invoke<any>(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
                 path: getKubeconfig(),
                 context: getCluster(),
-                resourceName: node.metadata.name,
+                resourceName: node.metadata?.name,
               }),
               {
                 loading: `${cordoned ? 'Uncordoning' : 'Cordoning'}...`,
                 success: () => {
                   return (
                     <span>
-                      Node <b>{node.metadata.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
+                      Node <b>{node.metadata?.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
                     </span>
                   );
                 },
                 error: (err) => (
                   <span>
-                    Cant {cordoned ? 'uncordon' : 'cordon'} <b>{node.metadata.name}</b>
+                    Cant {cordoned ? 'uncordon' : 'cordon'} <b>{node.metadata?.name}</b>
                     <br />
                     {err.message}
                   </span>
@@ -173,27 +173,27 @@ const columns: ColumnDef<Node>[] = [
           )}
         </DropdownMenuItem>,
         <DropdownMenuItem
-          key={node.metadata.uid}
+          key={node.metadata?.uid}
           className="text-xs"
           onClick={async () => {
             toast.promise(
               invoke<any>('drain_node', {
                 path: getKubeconfig(),
                 context: getCluster(),
-                resourceName: node.metadata.name,
+                resourceName: node.metadata?.name,
               }),
               {
                 loading: 'Draining...',
                 success: () => {
                   return (
                     <span>
-                      Node <b>{node.metadata.name}</b> drained
+                      Node <b>{node.metadata?.name}</b> drained
                     </span>
                   );
                 },
                 error: (err) => (
                   <span>
-                    Cant drain <b>{node.metadata.name}</b>
+                    Cant drain <b>{node.metadata?.name}</b>
                     <br />
                     {err.message}
                   </span>
@@ -208,6 +208,7 @@ const columns: ColumnDef<Node>[] = [
       ];
       return (
         <Actions
+          url={`/nodes/${node?.metadata?.name}`}
           children={additional}
           resource={node}
           name={'Node'}

@@ -19,7 +19,7 @@ const listenNetworkPoliciesEvents = async () => {
     const np = event.payload;
     networkpoliciesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(np.metadata.uid);
+      newMap.delete(np.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenNetworkPoliciesEvents = async () => {
     const np = event.payload;
     networkpoliciesState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(np.metadata.uid, np);
+      newMap.set(np.metadata?.uid as string, np);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const NetworkPolicies = () => {
       getPage={getNetworkPoliciesPage}
       state={() => npState.get() as Map<string, NetworkPolicy>}
       setState={npState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );

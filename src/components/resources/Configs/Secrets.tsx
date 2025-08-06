@@ -19,7 +19,7 @@ const listenReplicaSetEvents = async () => {
     const rs = event.payload;
     secretsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(rs.metadata.uid);
+      newMap.delete(rs.metadata?.uid as string);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenReplicaSetEvents = async () => {
     const ss = event.payload;
     secretsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ss.metadata.uid, ss);
+      newMap.set(ss.metadata?.uid as string, ss);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Secrets = () => {
       getPage={getSecretsPage}
       state={() => secretsState.get() as Map<string, Secret>}
       setState={secretsState.set}
-      extractKey={(p) => p.metadata.uid}
+      extractKey={(p) => p.metadata?.uid as string}
       columns={columns}
     />
   );
