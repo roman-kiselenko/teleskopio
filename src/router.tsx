@@ -11,6 +11,7 @@ import CronJobs from '@/components/resources/Workloads/CronJobs';
 import ConfigMaps from '@/components/resources/Configs/ConfigMaps';
 import Secrets from '@/components/resources/Configs/Secrets';
 import Namespaces from '@/components/resources/Configs/Namespaces';
+import StorageClasses from '@/components/resources/Storage/StorageClasses';
 import Services from '@/components/resources/Network/Services';
 import Ingresses from '@/components/resources/Network/Ingresses';
 import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
@@ -29,6 +30,7 @@ import {
   LoadConfigMap,
   LoadSecret,
   LoadNamespace,
+  LoadStorageClass,
   LoadService,
   LoadIngress,
   LoadNetworkPolicy,
@@ -394,6 +396,26 @@ export const router = createBrowserRouter([
           };
         },
         element: <ResourceEditor resource="serviceaccount" />,
+      },
+    ],
+  },
+  {
+    path: '/storageclasses',
+    element: <Layout />,
+    children: [
+      {
+        path: '/storageclasses',
+        element: <StorageClasses />,
+      },
+      {
+        path: '/storageclasses/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            name: params.name,
+            data: await LoadStorageClass(params.name),
+          };
+        },
+        element: <ResourceEditor resource="storageclass" />,
       },
     ],
   },

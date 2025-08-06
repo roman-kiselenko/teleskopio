@@ -3,7 +3,7 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { ColumnDef } from '@tanstack/react-table';
-import { Node } from '@/types';
+import { Node } from 'kubernetes-models/v1';
 import { Badge } from '@/components/ui/badge';
 import Actions from '@/components/ui/Table/Actions';
 import { cn } from '@/util';

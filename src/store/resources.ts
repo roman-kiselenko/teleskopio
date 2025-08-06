@@ -1,24 +1,19 @@
 import { hookstate, useHookstate } from '@hookstate/core';
 import {
   Pod,
-  Deployment,
-  DaemonSet,
-  ReplicaSet,
-  StatefulSet,
-  Job,
   Node,
   Event,
-  CronJob,
   Secret,
-  StorageClass,
+  ConfigMap,
   Service,
   ServiceAccount,
-  Role,
-  NetworkPolicy,
-  Ingress,
-  ConfigMap,
   Namespace,
-} from '@/types';
+} from 'kubernetes-models/v1';
+import { Job, CronJob } from 'kubernetes-models/batch/v1';
+import { StorageClass } from 'kubernetes-models/storage.k8s.io/v1';
+import { Role } from 'kubernetes-models/rbac.authorization.k8s.io/v1';
+import { Ingress, NetworkPolicy } from 'kubernetes-models/networking.k8s.io/v1';
+import { Deployment, DaemonSet, ReplicaSet, StatefulSet } from 'kubernetes-models/apps/v1';
 
 export const daemonSetsState = hookstate<Map<string, DaemonSet>>(new Map());
 

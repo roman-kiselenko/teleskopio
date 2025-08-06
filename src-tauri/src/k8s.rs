@@ -432,22 +432,6 @@ pub mod client {
     }
 
     #[tauri::command]
-    pub async fn get_namespaces(path: &str, context: &str) -> Result<Vec<Namespace>, GenericError> {
-        let client = get_client(&path, context).await?;
-        let namespace_api: Api<Namespace> = Api::all(client);
-
-        let namespaces = namespace_api
-            .list(&ListParams::default())
-            .await
-            .map_err(|err| {
-                println!("error {:?}", err);
-                GenericError::from(err)
-            })?;
-
-        Ok(namespaces.items)
-    }
-
-    #[tauri::command]
     pub async fn get_pod_logs(
         path: &str,
         context: &str,
@@ -689,6 +673,44 @@ pub mod client {
     }
 
     macro_rules! generate_delete_fn {
+        ($fn_name:ident, $type:ty, $log_type:literal, cluster_scoped) => {
+            #[tauri::command]
+            pub async fn $fn_name(
+                path: &str,
+                context: &str,
+                resource_name: &str,
+            ) -> Result<(), GenericError> {
+                log::info!(
+                    concat!("delete_", $log_type, " {:?} {:?} {:?}"),
+                    path,
+                    context,
+                    resource_name
+                );
+                let client = get_client(&path, context).await?;
+                let api: Api<$type> = Api::all(client);
+                let dp = DeleteParams::default();
+                let res = api.delete(resource_name, &dp).await.map_err(|err| {
+                    println!("error {:?}", err);
+                    GenericError::from(err)
+                })?;
+
+                match res {
+                    Either::Left(obj) => {
+                        log::info!(
+                            concat!("deleted ", $log_type, ": {}"),
+                            obj.metadata.name.unwrap_or_default()
+                        );
+                    }
+                    Either::Right(status) => {
+                        log::info!(
+                            concat!("API response (", $log_type, "): {:?}"),
+                            status.status
+                        );
+                    }
+                };
+                Ok(())
+            }
+        };
         ($fn_name:ident, $type:ty, $log_type:literal) => {
             #[tauri::command]
             pub async fn $fn_name(
@@ -817,6 +839,7 @@ pub mod client {
         "event-deleted"
     );
     // Namespaces
+    generate_get_fn!(get_namespaces, Namespace);
     generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");
     generate_get_one_fn!(get_one_namespace, Namespace, cluster_scoped);
     generate_event_handler_fn!(
@@ -826,6 +849,7 @@ pub mod client {
         "namespace-updated",
         "namespace-deleted"
     );
+    generate_delete_fn!(delete_namespace, Namespace, "namespace", cluster_scoped);
     // Deployments
     generate_get_page_fn!(get_deployments_page, Deployment, "deployments");
     generate_get_one_fn!(get_one_deployment, Deployment);
@@ -942,7 +966,21 @@ pub mod client {
     );
     generate_delete_fn!(delete_networkpolicy, NetworkPolicy, "networkpolicy");
     // StorageClasses
+    generate_get_page_fn!(get_storageclasses_page, StorageClass, "storageclass");
     generate_get_fn!(get_storageclasses, StorageClass);
+    generate_event_handler_fn!(
+        storageclass_events,
+        "storageclass",
+        StorageClass,
+        "storageclass-updated",
+        "storageclass-deleted"
+    );
+    generate_delete_fn!(
+        delete_storageclass,
+        StorageClass,
+        "storageclass",
+        cluster_scoped
+    );
     generate_get_one_fn!(get_one_storageclass, StorageClass, cluster_scoped);
     // ServiceAccounts
     generate_get_page_fn!(get_serviceaccounts_page, ServiceAccount, "serviceaccount");
@@ -960,76 +998,4 @@ pub mod client {
     generate_get_one_fn!(get_one_role, Role);
     generate_event_handler_fn!(role_events, "role", Role, "role-updated", "role-deleted");
     generate_delete_fn!(delete_role, Role, "role");
-
-    #[tauri::command]
-    pub async fn delete_storageclass(
-        path: &str,
-        context: &str,
-        resource_name: &str,
-    ) -> Result<(), GenericError> {
-        log::info!(
-            "delete_storageclass {:?} {:?} {:?}",
-            path,
-            context,
-            resource_name
-        );
-        let client = get_client(&path, context).await?;
-        let storageclass_api: Api<StorageClass> = Api::all(client);
-        let dp = DeleteParams::default();
-        let storageclass = storageclass_api
-            .delete(resource_name, &dp)
-            .await
-            .map_err(|err| {
-                println!("error {:?}", err);
-                GenericError::from(err)
-            })?;
-        match storageclass {
-            Either::Left(storageclass) => {
-                log::info!(
-                    "deleted storageclass: {}",
-                    storageclass.metadata.name.unwrap_or_default()
-                );
-            }
-            Either::Right(status) => {
-                log::info!("API response: {:?}", status.message);
-            }
-        };
-        Ok(())
-    }
-
-    #[tauri::command]
-    pub async fn delete_namespace(
-        path: &str,
-        context: &str,
-        resource_name: &str,
-    ) -> Result<(), GenericError> {
-        log::info!(
-            "delete_namespace {:?} {:?} {:?}",
-            path,
-            context,
-            resource_name
-        );
-        let client = get_client(&path, context).await?;
-        let namespace_api: Api<Namespace> = Api::all(client);
-        let dp = DeleteParams::default();
-        let namespace = namespace_api
-            .delete(resource_name, &dp)
-            .await
-            .map_err(|err| {
-                println!("error {:?}", err);
-                GenericError::from(err)
-            })?;
-        match namespace {
-            Either::Left(namespace) => {
-                log::info!(
-                    "deleted namespace: {}",
-                    namespace.metadata.name.unwrap_or_default()
-                );
-            }
-            Either::Right(status) => {
-                log::info!("API response: {:?}", status.message);
-            }
-        };
-        Ok(())
-    }
 }

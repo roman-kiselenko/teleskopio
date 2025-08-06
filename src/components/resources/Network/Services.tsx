@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Network/columns/Services';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Service } from '@/types';
+import { Service } from 'kubernetes-models/v1';
 
 const subscribeServicesEvents = async (rv: string) => {
   await invoke('service_events', {

@@ -1,10 +1,14 @@
 import { Container as Icon } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ContainerStatus } from '@/types';
+import { IIoK8sApiCoreV1ContainerStatus } from 'kubernetes-models/v1/ContainerStatus';
 import timeAgo from '@/timeAgo';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
+
+interface ContainerStatus extends IIoK8sApiCoreV1ContainerStatus {
+  containerType: string;
+}
 
 function ContainerIcon({ container }: { container: ContainerStatus }) {
   const [value, setValue] = useState(container.state?.running?.startedAt);
@@ -30,12 +34,12 @@ function ContainerIcon({ container }: { container: ContainerStatus }) {
   if (container.containerType === 'Ephemeral') {
     ephemeralcontainer = true;
   }
-  if (container.state.running) {
-    output = value;
+  if (container?.state?.running) {
+    output = value as string;
     blink = false;
     color = 'text-green-400';
   }
-  if (container.state.terminated) {
+  if (container?.state?.terminated) {
     output = `${container.state.terminated.reason} ${container.state.terminated.exitCode === 0 ? '' : container.state.terminated.exitCode}`;
     blink = false;
     color = 'text-red-400';
@@ -43,8 +47,8 @@ function ContainerIcon({ container }: { container: ContainerStatus }) {
       color = 'text-green-400';
     }
   }
-  if (container.state.waiting) {
-    output = container.state.waiting.reason;
+  if (container?.state?.waiting) {
+    output = container.state.waiting.reason as string;
     blink = true;
     color = 'text-orange-400';
   }

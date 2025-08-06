@@ -6,6 +6,8 @@ import {
   Telescope,
   Share2,
   PaintRoller,
+  HardDrive,
+  HardDriveDownload,
   VenetianMask,
   SquareAsterisk,
   FileSliders,
@@ -81,6 +83,11 @@ const items = [
       { title: 'Ingresses', icon: EthernetPort, url: '/ingresses' },
       { title: 'NetworkPolicies', icon: ShieldAlert, url: '/networkpolicies' },
     ],
+  },
+  {
+    title: 'Storage',
+    icon: HardDrive,
+    submenu: [{ title: 'StorageClasses', icon: HardDriveDownload, url: '/storageclasses' }],
   },
   {
     title: 'Access',

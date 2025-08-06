@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/Deployments';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { ReplicaSet } from '@/types';
+import { ReplicaSet } from 'kubernetes-models/apps/v1';
 
 const subscribeReplicaSetEvents = async (rv: string) => {
   await invoke('replicaset_events', {

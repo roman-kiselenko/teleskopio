@@ -131,7 +131,9 @@ pub fn run() {
             k8s::client::networkpolicy_events,
             k8s::client::delete_networkpolicy,
             // StorageClasses
+            k8s::client::get_storageclasses_page,
             k8s::client::get_storageclasses,
+            k8s::client::storageclass_events,
             k8s::client::get_one_storageclass,
             k8s::client::delete_storageclass,
             // ServiceAccounts

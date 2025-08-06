@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/DaemonSets';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { DaemonSet } from '@/types';
+import { DaemonSet } from 'kubernetes-models/apps/v1';
 
 const subscribeDaemonSetEvents = async (rv: string) => {
   await invoke('daemonset_events', {

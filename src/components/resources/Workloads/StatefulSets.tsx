@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/StatefulSets';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { StatefulSet } from '@/types';
+import { StatefulSet } from 'kubernetes-models/apps/v1';
 
 const subscribeStatefulSetEvents = async (rv: string) => {
   await invoke('statefulset_events', {

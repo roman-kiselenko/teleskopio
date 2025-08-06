@@ -1,11 +1,8 @@
 import { useEffect, useCallback } from 'react';
-// import { SearchField } from '~/components/SearchField';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Start/Table/ColumnDef';
 import { useConfigsState, getConfigs } from '@/store/kubeconfigs';
-import { ColumnDef } from '@tanstack/react-table';
-import { Cluster } from '@/types';
 
 export function StartPage() {
   const configs = useConfigsState();

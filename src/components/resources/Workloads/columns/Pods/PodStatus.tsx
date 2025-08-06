@@ -1,14 +1,15 @@
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Pod } from '@/types';
+import { Pod, IPodStatus } from 'kubernetes-models/v1';
 
 function PodStatus({ pod }: { pod: Pod }) {
-  let phase = pod.status.phase ?? 'Unknown';
+  let phase = pod?.status?.phase ?? 'Unknown';
+  let terminating = false;
   let color = 'text-green-500';
   let blink = false;
-  if (pod.metadata.deletionTimestamp) {
-    phase = 'Terminating';
+  if (pod?.metadata?.deletionTimestamp) {
+    terminating = true;
     color = 'text-gray-300';
     blink = true;
   } else if (phase === 'Failed') {
@@ -16,7 +17,7 @@ function PodStatus({ pod }: { pod: Pod }) {
   } else if (phase === 'Pending') {
     color = 'text-orange-500';
     blink = true;
-  } else if (phase === 'Evicted') {
+  } else if (phase === ('Evicted' as IPodStatus['phase'])) {
     color = 'text-gray-500';
   } else if (phase === 'Succeeded') {
     color = 'text-green-600';
@@ -39,7 +40,7 @@ function PodStatus({ pod }: { pod: Pod }) {
   );
   return (
     <div className="flex flex-row items-center">
-      {containers.length && !pod.metadata.deletionTimestamp ? (
+      {containers.length && !pod?.metadata?.deletionTimestamp ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <span className={className}>{phase}</span>
@@ -52,7 +53,7 @@ function PodStatus({ pod }: { pod: Pod }) {
           </TooltipContent>
         </Tooltip>
       ) : (
-        <span className={className}>{phase}</span>
+        <span className={className}>{terminating ? 'Terminating' : phase}</span>
       )}
     </div>
   );

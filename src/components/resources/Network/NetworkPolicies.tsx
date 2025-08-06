@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Network/columns/NetworkPolicies';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { NetworkPolicy } from '@/types';
+import { NetworkPolicy } from 'kubernetes-models/networking.k8s.io/v1';
 
 const subscribeNetworkPoliciesEvents = async (rv: string) => {
   await invoke('networkpolicy_events', {

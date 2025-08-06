@@ -3,7 +3,7 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DaemonSet } from '@/types';
+import { DaemonSet } from 'kubernetes-models/apps/v1';
 import DsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 

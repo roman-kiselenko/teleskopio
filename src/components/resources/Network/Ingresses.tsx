@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Network/columns/Ingresses';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Ingress } from '@/types';
+import { Ingress } from 'kubernetes-models/networking.k8s.io/v1';
 
 const subscribeIngressesEvents = async (rv: string) => {
   await invoke('ingress_events', {

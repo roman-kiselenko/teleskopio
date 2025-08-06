@@ -3,7 +3,7 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Namespace } from '@/types';
+import { Namespace } from 'kubernetes-models/v1';
 import Actions from '@/components/ui/Table/Actions';
 
 const columns: ColumnDef<Namespace>[] = [

@@ -25,26 +25,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pod } from '@/types';
+import { Pod } from 'kubernetes-models/v1';
 
 const columns: ColumnDef<Pod>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <PodName name={row.original.metadata.name} />),
+    cell: memo(({ row }) => <PodName name={row?.original?.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata.namespace}</div>),
+    cell: memo(({ row }) => <div>{row?.original?.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'spec.nodeName',
     id: 'nodename',
     header: memo(({ column }) => <HeaderAction column={column} name={'Node'} />),
-    cell: memo(({ row }) => <div>{row.original.spec.nodeName}</div>),
+    cell: memo(({ row }) => <div>{row?.original?.spec?.nodeName}</div>),
   },
   {
     accessorKey: 'containers',
@@ -56,16 +56,14 @@ const columns: ColumnDef<Pod>[] = [
       if (pod.status?.initContainerStatuses) {
         containers.concat(
           pod.status.initContainerStatuses.map((c) => {
-            c.containerType = 'Init';
-            return c;
+            return { ...c, containerType: 'Init' };
           }),
         );
       }
       if (pod.status?.ephemeralContainerStatuses) {
         containers.concat(
           pod.status.ephemeralContainerStatuses.map((c) => {
-            c.containerType = 'Ephemeral';
-            return c;
+            return { ...c, containerType: 'Ephemeral' };
           }),
         );
       }
@@ -79,10 +77,10 @@ const columns: ColumnDef<Pod>[] = [
     }),
   },
   {
-    accessorFn: (row) => row.status.podIP ?? '',
+    accessorFn: (row) => row?.status?.podIP ?? '',
     id: 'pod_ip',
     header: memo(({ column }) => <HeaderAction column={column} name={'PodIP'} />),
-    cell: memo(({ row }) => <div>{row.original.status.podIP}</div>),
+    cell: memo(({ row }) => <div>{row?.original?.status?.podIP}</div>),
   },
   {
     accessorKey: 'status.phase',
@@ -92,7 +90,7 @@ const columns: ColumnDef<Pod>[] = [
   },
   {
     id: 'age',
-    accessorFn: (row) => row?.metadata.creationTimestamp,
+    accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
@@ -113,14 +111,14 @@ const columns: ColumnDef<Pod>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigate(`/pods/${pod.metadata.namespace}/${pod.metadata.name}`)}
+              onClick={() => navigate(`/pods/${pod?.metadata?.namespace}/${pod?.metadata?.name}`)}
             >
               <SquareMousePointer size={8} />
               Open
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigator.clipboard.writeText(pod.metadata.name)}
+              onClick={() => navigator.clipboard.writeText(pod?.metadata?.name as string)}
             >
               <ClipboardCopy size={8} />
               Copy name
@@ -133,21 +131,21 @@ const columns: ColumnDef<Pod>[] = [
                   invoke<Pod>('delete_pod', {
                     path: getKubeconfig(),
                     context: getCluster(),
-                    resourceNamespace: pod.metadata.namespace,
-                    resourceName: pod.metadata.name,
+                    resourceNamespace: pod?.metadata?.namespace,
+                    resourceName: pod?.metadata?.name,
                   }),
                   {
                     loading: 'Deleting...',
                     success: () => {
                       return (
                         <span>
-                          Terminating Pod <b>{pod.metadata.name}</b>
+                          Terminating Pod <b>{pod?.metadata?.name}</b>
                         </span>
                       );
                     },
                     error: (err) => (
                       <span>
-                        Cant delete pod <b>{pod.metadata.name}</b>
+                        Cant delete pod <b>{pod?.metadata?.name}</b>
                         <br />
                         {err.message}
                       </span>
@@ -161,7 +159,9 @@ const columns: ColumnDef<Pod>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => navigate(`/pods/logs/${pod.metadata.namespace}/${pod.metadata.name}`)}
+              onClick={() =>
+                navigate(`/pods/logs/${pod?.metadata?.namespace}/${pod?.metadata?.name}`)
+              }
               disabled={actionDisabled}
               className="text-xs"
             >

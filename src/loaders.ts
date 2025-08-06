@@ -98,6 +98,14 @@ export async function LoadNamespace(name: string) {
   });
 }
 
+export async function LoadStorageClass(name: string) {
+  return invoke<any>('get_one_storageclass', {
+    path: currentClusterState.kube_config.get(),
+    context: currentClusterState.cluster.get(),
+    name: name,
+  });
+}
+
 export async function LoadService(namespace: string, name: string) {
   return invoke<any>('get_one_service', {
     path: currentClusterState.kube_config.get(),

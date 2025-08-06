@@ -19,7 +19,7 @@ export default defineConfig(async () => ({
     },
   },
   optimizeDeps: {
-    exclude: ['monaco-yaml/yaml.worker'],
+    exclude: ['monaco-yaml/yaml.worker.js'],
   },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

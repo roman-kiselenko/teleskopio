@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Access/columns/Roles';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Role } from '@/types';
+import { Role } from 'kubernetes-models/rbac.authorization.k8s.io/v1';
 
 const subscribeRolesEvents = async (rv: string) => {
   await invoke('role_events', {

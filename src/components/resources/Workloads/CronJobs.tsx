@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/CronJobs';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { CronJob } from '@/types';
+import { CronJob } from 'kubernetes-models/batch/v1';
 
 const subscribeCronJobEvents = async (rv: string) => {
   await invoke('cronjob_events', {

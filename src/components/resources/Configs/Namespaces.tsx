@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Configs/columns/Namespaces';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Namespace } from '@/types';
+import { Namespace } from 'kubernetes-models/v1';
 
 const subscribeNamespacesEvents = async (rv: string) => {
   await invoke('namespace_events', {

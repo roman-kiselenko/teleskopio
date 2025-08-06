@@ -3,7 +3,7 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { CronJob } from '@/types';
+import { CronJob } from 'kubernetes-models/batch/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import cronstrue from 'cronstrue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

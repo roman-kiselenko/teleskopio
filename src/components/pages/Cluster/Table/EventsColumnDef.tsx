@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Event } from '@/types';
+import { Event } from 'kubernetes-models/v1';
 import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';

@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Configs/columns/ConfigMaps';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { ConfigMap } from '@/types';
+import { ConfigMap } from 'kubernetes-models/v1';
 
 const subscribeConfigmapsEvents = async (rv: string) => {
   await invoke('configmap_events', {

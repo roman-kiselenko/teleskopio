@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Configs/columns/Secrets';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Secret } from '@/types';
+import { Secret } from 'kubernetes-models/v1';
 
 const subscribeSecretsEvents = async (rv: string) => {
   await invoke('secret_events', {

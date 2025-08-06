@@ -4,7 +4,7 @@ import { currentClusterState } from '@/store/cluster';
 import columns from '@/components/resources/Workloads/columns/Jobs';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Job } from '@/types';
+import { Job } from 'kubernetes-models/batch/v1';
 
 const subscribeJobEvents = async (rv: string) => {
   await invoke('job_events', {

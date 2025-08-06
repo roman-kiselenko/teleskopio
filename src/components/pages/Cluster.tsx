@@ -5,8 +5,8 @@ import columns from '@/components/pages/Cluster/Table/ColumnDef';
 import eventsColumns from '@/components/pages/Cluster/Table/EventsColumnDef';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Node, Event } from '@/types';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { Node, Event } from 'kubernetes-models/v1';
 
 const subscribeNodeEvents = async (rv: string) => {
   await invoke('node_events', {
@@ -25,16 +25,16 @@ const subscribeEventEvents = async (rv: string) => {
 };
 
 const listenNodeEvents = async () => {
-  await listen<Node>('node-deleted', (event) => {
+  await listen<any>('node-deleted', (event) => {
     const no = event.payload;
     nodesState.set((prev) => {
-      const newMap = new Map(prev);
+      const newMap = new Map<string, Node>(prev);
       newMap.delete(no.metadata.uid);
       return newMap;
     });
   });
 
-  await listen<Node>('node-updated', (event) => {
+  await listen<any>('node-updated', (event) => {
     const no = event.payload;
     nodesState.set((prev) => {
       const newMap = new Map(prev);
@@ -45,7 +45,7 @@ const listenNodeEvents = async () => {
 };
 
 const listenEventEvents = async () => {
-  await listen<Event>('event-deleted', (event) => {
+  await listen<any>('event-deleted', (event) => {
     const ev = event.payload;
     eventsState.set((prev) => {
       const newMap = new Map(prev);
@@ -54,7 +54,7 @@ const listenEventEvents = async () => {
     });
   });
 
-  await listen<Event>('event-updated', (event) => {
+  await listen<any>('event-updated', (event) => {
     const ev = event.payload;
     eventsState.set((prev) => {
       const newMap = new Map(prev);
@@ -117,7 +117,7 @@ export function ClusterPage() {
                   getPage={getNodesPage}
                   state={() => nodesState.get() as Map<string, Node>}
                   setState={nodesState.set}
-                  extractKey={(p) => p.metadata.uid}
+                  extractKey={(p: any) => p.metadata.uid}
                   columns={columns}
                 />
               </div>
@@ -130,7 +130,7 @@ export function ClusterPage() {
                   getPage={getEventsPage}
                   state={() => eventsState.get() as Map<string, Event>}
                   setState={eventsState.set}
-                  extractKey={(p) => p.metadata.uid}
+                  extractKey={(p: any) => p.metadata.uid}
                   columns={eventsColumns}
                 />
               </div>
