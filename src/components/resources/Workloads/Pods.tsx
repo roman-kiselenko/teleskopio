@@ -19,7 +19,7 @@ const listenPodEvents = async () => {
     const pod = event.payload;
     podsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(pod.uid);
+      newMap.delete(pod.metadata.uid);
       return newMap;
     });
   });
@@ -28,7 +28,7 @@ const listenPodEvents = async () => {
     const pod = event.payload;
     podsState.set((prev) => {
       const newMap = new Map(prev);
-      newMap.set(pod.uid, pod);
+      newMap.set(pod.metadata.uid, pod);
       return newMap;
     });
   });
@@ -60,7 +60,7 @@ const Pods = () => {
       subscribeEvents={subscribePodEvents}
       state={() => podsState.get() as Map<string, Pod>}
       setState={podsState.set}
-      extractKey={(p) => p.uid}
+      extractKey={(p) => p.metadata.uid}
       columns={columns}
     />
   );

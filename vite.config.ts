@@ -18,6 +18,9 @@ export default defineConfig(async () => ({
       fs: resolve(__dirname, 'src/fs.ts'),
     },
   },
+  optimizeDeps: {
+    exclude: ['monaco-yaml/yaml.worker'],
+  },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors

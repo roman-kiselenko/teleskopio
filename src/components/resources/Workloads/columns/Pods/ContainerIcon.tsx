@@ -1,46 +1,50 @@
 import { Container as Icon } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Container } from '@/types';
+import { ContainerStatus } from '@/types';
 import timeAgo from '@/timeAgo';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 
-function ContainerIcon({ container }: { container: Container }) {
-  const [value, setValue] = useState(container.started_at);
+function ContainerIcon({ container }: { container: ContainerStatus }) {
+  const [value, setValue] = useState(container.state?.running?.startedAt);
   useEffect(() => {
     const updateValue = () => {
-      if (container.running) {
-        setValue(timeAgo.format(moment(container.started_at).toDate(), 'mini'));
+      if (container.state?.running?.startedAt) {
+        setValue(timeAgo.format(moment(container.state?.running.startedAt).toDate(), 'mini'));
       }
     };
     updateValue();
     const interval = setInterval(updateValue, 1000);
     return () => clearInterval(interval);
-  }, [container.started_at]);
+  }, [container.state?.running?.startedAt]);
 
   let output = 'Unknown';
   let color = 'text-gray-400';
   let initcontainer = false;
+  let ephemeralcontainer = false;
   let blink = true;
-  if (container.container_type === 'Init') {
+  if (container.containerType === 'Init') {
     initcontainer = true;
   }
-  if (container.running) {
+  if (container.containerType === 'Ephemeral') {
+    ephemeralcontainer = true;
+  }
+  if (container.state.running) {
     output = value;
     blink = false;
     color = 'text-green-400';
   }
-  if (container.terminated) {
-    output = `${container.reason} ${container.exit_code === 0 ? '' : container.exit_code}`;
+  if (container.state.terminated) {
+    output = `${container.state.terminated.reason} ${container.state.terminated.exitCode === 0 ? '' : container.state.terminated.exitCode}`;
     blink = false;
     color = 'text-red-400';
-    if (container.exit_code === 0) {
+    if (container.state.terminated.exitCode === 0) {
       color = 'text-green-400';
     }
   }
-  if (container.waiting) {
-    output = container.reason;
+  if (container.state.waiting) {
+    output = container.state.waiting.reason;
     blink = true;
     color = 'text-orange-400';
   }

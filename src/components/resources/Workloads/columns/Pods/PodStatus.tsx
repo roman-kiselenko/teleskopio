@@ -4,10 +4,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Pod } from '@/types';
 
 function PodStatus({ pod }: { pod: Pod }) {
-  let phase = pod.phase ?? 'Unknown';
+  let phase = pod.status.phase ?? 'Unknown';
   let color = 'text-green-500';
   let blink = false;
-  if (pod?.is_terminating) {
+  if (pod.metadata.deletionTimestamp) {
     phase = 'Terminating';
     color = 'text-gray-300';
     blink = true;
@@ -21,8 +21,15 @@ function PodStatus({ pod }: { pod: Pod }) {
   } else if (phase === 'Succeeded') {
     color = 'text-green-600';
   }
-  const restarts = `${pod?.containers?.length} / ${pod?.containers?.reduce((acc, curr) => {
-    return curr.running ? acc + 1 : acc;
+  let containers = pod.status?.containerStatuses ? pod.status?.containerStatuses : [];
+  if (pod.status?.initContainerStatuses) {
+    containers.concat(pod.status.initContainerStatuses);
+  }
+  if (pod.status?.ephemeralContainerStatuses) {
+    containers.concat(pod.status.ephemeralContainerStatuses);
+  }
+  const restarts = `${containers.length} / ${containers.reduce((acc, curr) => {
+    return curr.ready ? acc + 1 : acc;
   }, 0)}`;
   const className = cn(
     blink
@@ -32,7 +39,7 @@ function PodStatus({ pod }: { pod: Pod }) {
   );
   return (
     <div className="flex flex-row items-center">
-      {pod?.containers?.length && !pod?.is_terminating ? (
+      {containers.length && !pod.metadata.deletionTimestamp ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <span className={className}>{phase}</span>

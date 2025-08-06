@@ -119,7 +119,7 @@ export function PodLogs() {
             <SelectValue placeholder={currentContainer} />
           </SelectTrigger>
           <SelectContent>
-            {podContainers?.map((c) => (
+            {podContainers?.map((c: any) => (
               <SelectItem className="text-xs" key={c.name} value={c.name}>
                 {c.name}
               </SelectItem>

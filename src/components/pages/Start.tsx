@@ -4,6 +4,8 @@ import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Start/Table/ColumnDef';
 import { useConfigsState, getConfigs } from '@/store/kubeconfigs';
+import { ColumnDef } from '@tanstack/react-table';
+import { Cluster } from '@/types';
 
 export function StartPage() {
   const configs = useConfigsState();
@@ -28,7 +30,7 @@ export function StartPage() {
     <div className="flex-grow overflow-auto">
       <div className="grid grid-cols-1">
         <div className="h-24 col-span-2">
-          <DataTable columns={columns} data={configs.configs.get()} />
+          <DataTable columns={columns as any} data={configs.configs.get() as any} />
         </div>
       </div>
     </div>

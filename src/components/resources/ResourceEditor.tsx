@@ -24,7 +24,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
   const { theme } = useTheme();
   const { name, ns, data } = useLoaderData();
   const monaco = useMonaco();
-  const editorRef = useRef(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [original, setOriginal] = useState(data);
   const [hasErrors, setHasErrors] = useState(false);
   const [fontSize, setFontsize] = useState(14);
@@ -37,7 +37,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
     const model = editorRef.current.getModel();
 
     const checkMarkers = () => {
-      const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+      const markers = monaco.editor.getModelMarkers({ resource: model?.uri });
       setHasErrors(markers.length > 0);
     };
 
@@ -62,7 +62,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
     const editor = editorRef.current;
     if (!editor) return;
     const model = editor?.getModel();
-    const markers = monaco?.editor.getModelMarkers({ resource: model.uri });
+    const markers = monaco?.editor.getModelMarkers({ resource: model?.uri });
 
     if (markers && markers.length > 0) {
       toast.error(

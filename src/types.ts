@@ -1,28 +1,43 @@
-type Container = {
+type ContainerStatus = {
   name: string;
-  image: string;
+  ready: Boolean;
   started: Boolean;
-  running: Boolean;
-  terminated: Boolean;
-  waiting: Boolean;
-  started_at: string;
-  exit_code: number;
-  container_type: String;
-  reason: string;
+  containerType: string;
+  state: {
+    waiting: {
+      message: string;
+      reason: string;
+    };
+    terminated: {
+      exitCode: number;
+      startedAt: string;
+      reason: string;
+    };
+    running: {
+      startedAt: string;
+    };
+  };
 };
 
 type Pod = {
-  name: string;
-  namespace: string;
-  uid: string;
-  age: string;
-  creation_timestamp: string;
-  containers: Container[];
-  node_name: string;
-  host_ip: string;
-  pod_ip: string;
-  phase?: string;
-  is_terminating: Boolean;
+  metadata: {
+    name: string;
+    namespace: string;
+    uid: string;
+    labels: Object[];
+    creationTimestamp: string;
+    deletionTimestamp?: string;
+  };
+  spec: {
+    nodeName: string;
+  };
+  status: {
+    podIP: string;
+    phase: string;
+    initContainerStatuses: ContainerStatus[];
+    ephemeralContainerStatuses: ContainerStatus[];
+    containerStatuses: ContainerStatus[];
+  };
 };
 
 type Cluster = {
@@ -293,7 +308,7 @@ type Namespace = {
 
 export type {
   Pod,
-  Container,
+  ContainerStatus,
   Cluster,
   Node,
   Event,
