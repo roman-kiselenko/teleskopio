@@ -4,8 +4,9 @@ import {
   ShieldAlert,
   EthernetPort,
   Telescope,
+  Vote,
+  MessageCircleX,
   Share2,
-  PaintRoller,
   HardDrive,
   HardDriveDownload,
   VenetianMask,
@@ -73,6 +74,8 @@ const items = [
       { title: 'ConfigMaps', icon: FileSliders, url: '/configmaps' },
       { title: 'Secrets', icon: VenetianMask, url: '/secrets' },
       { title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' },
+      { title: 'MutatingWebhook', icon: Vote, url: '/mutatingwebhooks' },
+      { title: 'ValidatingWebhook', icon: MessageCircleX, url: '/validatingwebhooks' },
     ],
   },
   {
@@ -110,6 +113,7 @@ export function AppSidebar() {
   const cc = useCurrentClusterState();
   let location = useLocation();
   const { state } = useSidebar();
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>

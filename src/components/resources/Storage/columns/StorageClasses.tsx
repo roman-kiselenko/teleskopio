@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { StorageClass } from 'kubernetes-models/storage.k8s.io/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<StorageClass>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'name',
     id: 'name',
@@ -42,17 +43,22 @@ const columns: ColumnDef<StorageClass>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const sc = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'StorageClass');
+      let request = {
+        name: sc.metadata?.name,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: sc?.metadata?.name,
+        request,
       };
       return (
         <Actions
           resource={sc}
-          url={`/storageclasses/${sc?.metadata?.name}`}
+          url={`/yaml/StorageClass/${sc.metadata?.name}/${sc?.metadata?.namespace}`}
           name={'StorageClass'}
-          action={'delete_storageclass'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

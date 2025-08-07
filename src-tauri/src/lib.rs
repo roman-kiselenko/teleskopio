@@ -49,103 +49,22 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            // Api Resources
+            k8s::client::list_apiresources,
+            k8s::client::list_dynamic_resource,
+            k8s::client::get_dynamic_resource,
+            k8s::client::delete_dynamic_resource,
+            k8s::client::watch_dynamic_resource,
             k8s::client::lookup_configs,
             k8s::client::get_version,
             k8s::client::update_kube_object,
-            // Events
-            k8s::client::get_events_page,
-            k8s::client::event_events,
-            // Namespaces
-            k8s::client::get_namespaces,
-            k8s::client::get_namespaces_page,
-            k8s::client::get_one_namespace,
-            k8s::client::namespace_events,
-            k8s::client::delete_namespace,
-            // Nodes
-            k8s::client::get_nodes_page,
-            k8s::client::get_one_node,
-            k8s::client::node_events,
+            // Pod
+            k8s::client::get_pod_logs,
+            k8s::client::stream_pod_logs,
+            // Node
             k8s::client::drain_node,
             k8s::client::cordon_node,
             k8s::client::uncordon_node,
-            // Pods
-            k8s::client::get_pods_page,
-            k8s::client::get_one_pod,
-            k8s::client::get_pod_logs,
-            k8s::client::stream_pod_logs,
-            k8s::client::pod_events,
-            k8s::client::delete_pod,
-            // Deployments
-            k8s::client::get_deployments_page,
-            k8s::client::get_one_deployment,
-            k8s::client::deployment_events,
-            k8s::client::delete_deployment,
-            // DaemonSets
-            k8s::client::get_daemonsets_page,
-            k8s::client::get_one_daemonset,
-            k8s::client::daemonset_events,
-            k8s::client::delete_daemonset,
-            // ReplicaSets
-            k8s::client::get_replicasets_page,
-            k8s::client::get_one_replicaset,
-            k8s::client::replicaset_events,
-            k8s::client::delete_replicaset,
-            // StatefulSets
-            k8s::client::get_statefulsets_page,
-            k8s::client::get_one_statefulset,
-            k8s::client::statefulset_events,
-            k8s::client::delete_statefulset,
-            // Jobs
-            k8s::client::get_jobs_page,
-            k8s::client::get_one_job,
-            k8s::client::job_events,
-            k8s::client::delete_job,
-            // CronJobs
-            k8s::client::get_cronjobs_page,
-            k8s::client::get_one_cronjob,
-            k8s::client::cronjob_events,
-            k8s::client::delete_cronjob,
-            // ConfigMaps
-            k8s::client::get_configmaps_page,
-            k8s::client::get_one_configmap,
-            k8s::client::configmap_events,
-            k8s::client::delete_configmap,
-            // Secrets
-            k8s::client::get_secrets_page,
-            k8s::client::get_one_secret,
-            k8s::client::secret_events,
-            k8s::client::delete_secret,
-            // Services
-            k8s::client::get_services_page,
-            k8s::client::get_one_service,
-            k8s::client::service_events,
-            k8s::client::delete_service,
-            // Ingresses
-            k8s::client::get_ingresses_page,
-            k8s::client::get_one_ingress,
-            k8s::client::ingress_events,
-            k8s::client::delete_ingress,
-            // NetworkPolicies
-            k8s::client::get_networkpolicies_page,
-            k8s::client::get_one_networkpolicy,
-            k8s::client::networkpolicy_events,
-            k8s::client::delete_networkpolicy,
-            // StorageClasses
-            k8s::client::get_storageclasses_page,
-            k8s::client::get_storageclasses,
-            k8s::client::storageclass_events,
-            k8s::client::get_one_storageclass,
-            k8s::client::delete_storageclass,
-            // ServiceAccounts
-            k8s::client::get_serviceaccounts_page,
-            k8s::client::get_one_serviceaccount,
-            k8s::client::serviceaccount_events,
-            k8s::client::delete_serviceaccount,
-            // Roles
-            k8s::client::get_roles_page,
-            k8s::client::get_one_role,
-            k8s::client::role_events,
-            k8s::client::delete_role,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

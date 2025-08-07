@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ConfigMap } from 'kubernetes-models/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<ConfigMap>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -30,18 +31,23 @@ const columns: ColumnDef<ConfigMap>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const cm = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ConfigMap');
+      let request = {
+        name: cm.metadata?.name,
+        namespace: cm?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: cm.metadata?.namespace,
-        resourceName: cm.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/configmaps/${cm.metadata?.namespace}/${cm?.metadata?.name}`}
+          url={`/yaml/ConfigMap/${cm.metadata?.name}/${cm.metadata?.namespace}`}
           resource={cm}
           name={'ConfigMap'}
-          action={'delete_configmap'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

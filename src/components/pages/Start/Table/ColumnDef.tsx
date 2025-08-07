@@ -9,6 +9,9 @@ import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
 import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';
+import { apiResourcesState } from '@/store/api-resources';
+import { ApiResource } from '@/types';
+import { currentClusterState } from '@/store/cluster';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -42,9 +45,15 @@ const columns: ColumnDef<Cluster>[] = [
           invoke<{ gitVersion: string }>('get_version', { path: path, context: cluster }),
           {
             loading: 'Connecting...',
-            success: (data: { gitVersion: string }) => {
+            success: async (data: { gitVersion: string }) => {
               setVersion(data.gitVersion);
               setCurrentCluster(cluster, path);
+              apiResourcesState.set(
+                await invoke<ApiResource[]>('list_apiresources', {
+                  path: currentClusterState.kube_config.get(),
+                  context: currentClusterState.cluster.get(),
+                }),
+              );
               navigate('/cluster');
               return (
                 <span>

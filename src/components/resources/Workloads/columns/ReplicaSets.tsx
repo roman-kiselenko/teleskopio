@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ReplicaSet } from 'kubernetes-models/apps/v1';
 import RsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<ReplicaSet>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -42,18 +43,23 @@ const columns: ColumnDef<ReplicaSet>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const rs = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ReplicaSet');
+      let request = {
+        name: rs.metadata?.name,
+        namespace: rs?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: rs.metadata?.namespace,
-        resourceName: rs.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/replicasets/${rs.metadata?.namespace}/${rs?.metadata?.name}`}
+          url={`/yaml/ReplicaSet/${rs.metadata?.name}/${rs?.metadata?.namespace}`}
           resource={rs}
           name={'ReplicaSet'}
-          action={'delete_replicaset'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

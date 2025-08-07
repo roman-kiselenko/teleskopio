@@ -10,6 +10,7 @@ interface PaginatedTableProps<T> {
   getPage: (args: {
     path: string;
     context: string;
+    limit: number;
     continueToken?: string;
   }) => Promise<[T[], string | null, string]>;
   subscribeEvents: (rv: string) => Promise<void>;
@@ -43,6 +44,7 @@ export function PaginatedTable<T>({
       const [items, next, rv] = await getPage({
         path: kubeConfig,
         context: cluster,
+        limit: 50,
         continueToken: nextToken ?? undefined,
       });
       setState((prev) => {

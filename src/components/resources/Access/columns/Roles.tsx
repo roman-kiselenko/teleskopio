@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Role } from 'kubernetes-models/rbac.authorization.k8s.io/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<Role>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -30,18 +31,23 @@ const columns: ColumnDef<Role>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const role = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Role');
+      let request = {
+        name: role.metadata?.name,
+        namespace: role?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: role.metadata?.name,
-        resourceNamespace: role.metadata?.namespace,
+        request,
       };
       return (
         <Actions
-          url={`/roles/${role.metadata?.namespace}/${role?.metadata?.name}`}
+          url={`/yaml/Role/${role.metadata?.name}/${role.metadata?.namespace}`}
           resource={role}
           name={'Role'}
-          action={'delete_role'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

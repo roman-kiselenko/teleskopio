@@ -1,15 +1,14 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Event } from 'kubernetes-models/v1';
 import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
 
-const columns: ColumnDef<Event>[] = [
+const columns: ColumnDef<any>[] = [
   {
-    accessorKey: 'message',
-    id: 'message',
+    accessorKey: 'note',
+    id: 'note',
     header: 'Message',
-    cell: memo(({ row }) => <div>{row.original.message}</div>),
+    cell: memo(({ row }) => <div>{row.original.note}</div>),
   },
   {
     accessorKey: 'type',

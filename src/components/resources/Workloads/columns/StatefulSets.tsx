@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { StatefulSet } from 'kubernetes-models/apps/v1';
 import SsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<StatefulSet>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -44,18 +45,23 @@ const columns: ColumnDef<StatefulSet>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const ss = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'StatefulSet');
+      let request = {
+        name: ss.metadata?.name,
+        namespace: ss?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: ss.metadata?.namespace,
-        resourceName: ss.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/statefulsets/${ss.metadata?.namespace}/${ss?.metadata?.name}`}
+          url={`/yaml/StatefulSet/${ss.metadata?.name}/${ss?.metadata?.namespace}`}
           resource={ss}
           name={'StatefulSet'}
-          action={'delete_statefulset'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

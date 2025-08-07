@@ -19,10 +19,10 @@ import * as monaco from 'monaco-editor';
 loader.config({ monaco });
 import yaml from 'js-yaml';
 
-export function ResourceEditor({ resource }: { resource: string }) {
+export function ResourceEditor() {
   let navigate = useNavigate();
   const { theme } = useTheme();
-  const { name, ns, data } = useLoaderData();
+  const { name, namespace, data } = useLoaderData();
   const monaco = useMonaco();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [original, setOriginal] = useState(data);
@@ -129,14 +129,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
 
   function handleEditorDidMount(editor: any, monaco: any) {
     editorRef.current = editor;
-    let schema;
-    if (resource === 'pod') {
-      schema = podschema;
-    } else if (resource === 'deployment') {
-      schema = deploymentschema;
-    } else if (resource === 'daemonset') {
-      schema = daemonsetschema;
-    }
+    let schema = podschema;
     configureMonacoYaml(monaco, {
       enableSchemaRequest: false,
       validate: true,
@@ -144,7 +137,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
       completion: true,
       schemas: [
         {
-          uri: `file://schema/${resource}.json`,
+          uri: `file://schema/object.json`,
           fileMatch: ['*'],
           schema: schema,
         },
@@ -160,7 +153,7 @@ export function ResourceEditor({ resource }: { resource: string }) {
         </Button>
         <Button className="text-xs">
           <Pencil />
-          {ns ? `${ns}/${name}` : name}
+          {namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}
         </Button>
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
           <Save />

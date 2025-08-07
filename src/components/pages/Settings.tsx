@@ -2,15 +2,25 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useTheme } from '@/components/ThemeProvider';
 import type { Theme } from '@/components/ThemeProvider';
-
+import { useApiResourcesState } from '@/store/api-resources';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const apiResources = useApiResourcesState();
   return (
-    <div className="flex flex-col flex-grow">
-      <div className="flex items-center flex-shrink-0 h-10 px-2 text-xs">Settings</div>
-      <div className="flex-grow overflow-auto">
-        <div className="grid grid-cols-1">
-          <div className="h-24 col-span-1 bg-background">
+    <div className="flex flex-row flex-grow flex flex-col h-screen overflow-auto">
+      <div className="flex w-1/2">
+        <div className="flex items-center flex-shrink-0 h-10 px-2 text-xs">Theme</div>
+        <div className="flex">
+          <div className="col-span-1 bg-background">
             <RadioGroup
               className="p-2"
               defaultValue={theme}
@@ -38,6 +48,40 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+      {apiResources.get().slice().length === 0 ? (
+        <></>
+      ) : (
+        <div>
+          <div className="flex items-center flex-shrink-0 h-10 px-2 text-xs">API Resources</div>
+          <div className="flex">
+            <div className="col-span-1 bg-background">
+              <Table className="text-xs">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Group</TableHead>
+                    <TableHead className="w-[100px] ">Version</TableHead>
+                    <TableHead>Kind</TableHead>
+                    <TableHead>Namespaced</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {apiResources
+                    .get()
+                    .slice()
+                    .map((a: any) => (
+                      <TableRow>
+                        <TableCell className="font-medium">{a.group}</TableCell>
+                        <TableCell>{a.version}</TableCell>
+                        <TableCell>{a.kind}</TableCell>
+                        <TableCell>{a.namespaced ? 'True' : 'False'}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

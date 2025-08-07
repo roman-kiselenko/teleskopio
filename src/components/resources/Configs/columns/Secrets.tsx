@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Secret } from 'kubernetes-models/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<Secret>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -36,18 +37,23 @@ const columns: ColumnDef<Secret>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const secret = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Secret');
+      let request = {
+        name: secret.metadata?.name,
+        namespace: secret?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: secret.metadata?.namespace,
-        resourceName: secret.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/secrets/${secret.metadata?.namespace}/${secret?.metadata?.name}`}
+          url={`/yaml/Secret/${secret.metadata?.name}/${secret.metadata?.namespace}`}
           resource={secret}
           name={'Secret'}
-          action={'delete_secret'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

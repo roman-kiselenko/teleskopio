@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Service } from 'kubernetes-models/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<Service>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -48,18 +49,23 @@ const columns: ColumnDef<Service>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const service = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Service');
+      let request = {
+        name: service.metadata?.name,
+        namespace: service?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: service.metadata?.namespace,
-        resourceName: service.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/services/${service.metadata?.namespace}/${service?.metadata?.name}`}
+          url={`/yaml/Service/${service.metadata?.name}/${service.metadata?.namespace}`}
           resource={service}
           name={'Service'}
-          action={'delete_service'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

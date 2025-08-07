@@ -1,67 +1,15 @@
-import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { useNetworkPoliciesState, networkpoliciesState } from '@/store/resources';
-import { currentClusterState } from '@/store/cluster';
+import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
+import { useNetworkPoliciesState } from '@/store/resources';
 import columns from '@/components/resources/Network/columns/NetworkPolicies';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { NetworkPolicy } from 'kubernetes-models/networking.k8s.io/v1';
-
-const subscribeNetworkPoliciesEvents = async (rv: string) => {
-  await invoke('networkpolicy_events', {
-    path: currentClusterState.kube_config.get(),
-    context: currentClusterState.cluster.get(),
-    rv: rv,
-  });
-};
-
-const listenNetworkPoliciesEvents = async () => {
-  await listen<NetworkPolicy>('networkpolicy-deleted', (event) => {
-    const np = event.payload;
-    networkpoliciesState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(np.metadata?.uid as string);
-      return newMap;
-    });
-  });
-
-  await listen<NetworkPolicy>('networkpolicy-updated', (event) => {
-    const np = event.payload;
-    networkpoliciesState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.set(np.metadata?.uid as string, np);
-      return newMap;
-    });
-  });
-};
-
-const getNetworkPoliciesPage = async ({
-  path,
-  context,
-  continueToken,
-}: {
-  path: string;
-  context: string;
-  continueToken?: string;
-}) => {
-  return await invoke<[NetworkPolicy[], string | null, string]>('get_networkpolicies_page', {
-    path,
-    context,
-    limit: 50,
-    continueToken,
-  });
-};
 
 const NetworkPolicies = () => {
-  const npState = useNetworkPoliciesState();
-  listenNetworkPoliciesEvents();
+  const np = useNetworkPoliciesState();
   return (
-    <PaginatedTable<NetworkPolicy>
-      subscribeEvents={subscribeNetworkPoliciesEvents}
-      getPage={getNetworkPoliciesPage}
-      state={() => npState.get() as Map<string, NetworkPolicy>}
-      setState={npState.set}
-      extractKey={(p) => p.metadata?.uid as string}
+    <DynamicResourceTable
+      kind="NetworkPolicy"
       columns={columns}
+      state={() => np.get() as Map<string, any>}
+      setState={np.set}
     />
   );
 };

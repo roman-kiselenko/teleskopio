@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DaemonSet } from 'kubernetes-models/apps/v1';
 import DsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<DaemonSet>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -30,18 +31,23 @@ const columns: ColumnDef<DaemonSet>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const ds = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'DaemonSet');
+      let request = {
+        name: ds.metadata?.name,
+        namespace: ds?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: ds.metadata?.namespace,
-        resourceName: ds.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/daemonsets/${ds.metadata?.namespace}/${ds?.metadata?.name}`}
+          url={`/yaml/DaemonSet/${ds.metadata?.name}/${ds?.metadata?.namespace}`}
           resource={ds}
           name={'DaemonSet'}
-          action={'delete_daemonset'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

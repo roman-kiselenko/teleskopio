@@ -25,9 +25,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pod } from 'kubernetes-models/v1';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<Pod>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -100,6 +101,17 @@ const columns: ColumnDef<Pod>[] = [
       const pod = row.original;
       const actionDisabled = pod?.metadata?.deletionTimestamp ? true : false;
       let navigate = useNavigate();
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Pod');
+      let request = {
+        name: pod.metadata?.name,
+        namespace: pod?.metadata?.namespace,
+        ...resource,
+      };
+      const payload = {
+        path: getKubeconfig(),
+        context: getCluster(),
+        request,
+      };
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -111,7 +123,9 @@ const columns: ColumnDef<Pod>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="text-xs"
-              onClick={() => navigate(`/pods/${pod?.metadata?.namespace}/${pod?.metadata?.name}`)}
+              onClick={() =>
+                navigate(`/yaml/Pod/${pod?.metadata?.name}/${pod?.metadata?.namespace}`)
+              }
             >
               <SquareMousePointer size={8} />
               Open
@@ -127,31 +141,23 @@ const columns: ColumnDef<Pod>[] = [
               disabled={actionDisabled}
               className="text-xs"
               onClick={async () => {
-                toast.promise(
-                  invoke<Pod>('delete_pod', {
-                    path: getKubeconfig(),
-                    context: getCluster(),
-                    resourceNamespace: pod?.metadata?.namespace,
-                    resourceName: pod?.metadata?.name,
-                  }),
-                  {
-                    loading: 'Deleting...',
-                    success: () => {
-                      return (
-                        <span>
-                          Terminating Pod <b>{pod?.metadata?.name}</b>
-                        </span>
-                      );
-                    },
-                    error: (err) => (
+                toast.promise(invoke<any>('delete_dynamic_resource', payload), {
+                  loading: 'Deleting...',
+                  success: () => {
+                    return (
                       <span>
-                        Cant delete pod <b>{pod?.metadata?.name}</b>
-                        <br />
-                        {err.message}
+                        Terminating Pod <b>{pod?.metadata?.name}</b>
                       </span>
-                    ),
+                    );
                   },
-                );
+                  error: (err) => (
+                    <span>
+                      Cant delete pod <b>{pod?.metadata?.name}</b>
+                      <br />
+                      {err.message}
+                    </span>
+                  ),
+                });
               }}
             >
               {' '}

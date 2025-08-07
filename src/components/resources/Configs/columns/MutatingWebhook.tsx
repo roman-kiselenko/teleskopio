@@ -16,44 +16,20 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
-    accessorKey: 'metadata.namespace',
-    id: 'namespace',
-    header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
-  },
-  {
-    accessorKey: 'status.ready',
-    id: 'replicase',
-    header: memo(({ column }) => <HeaderAction column={column} name={'Ready'} />),
-    cell: ({ row }) => {
-      const ready = row.original.status?.ready;
-      const succeeded = row.original.status?.succeeded;
-      return (
-        <div>
-          {ready}/{succeeded}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: 'spec.backoffLimit',
-    id: 'backofflimit',
-    header: 'BackoffLimit',
-  },
-  {
-    id: 'age',
-    accessorFn: (row) => row?.metadata?.creationTimestamp,
+    id: 'creationTimestamp',
+    accessorFn: (row) => row.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const job = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Job');
+      const cm = row.original;
+      const resource = apiResourcesState
+        .get()
+        .find((r: ApiResource) => r.kind === 'MutatingWebhookConfiguration');
       let request = {
-        name: job.metadata?.name,
-        namespace: job?.metadata?.namespace,
+        name: cm.metadata?.name,
         ...resource,
       };
       const payload = {
@@ -63,9 +39,9 @@ const columns: ColumnDef<any>[] = [
       };
       return (
         <Actions
-          url={`/yaml/Job/${job.metadata?.name}/${job?.metadata?.namespace}`}
-          resource={job}
-          name={'Job'}
+          url={`/yaml/MutatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          resource={cm}
+          name={'MutatingWebhookConfiguration'}
           action={'delete_dynamic_resource'}
           payload={payload}
         />

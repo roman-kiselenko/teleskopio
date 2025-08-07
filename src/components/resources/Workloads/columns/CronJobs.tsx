@@ -3,13 +3,14 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { CronJob } from 'kubernetes-models/batch/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import cronstrue from 'cronstrue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<CronJob>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -51,18 +52,23 @@ const columns: ColumnDef<CronJob>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const cronjob = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'CronJob');
+      let request = {
+        name: cronjob.metadata?.name,
+        namespace: cronjob?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: cronjob.metadata?.namespace,
-        resourceName: cronjob.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/cronjobs/${cronjob.metadata?.namespace}/${cronjob.metadata?.name}`}
+          url={`/yaml/CronJob/${cronjob.metadata?.name}/${cronjob.metadata?.namespace}`}
           resource={cronjob}
           name={'CronJob'}
-          action={'delete_cronjob'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

@@ -4,4 +4,11 @@ type Cluster = {
   server?: string;
 };
 
-export type { Cluster };
+type ApiResource = {
+  group: string;
+  version: string;
+  kind: string;
+  namespaced: Boolean;
+};
+
+export type { Cluster, ApiResource };

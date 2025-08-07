@@ -3,7 +3,6 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { ColumnDef } from '@tanstack/react-table';
-import { Node } from 'kubernetes-models/v1';
 import { Badge } from '@/components/ui/badge';
 import Actions from '@/components/ui/Table/Actions';
 import { cn } from '@/util';
@@ -12,8 +11,10 @@ import { toast } from 'sonner';
 import { memo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<Node>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -120,10 +121,15 @@ const columns: ColumnDef<Node>[] = [
       const cordoned = node.spec?.taints?.find(
         (t) => t.effect === 'NoSchedule' && t.key === 'node.kubernetes.io/unschedulable',
       );
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
+      let request = {
+        name: node.metadata?.name,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: node.metadata?.name,
+        request,
       };
       const additional = [
         <DropdownMenuItem
@@ -208,11 +214,11 @@ const columns: ColumnDef<Node>[] = [
       ];
       return (
         <Actions
-          url={`/nodes/${node?.metadata?.name}`}
+          url={`/cluster/nodes/${node.metadata?.name}`}
           children={additional}
           resource={node}
           name={'Node'}
-          action={'delete_node'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

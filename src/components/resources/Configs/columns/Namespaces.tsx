@@ -3,10 +3,11 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Namespace } from 'kubernetes-models/v1';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<Namespace>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -23,17 +24,22 @@ const columns: ColumnDef<Namespace>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const ns = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Namespace');
+      let request = {
+        name: ns.metadata?.name,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: ns.metadata?.name,
+        request,
       };
       return (
         <Actions
-          url={`/namespaces/${ns?.metadata?.name}`}
+          url={`/yaml/Namespace/${ns.metadata?.name}/${ns.metadata?.namespace}`}
           resource={ns}
           name={'Namespace'}
-          action={'delete_namespace'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

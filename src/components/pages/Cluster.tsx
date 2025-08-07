@@ -6,35 +6,44 @@ import eventsColumns from '@/components/pages/Cluster/Table/EventsColumnDef';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Node, Event } from 'kubernetes-models/v1';
+import { apiResourcesState } from '@/store/api-resources';
+import { ApiResource } from '@/types';
 
 const subscribeNodeEvents = async (rv: string) => {
-  await invoke('node_events', {
+  const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
+  await invoke('watch_dynamic_resource', {
     path: currentClusterState.kube_config.get(),
     context: currentClusterState.cluster.get(),
-    rv: rv,
+    request: {
+      ...apiResource,
+      resource_version: rv,
+    },
   });
 };
 
 const subscribeEventEvents = async (rv: string) => {
-  await invoke('event_events', {
+  const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Event');
+  await invoke('watch_dynamic_resource', {
     path: currentClusterState.kube_config.get(),
     context: currentClusterState.cluster.get(),
-    rv: rv,
+    request: {
+      ...apiResource,
+      resource_version: rv,
+    },
   });
 };
 
 const listenNodeEvents = async () => {
-  await listen<any>('node-deleted', (event) => {
+  await listen<any>('Node-deleted', (event) => {
     const no = event.payload;
     nodesState.set((prev) => {
-      const newMap = new Map<string, Node>(prev);
+      const newMap = new Map(prev);
       newMap.delete(no.metadata.uid);
       return newMap;
     });
   });
 
-  await listen<any>('node-updated', (event) => {
+  await listen<any>('Node-updated', (event) => {
     const no = event.payload;
     nodesState.set((prev) => {
       const newMap = new Map(prev);
@@ -45,7 +54,7 @@ const listenNodeEvents = async () => {
 };
 
 const listenEventEvents = async () => {
-  await listen<any>('event-deleted', (event) => {
+  await listen<any>('Event-deleted', (event) => {
     const ev = event.payload;
     eventsState.set((prev) => {
       const newMap = new Map(prev);
@@ -54,7 +63,7 @@ const listenEventEvents = async () => {
     });
   });
 
-  await listen<any>('event-updated', (event) => {
+  await listen<any>('Event-updated', (event) => {
     const ev = event.payload;
     eventsState.set((prev) => {
       const newMap = new Map(prev);
@@ -67,34 +76,47 @@ const listenEventEvents = async () => {
 const getNodesPage = async ({
   path,
   context,
+  limit,
   continueToken,
 }: {
   path: string;
   context: string;
+  limit: number;
   continueToken?: string;
 }) => {
-  return await invoke<[Node[], string | null, string]>('get_nodes_page', {
-    path,
-    context,
+  const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
+  return await invoke<[any[], string | null, string]>('list_dynamic_resource', {
+    path: path,
+    context: context,
     limit: 50,
-    continueToken,
+    continueToken: continueToken,
+    request: {
+      ...apiResource,
+    },
   });
 };
 
 const getEventsPage = async ({
   path,
   context,
+  limit,
   continueToken,
 }: {
   path: string;
   context: string;
+  limit: number;
   continueToken?: string;
 }) => {
-  return await invoke<[Event[], string | null, string]>('get_events_page', {
-    path,
-    context,
-    limit: 50,
-    continueToken,
+  const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Event');
+  return await invoke<[any[], string | null, string]>('list_dynamic_resource', {
+    path: path,
+    context: context,
+    limit: limit,
+    continueToken: continueToken,
+    request: {
+      ...apiResource,
+      namespaced: false,
+    },
   });
 };
 
@@ -103,7 +125,6 @@ export function ClusterPage() {
   const eventsState = useEventsState();
   listenNodeEvents();
   listenEventEvents();
-
   return (
     <div className="flex flex-col flex-grow overflow-auto">
       <ResizablePanelGroup direction="horizontal" className="rounded-l">
@@ -115,7 +136,7 @@ export function ClusterPage() {
                 <PaginatedTable<Node>
                   subscribeEvents={subscribeNodeEvents}
                   getPage={getNodesPage}
-                  state={() => nodesState.get() as Map<string, Node>}
+                  state={() => nodesState.get() as Map<string, any>}
                   setState={nodesState.set}
                   extractKey={(p: any) => p.metadata.uid}
                   columns={columns}
@@ -128,7 +149,7 @@ export function ClusterPage() {
                 <PaginatedTable<Event>
                   subscribeEvents={subscribeEventEvents}
                   getPage={getEventsPage}
-                  state={() => eventsState.get() as Map<string, Event>}
+                  state={() => eventsState.get() as Map<string, any>}
                   setState={eventsState.set}
                   extractKey={(p: any) => p.metadata.uid}
                   columns={eventsColumns}

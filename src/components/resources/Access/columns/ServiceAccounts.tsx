@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ServiceAccount } from 'kubernetes-models/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<ServiceAccount>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -30,18 +31,25 @@ const columns: ColumnDef<ServiceAccount>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const sa = row.original;
+      const resource = apiResourcesState
+        .get()
+        .find((r: ApiResource) => r.kind === 'ServiceAccount');
+      let request = {
+        name: sa.metadata?.name,
+        namespace: sa?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceName: sa.metadata?.name,
-        resourceNamespace: sa.metadata?.namespace,
+        request,
       };
       return (
         <Actions
-          url={`/serviceaccounts/${sa.metadata?.namespace}/${sa?.metadata?.name}`}
+          url={`/yaml/ServiceAccount/${sa.metadata?.name}/${sa.metadata?.namespace}`}
           resource={sa}
           name={'ServiceAccount'}
-          action={'delete_serviceaccount'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

@@ -3,11 +3,12 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { NetworkPolicy } from 'kubernetes-models/networking.k8s.io/v1';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/api-resources';
 
-const columns: ColumnDef<NetworkPolicy>[] = [
+const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
@@ -36,18 +37,23 @@ const columns: ColumnDef<NetworkPolicy>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const np = row.original;
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'NetworkPolicy');
+      let request = {
+        name: np.metadata?.name,
+        namespace: np?.metadata?.namespace,
+        ...resource,
+      };
       const payload = {
         path: getKubeconfig(),
         context: getCluster(),
-        resourceNamespace: np?.metadata?.namespace,
-        resourceName: np?.metadata?.name,
+        request,
       };
       return (
         <Actions
           resource={np}
-          url={`/networkpolicies/${np?.metadata?.namespace}/${np?.metadata?.name}`}
+          url={`/yaml/NetworkPolicy/${np.metadata?.name}/${np.metadata?.namespace}`}
           name={'NetworkPolicy'}
-          action={'delete_networkpolicy'}
+          action={'delete_dynamic_resource'}
           payload={payload}
         />
       );

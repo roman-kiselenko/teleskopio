@@ -3,15 +3,8 @@ pub mod client {
     use either::Either;
     use futures_util::io::{AsyncBufReadExt, BufReader};
     use futures_util::stream::StreamExt;
-    use k8s_openapi::api::apps::v1::{DaemonSet, Deployment, ReplicaSet, StatefulSet};
-    use k8s_openapi::api::batch::v1::{CronJob, Job};
-    use k8s_openapi::api::core::v1::{
-        ConfigMap, Event, Namespace, Node, Pod, Secret, Service, ServiceAccount,
-    };
-    use k8s_openapi::api::networking::v1::{Ingress, NetworkPolicy};
+    use k8s_openapi::api::core::v1::{Node, Pod};
     use k8s_openapi::api::policy::v1::Eviction;
-    use k8s_openapi::api::rbac::v1::Role;
-    use k8s_openapi::api::storage::v1::StorageClass;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::DeleteOptions;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::Status;
@@ -22,10 +15,10 @@ pub mod client {
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
     use kube::core::{DynamicObject, GroupVersionKind};
     use kube::discovery::{Discovery, Scope};
-    use kube::{api::Api, Client, Config, Error, ResourceExt};
+    use kube::{api::Api, discovery::ApiResource, Client, Config, Error, ResourceExt};
     use lazy_static::lazy_static;
     use once_cell::sync::Lazy;
-    use serde::Serialize;
+    use serde::{Deserialize, Serialize};
     use serde_json;
     use serde_json::json;
     use serde_json::Value;
@@ -58,11 +51,56 @@ pub mod client {
     }
 
     #[derive(Debug, Serialize)]
+    pub struct ApiResourceInfo {
+        pub group: String,
+        pub version: String,
+        pub kind: String,
+        pub namespaced: bool,
+    }
+
+    #[derive(Debug, Serialize)]
     pub struct GenericError {
         message: String,
         code: Option<u16>,
         reason: Option<String>,
         details: Option<String>,
+    }
+
+    #[derive(serde::Deserialize)]
+    pub struct DeleteRequest {
+        pub group: Option<String>,
+        pub version: String,
+        pub kind: String,
+        pub name: String,
+        pub namespace: Option<String>,
+    }
+
+    #[derive(serde::Deserialize)]
+    pub struct GetRequest {
+        pub group: Option<String>,
+        pub version: String,
+        pub kind: String,
+        pub name: String,
+        pub namespace: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct ListRequest {
+        pub group: Option<String>,
+        pub version: String,
+        pub kind: String,
+        pub namespaced: bool,
+        pub namespace: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct WatchRequest {
+        pub group: Option<String>,
+        pub version: String,
+        pub kind: String,
+        pub namespaced: bool,
+        pub namespace: Option<String>,
+        pub resource_version: Option<String>,
     }
 
     impl GenericError {
@@ -195,6 +233,37 @@ pub mod client {
     pub fn remove_reflector(path: &str, context: &str, resource: &str) {
         let mut map = REFLECTOR_HANDLES.lock().unwrap();
         map.remove(&(path.to_string(), context.to_string(), resource.to_string()));
+    }
+
+    #[tauri::command]
+    pub async fn list_apiresources(
+        path: &str,
+        context: &str,
+    ) -> Result<Vec<ApiResourceInfo>, GenericError> {
+        let client = get_client(path, context).await?;
+        let discovery = Discovery::new(client.clone())
+            .run()
+            .await
+            .map_err(GenericError::from)?;
+
+        let mut result = Vec::new();
+
+        for group in discovery.groups() {
+            for (ar, caps) in group.recommended_resources() {
+                let namespaced = match caps.scope {
+                    Scope::Namespaced => true,
+                    Scope::Cluster => false,
+                };
+                result.push(ApiResourceInfo {
+                    group: group.name().to_string(),
+                    version: ar.version.clone(),
+                    kind: ar.kind.clone(),
+                    namespaced: namespaced,
+                });
+            }
+        }
+
+        Ok(result)
     }
 
     #[tauri::command]
@@ -432,6 +501,218 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn list_dynamic_resource(
+        path: &str,
+        context: &str,
+        limit: u32,
+        continue_token: Option<String>,
+        request: ListRequest,
+    ) -> Result<(Vec<DynamicObject>, Option<String>, Option<String>), GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version;
+        let kind = request.kind;
+        log::info!(
+            "list {:?} {:?} {:?} {:?} {:?}",
+            kind,
+            path,
+            context,
+            limit,
+            continue_token
+        );
+
+        let client = get_client(path, context).await?;
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = Api::all_with(client, &ar);
+
+        let mut lp = ListParams::default();
+        lp = lp.limit(limit);
+        if let Some(token) = &continue_token {
+            lp = lp.continue_token(token);
+        }
+
+        let result = api.list(&lp).await.map_err(GenericError::from)?;
+        let next_token = result.metadata.continue_;
+        let resource_version = result.metadata.resource_version;
+
+        Ok((result.items, next_token, resource_version))
+    }
+
+    #[tauri::command]
+    pub async fn get_dynamic_resource(
+        path: &str,
+        context: &str,
+        request: GetRequest,
+    ) -> Result<String, GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version;
+        let kind = request.kind;
+        let name = request.name;
+        let namespace = request.namespace;
+
+        log::info!(
+            "get kind={}, name={}, namespace={:?}, group={}, version={}",
+            kind,
+            name,
+            namespace,
+            group,
+            version
+        );
+
+        let client = get_client(path, context).await?;
+
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = match namespace {
+            Some(ref ns) => Api::namespaced_with(client, ns, &ar),
+            None => Api::all_with(client, &ar),
+        };
+
+        let obj = api.get(&name).await.map_err(GenericError::from)?;
+        let yaml = serde_yaml::to_string(&obj)
+            .map_err(|e| GenericError::new(format!("YAML serialization error: {}", e)))?;
+
+        Ok(yaml)
+    }
+
+    #[tauri::command]
+    pub async fn delete_dynamic_resource(
+        path: &str,
+        context: &str,
+        request: DeleteRequest,
+    ) -> Result<(), GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version;
+        let kind = request.kind;
+        let name = request.name;
+        let namespace = request.namespace;
+
+        log::info!(
+            "delete single resource: kind={}, name={}, namespace={:?}, group={}, version={}",
+            kind,
+            name,
+            namespace,
+            group,
+            version
+        );
+
+        let client = get_client(path, context).await?;
+
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = match namespace {
+            Some(ref ns) => Api::namespaced_with(client, ns, &ar),
+            None => Api::all_with(client, &ar),
+        };
+
+        let dp = DeleteParams::default();
+        api.delete(&name, &dp).await.map_err(|err| {
+            println!("error {:?}", err);
+            GenericError::from(err)
+        })?;
+
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn watch_dynamic_resource(
+        app: tauri::AppHandle,
+        path: &str,
+        context: &str,
+        request: WatchRequest,
+    ) -> Result<(), GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version.clone();
+        let kind = request.kind.clone();
+        let namespaced = request.namespaced;
+        let namespace = request.namespace.clone();
+        let rv_string = request.resource_version.clone().unwrap();
+        log::info!("watch {:?} {:?} {:?} {:?}", kind, path, context, rv_string);
+        let client = get_client(path, context).await?;
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind: kind.clone(),
+        };
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = Api::all_with(client, &ar);
+
+        // watcher
+        let wp: WatchParams = WatchParams::default();
+        let rv_string = request.resource_version.unwrap();
+        let event_name_updated = format!("{}-updated", kind);
+        let event_name_deleted = format!("{}-deleted", kind);
+
+        {
+            let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+            let key = (
+                path.to_string(),
+                context.to_string(),
+                kind.clone().to_string(),
+            );
+            let key_clone = key.clone();
+
+            if let Some(old_handle) = handles.remove(&key) {
+                log::warn!("Aborting existing watcher for {:?}", key);
+                old_handle.abort();
+            }
+
+            let app_clone = app.clone();
+            let api_clone = api.clone();
+
+            let handle = spawn(async move {
+                let mut stream = match api_clone.watch(&wp, &rv_string).await {
+                    Ok(s) => s.boxed(),
+                    Err(e) => {
+                        eprintln!("watch failed: {:?}", e);
+                        return;
+                    }
+                };
+
+                while let Some(status) = stream.next().await {
+                    match status {
+                        Ok(WatchEvent::Added(p)) | Ok(WatchEvent::Modified(p)) => {
+                            let _ = app_clone.emit(&event_name_updated, &p);
+                        }
+                        Ok(WatchEvent::Deleted(p)) => {
+                            let _ = app_clone.emit(&event_name_deleted, &p);
+                        }
+                        Ok(_) => {}
+                        Err(err) => {
+                            eprintln!("watch stream error: {:?}", err);
+                            break;
+                        }
+                    }
+                }
+
+                log::info!("watcher ended for {:?}", key);
+            });
+
+            handles.insert(key_clone, handle);
+        }
+
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn get_pod_logs(
         path: &str,
         context: &str,
@@ -535,467 +816,4 @@ pub mod client {
 
         Ok(())
     }
-
-    macro_rules! generate_event_handler_fn {
-        (
-        $func_name:ident,
-        $resource_name:literal,
-        $kube_type:ty,
-        $event_updated:literal,
-        $event_deleted:literal
-    ) => {
-            #[tauri::command]
-            pub async fn $func_name(
-                path: &str,
-                context: &str,
-                rv: &str,
-                app: tauri::AppHandle,
-            ) -> Result<(), GenericError> {
-                log::info!(
-                    "{} START: path={:?}, context={:?} rv={:?}",
-                    stringify!($func_name),
-                    path,
-                    context,
-                    rv
-                );
-
-                let client = get_client(path, context).await?;
-                let api: Api<$kube_type> = Api::all(client);
-                let wp: WatchParams = WatchParams::default();
-                let rv_string = rv.to_string();
-
-                {
-                    let mut handles = REFLECTOR_HANDLES.lock().unwrap();
-                    let key = (
-                        path.to_string(),
-                        context.to_string(),
-                        $resource_name.to_string(),
-                    );
-                    let key_clone = key.clone();
-
-                    if let Some(old_handle) = handles.remove(&key) {
-                        log::warn!("Aborting existing watcher for {:?}", key);
-                        old_handle.abort();
-                    }
-
-                    let app_clone = app.clone();
-                    let api_clone = api.clone();
-
-                    let handle = spawn(async move {
-                        let mut stream = match api_clone.watch(&wp, rv_string.as_str()).await {
-                            Ok(s) => s.boxed(),
-                            Err(e) => {
-                                eprintln!("watch failed: {:?}", e);
-                                return;
-                            }
-                        };
-
-                        while let Some(status) = stream.next().await {
-                            match status {
-                                Ok(WatchEvent::Added(p)) | Ok(WatchEvent::Modified(p)) => {
-                                    let _ = app_clone.emit($event_updated, &p);
-                                }
-                                Ok(WatchEvent::Deleted(p)) => {
-                                    let _ = app_clone.emit($event_deleted, &p);
-                                }
-                                Ok(_) => {}
-                                Err(err) => {
-                                    eprintln!("watch stream error: {:?}", err);
-                                    break;
-                                }
-                            }
-                        }
-
-                        log::info!("watcher ended for {:?}", key);
-                    });
-
-                    handles.insert(key_clone, handle);
-                }
-
-                Ok(())
-            }
-        };
-    }
-
-    macro_rules! generate_get_page_fn {
-        ($fn_name:ident, $type:ty, $log_type:literal) => {
-            #[tauri::command]
-            pub async fn $fn_name(
-                path: &str,
-                context: &str,
-                limit: u32,
-                continue_token: Option<String>,
-            ) -> Result<(Vec<$type>, Option<String>, Option<String>), GenericError> {
-                log::info!(
-                    concat!("get_", $log_type, "_page {:?} {:?} {:?} {:?}"),
-                    path,
-                    context,
-                    limit,
-                    continue_token
-                );
-                let client = get_client(&path, context).await?;
-                let api: Api<$type> = Api::all(client);
-
-                let lp = if let Some(token) = &continue_token {
-                    ListParams::default().limit(limit).continue_token(token)
-                } else {
-                    ListParams::default().limit(limit)
-                };
-
-                let result = api.list(&lp).await.map_err(|err| {
-                    println!("error {:?}", err);
-                    GenericError::from(err)
-                })?;
-
-                let next_token = result.metadata.continue_;
-                let resource_version = result.metadata.resource_version.unwrap_or_default();
-                let mut items = result.items;
-
-                items.sort_by(|a, b| {
-                    let a_time = a
-                        .metadata
-                        .creation_timestamp
-                        .as_ref()
-                        .map(|t| t.0)
-                        .unwrap_or_default();
-                    let b_time = b
-                        .metadata
-                        .creation_timestamp
-                        .as_ref()
-                        .map(|t| t.0)
-                        .unwrap_or_default();
-                    b_time.cmp(&a_time)
-                });
-
-                Ok((items, next_token, Some(resource_version)))
-            }
-        };
-    }
-
-    macro_rules! generate_delete_fn {
-        ($fn_name:ident, $type:ty, $log_type:literal, cluster_scoped) => {
-            #[tauri::command]
-            pub async fn $fn_name(
-                path: &str,
-                context: &str,
-                resource_name: &str,
-            ) -> Result<(), GenericError> {
-                log::info!(
-                    concat!("delete_", $log_type, " {:?} {:?} {:?}"),
-                    path,
-                    context,
-                    resource_name
-                );
-                let client = get_client(&path, context).await?;
-                let api: Api<$type> = Api::all(client);
-                let dp = DeleteParams::default();
-                let res = api.delete(resource_name, &dp).await.map_err(|err| {
-                    println!("error {:?}", err);
-                    GenericError::from(err)
-                })?;
-
-                match res {
-                    Either::Left(obj) => {
-                        log::info!(
-                            concat!("deleted ", $log_type, ": {}"),
-                            obj.metadata.name.unwrap_or_default()
-                        );
-                    }
-                    Either::Right(status) => {
-                        log::info!(
-                            concat!("API response (", $log_type, "): {:?}"),
-                            status.status
-                        );
-                    }
-                };
-                Ok(())
-            }
-        };
-        ($fn_name:ident, $type:ty, $log_type:literal) => {
-            #[tauri::command]
-            pub async fn $fn_name(
-                path: &str,
-                context: &str,
-                resource_namespace: &str,
-                resource_name: &str,
-            ) -> Result<(), GenericError> {
-                log::info!(
-                    concat!("delete_", $log_type, " {:?} {:?} {:?} {:?}"),
-                    path,
-                    context,
-                    resource_namespace,
-                    resource_name
-                );
-                let client = get_client(&path, context).await?;
-                let api: Api<$type> = Api::namespaced(client, resource_namespace);
-                let dp = DeleteParams::default();
-                let res = api.delete(resource_name, &dp).await.map_err(|err| {
-                    println!("error {:?}", err);
-                    GenericError::from(err)
-                })?;
-
-                match res {
-                    Either::Left(obj) => {
-                        log::info!(
-                            concat!("deleted ", $log_type, ": {}"),
-                            obj.metadata.name.unwrap_or_default()
-                        );
-                    }
-                    Either::Right(status) => {
-                        log::info!(
-                            concat!("API response (", $log_type, "): {:?}"),
-                            status.status
-                        );
-                    }
-                };
-                Ok(())
-            }
-        };
-    }
-
-    macro_rules! generate_get_fn {
-        ($fn_name:ident, $type:ty) => {
-            #[tauri::command]
-            pub async fn $fn_name(path: &str, context: &str) -> Result<Vec<$type>, GenericError> {
-                log::info!("{} {:?} {:?}", stringify!($fn_name), path, context);
-                let client = get_client(&path, context).await?;
-                let api: Api<$type> = Api::all(client);
-
-                let list = api.list(&ListParams::default()).await.map_err(|err| {
-                    println!("error {:?}", err);
-                    GenericError::from(err)
-                })?;
-
-                Ok(list.items)
-            }
-        };
-    }
-
-    macro_rules! generate_get_one_fn {
-        ($fn_name:ident, $type:ty, cluster_scoped) => {
-            #[tauri::command]
-            pub async fn $fn_name(
-                path: &str,
-                context: &str,
-                name: &str,
-            ) -> Result<String, GenericError> {
-                log::info!(
-                    "{} path={:?} context={:?} name={:?}",
-                    stringify!($fn_name),
-                    path,
-                    context,
-                    name,
-                );
-                let client = get_client(&path, context).await?;
-                let api: Api<$type> = Api::all(client);
-                let obj = api.get(name).await.map_err(GenericError::from)?;
-                let yaml = serde_yaml::to_string(&obj)
-                    .map_err(|e| GenericError::new(format!("YAML serialization error: {}", e)))?;
-
-                Ok(yaml)
-            }
-        };
-        ($fn_name:ident, $type:ty) => {
-            #[tauri::command]
-            pub async fn $fn_name(
-                path: &str,
-                context: &str,
-                name: &str,
-                ns: &str,
-            ) -> Result<String, GenericError> {
-                log::info!(
-                    "{} path={:?} context={:?} name={:?} ns={:?}",
-                    stringify!($fn_name),
-                    path,
-                    context,
-                    name,
-                    ns,
-                );
-                let client = get_client(&path, context).await?;
-                let api: Api<$type> = Api::namespaced(client, ns);
-                let obj = api.get(name).await.map_err(GenericError::from)?;
-                let yaml = serde_yaml::to_string(&obj)
-                    .map_err(|e| GenericError::new(format!("YAML serialization error: {}", e)))?;
-
-                Ok(yaml)
-            }
-        };
-    }
-
-    generate_get_page_fn!(get_nodes_page, Node, "nodes");
-    generate_get_one_fn!(get_one_node, Node, cluster_scoped);
-    generate_event_handler_fn!(node_events, "node", Node, "node-updated", "node-deleted");
-    generate_get_page_fn!(get_pods_page, Pod, "pods");
-    generate_event_handler_fn!(pod_events, "pod", Pod, "pod-updated", "pod-deleted");
-    generate_get_one_fn!(get_one_pod, Pod);
-    generate_delete_fn!(delete_pod, Pod, "pod");
-    // Events
-    generate_get_page_fn!(get_events_page, Event, "events");
-    generate_event_handler_fn!(
-        event_events,
-        "event",
-        Event,
-        "event-updated",
-        "event-deleted"
-    );
-    // Namespaces
-    generate_get_fn!(get_namespaces, Namespace);
-    generate_get_page_fn!(get_namespaces_page, Namespace, "namespaces");
-    generate_get_one_fn!(get_one_namespace, Namespace, cluster_scoped);
-    generate_event_handler_fn!(
-        namespace_events,
-        "namespace",
-        Namespace,
-        "namespace-updated",
-        "namespace-deleted"
-    );
-    generate_delete_fn!(delete_namespace, Namespace, "namespace", cluster_scoped);
-    // Deployments
-    generate_get_page_fn!(get_deployments_page, Deployment, "deployments");
-    generate_get_one_fn!(get_one_deployment, Deployment);
-    generate_event_handler_fn!(
-        deployment_events,
-        "deployment",
-        Deployment,
-        "deployment-updated",
-        "deployment-deleted"
-    );
-    generate_delete_fn!(delete_deployment, Deployment, "deployment");
-    // DaemonSets
-    generate_get_page_fn!(get_daemonsets_page, DaemonSet, "daemonsets");
-    generate_get_one_fn!(get_one_daemonset, DaemonSet);
-    generate_event_handler_fn!(
-        daemonset_events,
-        "daemonset",
-        DaemonSet,
-        "daemonset-updated",
-        "daemonset-deleted"
-    );
-    generate_delete_fn!(delete_daemonset, DaemonSet, "daemonset");
-    // ReplicaSets
-    generate_get_page_fn!(get_replicasets_page, ReplicaSet, "replicasets");
-    generate_get_one_fn!(get_one_replicaset, ReplicaSet);
-    generate_event_handler_fn!(
-        replicaset_events,
-        "replicaset",
-        ReplicaSet,
-        "replicaset-updated",
-        "replicaset-deleted"
-    );
-    generate_delete_fn!(delete_replicaset, ReplicaSet, "replicaset");
-    // StatefulSets
-    generate_get_page_fn!(get_statefulsets_page, StatefulSet, "statefulset");
-    generate_get_one_fn!(get_one_statefulset, StatefulSet);
-    generate_event_handler_fn!(
-        statefulset_events,
-        "statefulset",
-        StatefulSet,
-        "statefulset-updated",
-        "statefulset-deleted"
-    );
-    generate_delete_fn!(delete_statefulset, StatefulSet, "statefulset");
-    //Jobs
-    generate_get_page_fn!(get_jobs_page, Job, "jobs");
-    generate_get_one_fn!(get_one_job, Job);
-    generate_event_handler_fn!(job_events, "job", Job, "job-updated", "job-deleted");
-    generate_delete_fn!(delete_job, Job, "job");
-    // CronJobs
-    generate_get_page_fn!(get_cronjobs_page, CronJob, "cronjob");
-    generate_get_one_fn!(get_one_cronjob, CronJob);
-    generate_event_handler_fn!(
-        cronjob_events,
-        "cronjob",
-        CronJob,
-        "cronjob-updated",
-        "cronjob-deleted"
-    );
-    generate_delete_fn!(delete_cronjob, CronJob, "cronjob");
-    // ConfigMaps
-    generate_get_page_fn!(get_configmaps_page, ConfigMap, "configmap");
-    generate_get_one_fn!(get_one_configmap, ConfigMap);
-    generate_event_handler_fn!(
-        configmap_events,
-        "configmap",
-        ConfigMap,
-        "configmap-updated",
-        "configmap-deleted"
-    );
-    generate_delete_fn!(delete_configmap, ConfigMap, "configmap");
-    // Secrets
-    generate_get_page_fn!(get_secrets_page, Secret, "secret");
-    generate_get_one_fn!(get_one_secret, Secret);
-    generate_event_handler_fn!(
-        secret_events,
-        "secret",
-        Secret,
-        "secret-updated",
-        "secret-deleted"
-    );
-    generate_delete_fn!(delete_secret, Secret, "secret");
-    // Services
-    generate_get_page_fn!(get_services_page, Service, "service");
-    generate_get_one_fn!(get_one_service, Service);
-    generate_event_handler_fn!(
-        service_events,
-        "service",
-        Service,
-        "service-updated",
-        "service-deleted"
-    );
-    generate_delete_fn!(delete_service, Service, "service");
-    // Ingresses
-    generate_get_page_fn!(get_ingresses_page, Ingress, "ingress");
-    generate_get_one_fn!(get_one_ingress, Ingress);
-    generate_event_handler_fn!(
-        ingress_events,
-        "ingress",
-        Ingress,
-        "ingress-updated",
-        "ingress-deleted"
-    );
-    generate_delete_fn!(delete_ingress, Ingress, "ingress");
-    // NetworkPolicies
-    generate_get_page_fn!(get_networkpolicies_page, NetworkPolicy, "networkpolicy");
-    generate_get_one_fn!(get_one_networkpolicy, NetworkPolicy);
-    generate_event_handler_fn!(
-        networkpolicy_events,
-        "networkpolicy",
-        NetworkPolicy,
-        "networkpolicy-updated",
-        "networkpolicy-deleted"
-    );
-    generate_delete_fn!(delete_networkpolicy, NetworkPolicy, "networkpolicy");
-    // StorageClasses
-    generate_get_page_fn!(get_storageclasses_page, StorageClass, "storageclass");
-    generate_get_fn!(get_storageclasses, StorageClass);
-    generate_event_handler_fn!(
-        storageclass_events,
-        "storageclass",
-        StorageClass,
-        "storageclass-updated",
-        "storageclass-deleted"
-    );
-    generate_delete_fn!(
-        delete_storageclass,
-        StorageClass,
-        "storageclass",
-        cluster_scoped
-    );
-    generate_get_one_fn!(get_one_storageclass, StorageClass, cluster_scoped);
-    // ServiceAccounts
-    generate_get_page_fn!(get_serviceaccounts_page, ServiceAccount, "serviceaccount");
-    generate_get_one_fn!(get_one_serviceaccount, ServiceAccount);
-    generate_event_handler_fn!(
-        serviceaccount_events,
-        "serviceaccount",
-        ServiceAccount,
-        "serviceaccount-updated",
-        "serviceaccount-deleted"
-    );
-    generate_delete_fn!(delete_serviceaccount, ServiceAccount, "serviceaccount");
-    // Roles
-    generate_get_page_fn!(get_roles_page, Role, "role");
-    generate_get_one_fn!(get_one_role, Role);
-    generate_event_handler_fn!(role_events, "role", Role, "role-updated", "role-deleted");
-    generate_delete_fn!(delete_role, Role, "role");
 }
