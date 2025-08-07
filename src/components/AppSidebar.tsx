@@ -11,6 +11,8 @@ import {
   HardDriveDownload,
   VenetianMask,
   SquareAsterisk,
+  ArrowUpDown,
+  ChevronsLeftRightEllipsis,
   FileSliders,
   Network,
   GlobeLock,
@@ -74,8 +76,9 @@ const items = [
       { title: 'ConfigMaps', icon: FileSliders, url: '/configmaps' },
       { title: 'Secrets', icon: VenetianMask, url: '/secrets' },
       { title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' },
-      { title: 'MutatingWebhook', icon: Vote, url: '/mutatingwebhooks' },
-      { title: 'ValidatingWebhook', icon: MessageCircleX, url: '/validatingwebhooks' },
+      { title: 'MutatingWebhooks', icon: Vote, url: '/mutatingwebhooks' },
+      { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/validatingwebhooks' },
+      { title: 'HPA', icon: ArrowUpDown, url: '/horizontalpodautoscalers' },
     ],
   },
   {
@@ -84,6 +87,7 @@ const items = [
     submenu: [
       { title: 'Services', icon: Share2, url: '/services' },
       { title: 'Ingresses', icon: EthernetPort, url: '/ingresses' },
+      { title: 'IngressClasses', icon: ChevronsLeftRightEllipsis, url: '/ingressclasses' },
       { title: 'NetworkPolicies', icon: ShieldAlert, url: '/networkpolicies' },
     ],
   },

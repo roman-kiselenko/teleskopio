@@ -84,6 +84,12 @@ export function useIngressesState() {
   return useHookstate(ingressesState);
 }
 
+export const ingressClassesState = hookstate<Map<string, any>>(new Map());
+
+export function useIngressClassesState() {
+  return useHookstate(ingressClassesState);
+}
+
 export const mutatingwebhooksState = hookstate<Map<string, any>>(new Map());
 
 export function useMutatingWebhooksState() {
@@ -94,6 +100,12 @@ export const configmapsState = hookstate<Map<string, any>>(new Map());
 
 export function useConfigmapsState() {
   return useHookstate(configmapsState);
+}
+
+export const horizontalPodAutoscalersState = hookstate<Map<string, any>>(new Map());
+
+export function useHorizontalPodAutoscalerState() {
+  return useHookstate(horizontalPodAutoscalersState);
 }
 
 export const namespacesState = hookstate<Map<string, any>>(new Map());

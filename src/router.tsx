@@ -12,8 +12,10 @@ import MutatingWebhooks from '@/components/resources/Configs/MutatingWebhooks';
 import ConfigMaps from '@/components/resources/Configs/ConfigMaps';
 import Secrets from '@/components/resources/Configs/Secrets';
 import Namespaces from '@/components/resources/Configs/Namespaces';
+import HorizontalPodAutoscalers from '@/components/resources/Configs/HorizontalPodAutoscalers';
 import StorageClasses from '@/components/resources/Storage/StorageClasses';
 import Services from '@/components/resources/Network/Services';
+import IngressClasses from '@/components/resources/Network/IngressClasses';
 import Ingresses from '@/components/resources/Network/Ingresses';
 import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
@@ -168,6 +170,16 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    path: '/horizontalpodautoscalers',
+    element: <Layout />,
+    children: [
+      {
+        path: '/horizontalpodautoscalers',
+        element: <HorizontalPodAutoscalers />,
+      },
+    ],
+  },
+  {
     path: '/namespaces',
     element: <Layout />,
     children: [
@@ -194,6 +206,16 @@ export const router = createBrowserRouter([
       {
         path: '/ingresses',
         element: <Ingresses />,
+      },
+    ],
+  },
+  {
+    path: '/ingressclasses',
+    element: <Layout />,
+    children: [
+      {
+        path: '/ingressclasses',
+        element: <IngressClasses />,
       },
     ],
   },
