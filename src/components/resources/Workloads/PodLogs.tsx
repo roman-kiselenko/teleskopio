@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { JumpCommand } from '@/components/ui/JumpCommand';
+import { useVersionState } from '@/store/version';
 
 export function PodLogs() {
   const { name, ns, data } = useLoaderData();
@@ -25,6 +27,7 @@ export function PodLogs() {
   const containerRef = useRef<HTMLDivElement>(null);
   let logLines = useLogsState();
   const [filterText, setFilterText] = useState('');
+  const version = useVersionState();
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -99,7 +102,23 @@ export function PodLogs() {
     setAutoScroll(atBottom);
   };
   return (
-    <div className="h-screen p-2 flex flex-col">
+    <div className="h-screen flex flex-col">
+      <div className="flex flex-row justify-between">
+        <div>
+          <JumpCommand />
+        </div>
+        <div>
+          {version.version.get() === '' ? (
+            <></>
+          ) : (
+            <p className="text-muted-foreground p-2 pt-3.5 text-xs">
+              <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
+                {version.version.get()}
+              </kbd>
+            </p>
+          )}
+        </div>
+      </div>
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />

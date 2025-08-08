@@ -85,6 +85,12 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <div>{row?.original?.status?.podIP}</div>),
   },
   {
+    accessorFn: (row) => row?.status?.qosClass ?? '',
+    id: 'qos',
+    header: memo(({ column }) => <HeaderAction column={column} name={'QOS'} />),
+    cell: memo(({ row }) => <div>{row?.original?.status?.qosClass}</div>),
+  },
+  {
     accessorKey: 'status.phase',
     id: 'phase',
     header: memo(({ column }) => <HeaderAction column={column} name={'Status'} />),

@@ -34,13 +34,13 @@ export function SettingsPage() {
       <div className="flex flex-col w-full">
         <Tabs defaultValue="theme" className="text-xs">
           <TabsList>
-            <TabsTrigger value="theme" className="text-xs">
+            <TabsTrigger key="theme" value="theme" className="text-xs">
               Theme
             </TabsTrigger>
-            <TabsTrigger value="api-resources" className="text-xs">
+            <TabsTrigger key="api-resources" value="api-resources" className="text-xs">
               API Resources
             </TabsTrigger>
-            <TabsTrigger value="logs" className="text-xs">
+            <TabsTrigger key="logs" value="logs" className="text-xs">
               Backend Logs
             </TabsTrigger>
           </TabsList>

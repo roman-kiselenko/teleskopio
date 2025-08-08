@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import { useCurrentClusterState } from '@/store/cluster';
 import { NavLink } from 'react-router-dom';
-import { useVersionState } from '@/store/version';
 import { useLocation } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -45,7 +44,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
 
-const items = [
+export const items = [
   {
     title: 'Main',
     url: '/',

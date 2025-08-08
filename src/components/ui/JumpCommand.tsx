@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calculator, Calendar, CreditCard, Settings, Smile, User } from 'lucide-react';
+import { items } from '@/components/AppSidebar';
+import { useNavigate } from 'react-router';
 
 import {
   CommandDialog,
@@ -8,12 +10,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
 } from '@/components/ui/command';
 
 export function JumpCommand() {
   const [open, setOpen] = useState(false);
+  let navigate = useNavigate();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -29,47 +30,47 @@ export function JumpCommand() {
 
   return (
     <>
-      <p className="text-muted-foreground p-2 text-xs">
+      <p className="text-muted-foreground p-2 pt-3.5 text-xs">
         <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
           <span className="text-xs">⌘</span>J
         </kbd>
       </p>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a command or search..." />
+        <CommandInput className="text-xs" placeholder="Jump to..." />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Suggestions">
-            <CommandItem>
-              <Calendar />
-              <span>Calendar</span>
-            </CommandItem>
-            <CommandItem>
-              <Smile />
-              <span>Search Emoji</span>
-            </CommandItem>
-            <CommandItem>
-              <Calculator />
-              <span>Calculator</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Settings">
-            <CommandItem>
-              <User />
-              <span>Profile</span>
-              <CommandShortcut>⌘P</CommandShortcut>
-            </CommandItem>
-            <CommandItem>
-              <CreditCard />
-              <span>Billing</span>
-              <CommandShortcut>⌘B</CommandShortcut>
-            </CommandItem>
-            <CommandItem>
-              <Settings />
-              <span>Settings</span>
-              <CommandShortcut>⌘S</CommandShortcut>
-            </CommandItem>
-          </CommandGroup>
+          <CommandEmpty className="text-xs p-2">No results found.</CommandEmpty>
+          {items.map((i, index) => (
+            <CommandGroup key={index} heading={i.title}>
+              {i?.url ? (
+                <CommandItem
+                  key={index}
+                  value={i.title}
+                  onSelect={(currentValue) => {
+                    setOpen(false);
+                    navigate(items.find((v) => v.title === currentValue)?.url as string);
+                  }}
+                >
+                  <i.icon />
+                  <span className="text-xs">{i.title}</span>
+                </CommandItem>
+              ) : (
+                <></>
+              )}
+              {i.submenu.map((x, xindex) => (
+                <CommandItem
+                  value={x.title}
+                  key={xindex}
+                  onSelect={(currentValue) => {
+                    setOpen(false);
+                    navigate(i.submenu.find((z) => z.title === currentValue)?.url as string);
+                  }}
+                >
+                  <x.icon />
+                  <span className="text-xs">{x.title}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
         </CommandList>
       </CommandDialog>
     </>
