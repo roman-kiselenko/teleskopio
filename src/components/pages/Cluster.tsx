@@ -109,7 +109,6 @@ export function ClusterPage() {
   return (
     <div className="flex flex-col flex-grow overflow-auto">
       <ResizablePanelGroup direction="horizontal" className="rounded-l">
-        <ResizableHandle />
         <ResizablePanel defaultSize={100}>
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel defaultSize={50}>
@@ -134,6 +133,7 @@ export function ClusterPage() {
                   setState={eventsState.set}
                   extractKey={(p: any) => p.metadata.uid}
                   columns={eventsColumns}
+                  withoutJump={true}
                 />
               </div>
             </ResizablePanel>

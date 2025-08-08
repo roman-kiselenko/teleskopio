@@ -11,6 +11,7 @@ interface DynamicResourceTableProps<T> {
   columns: ColumnDef<T, any>[];
   state: () => Map<string, T>;
   setState: (setter: (prev: Map<string, T>) => Map<string, T>) => void;
+  withoutJump?: Boolean;
 }
 
 export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
@@ -18,6 +19,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   columns,
   state,
   setState,
+  withoutJump,
 }: DynamicResourceTableProps<T>) => {
   const getApiResource = (): ApiResource => {
     const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === kind);
@@ -76,6 +78,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       setState={setState}
       extractKey={(item) => item.metadata?.uid as string}
       columns={columns}
+      withoutJump={withoutJump}
     />
   );
 };

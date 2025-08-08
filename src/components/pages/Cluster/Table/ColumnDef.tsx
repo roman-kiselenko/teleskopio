@@ -125,79 +125,81 @@ const columns: ColumnDef<any>[] = [
         name: node.metadata?.name,
         ...resource,
       };
-      const additional = [
-        <DropdownMenuItem
-          key={node.metadata?.uid}
-          className="text-xs"
-          onClick={async () => {
-            toast.promise(
-              call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
-                ...request,
-                resourceName: node.metadata?.name,
-              }),
-              {
-                loading: `${cordoned ? 'Uncordoning' : 'Cordoning'}...`,
+      const additional = (
+        <div>
+          <DropdownMenuItem
+            key={node.metadata?.uid}
+            className="text-xs"
+            onClick={async () => {
+              toast.promise(
+                call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
+                  ...request,
+                  resourceName: node.metadata?.name,
+                }),
+                {
+                  loading: `${cordoned ? 'Uncordoning' : 'Cordoning'}...`,
+                  success: () => {
+                    return (
+                      <span>
+                        Node <b>{node.metadata?.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
+                      </span>
+                    );
+                  },
+                  error: (err) => (
+                    <span>
+                      Cant {cordoned ? 'uncordon' : 'cordon'} <b>{node.metadata?.name}</b>
+                      <br />
+                      {err.message}
+                    </span>
+                  ),
+                },
+              );
+            }}
+          >
+            {cordoned ? (
+              <div className="flex flex-row items-center">
+                <div>
+                  <CirclePause className="mr-2" />
+                </div>
+                <div>Uncordon</div>
+              </div>
+            ) : (
+              <div className="flex flex-row items-center">
+                <div>
+                  <CirclePlay className="mr-2" />
+                </div>
+                <div>Cordon</div>
+              </div>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            key={node.metadata?.uid}
+            className="text-xs"
+            onClick={async () => {
+              toast.promise(call('drain_node', { resourceName: node.metadata?.name }), {
+                loading: 'Draining...',
                 success: () => {
                   return (
                     <span>
-                      Node <b>{node.metadata?.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
+                      Node <b>{node.metadata?.name}</b> drained
                     </span>
                   );
                 },
                 error: (err) => (
                   <span>
-                    Cant {cordoned ? 'uncordon' : 'cordon'} <b>{node.metadata?.name}</b>
+                    Cant drain <b>{node.metadata?.name}</b>
                     <br />
                     {err.message}
                   </span>
                 ),
-              },
-            );
-          }}
-        >
-          {cordoned ? (
-            <div className="flex flex-row items-center">
-              <div>
-                <CirclePause className="mr-2" />
-              </div>
-              <div>Uncordon</div>
-            </div>
-          ) : (
-            <div className="flex flex-row items-center">
-              <div>
-                <CirclePlay className="mr-2" />
-              </div>
-              <div>Cordon</div>
-            </div>
-          )}
-        </DropdownMenuItem>,
-        <DropdownMenuItem
-          key={node.metadata?.uid}
-          className="text-xs"
-          onClick={async () => {
-            toast.promise(call('drain_node', { resourceName: node.metadata?.name }), {
-              loading: 'Draining...',
-              success: () => {
-                return (
-                  <span>
-                    Node <b>{node.metadata?.name}</b> drained
-                  </span>
-                );
-              },
-              error: (err) => (
-                <span>
-                  Cant drain <b>{node.metadata?.name}</b>
-                  <br />
-                  {err.message}
-                </span>
-              ),
-            });
-          }}
-        >
-          <BrushCleaning />
-          Drain
-        </DropdownMenuItem>,
-      ];
+              });
+            }}
+          >
+            <BrushCleaning />
+            Drain
+          </DropdownMenuItem>
+        </div>
+      );
       return (
         <Actions
           url={`/cluster/nodes/${node.metadata?.name}`}

@@ -240,6 +240,7 @@ pub mod client {
         path: &str,
         context: &str,
     ) -> Result<Vec<ApiResourceInfo>, GenericError> {
+        log::info!("list_apiresources {} {}", path, context);
         let client = get_client(path, context).await?;
         let discovery = Discovery::new(client.clone())
             .run()
@@ -272,6 +273,7 @@ pub mod client {
         context: &str,
         yaml: String,
     ) -> Result<(), GenericError> {
+        log::info!("update_kube_object {} {} {}", path, context, yaml);
         let dyn_obj: DynamicObject = serde_yaml::from_str(&yaml)
             .map_err(|e| GenericError::new(format!("YAML parse error: {e}")))?;
 
@@ -363,6 +365,7 @@ pub mod client {
         context: &str,
         resource_name: &str,
     ) -> Result<(), GenericError> {
+        log::info!("cordon node {} {} {}", path, context, resource_name);
         let client = get_client(&path, context).await?;
         let nodes: Api<Node> = Api::all(client);
         let patch = json!({
@@ -387,6 +390,7 @@ pub mod client {
         context: &str,
         resource_name: &str,
     ) -> Result<(), GenericError> {
+        log::info!("uncordon node {} {} {}", path, context, resource_name);
         let client = get_client(&path, context).await?;
         let nodes: Api<Node> = Api::all(client);
         let patch = json!({
@@ -497,6 +501,7 @@ pub mod client {
         let req = Request::builder().uri("/version").body(vec![]).unwrap();
 
         let version_info: Value = client.request(req).await?;
+        log::info!("cluster version {}", version_info);
         Ok(version_info)
     }
 
@@ -759,6 +764,14 @@ pub mod client {
         ns: &str,
         container: &str,
     ) -> Result<(), GenericError> {
+        log::info!(
+            "stream_pod_logs path={:?} context={:?} name={:?} ns={:?} container={:?}",
+            path,
+            context,
+            name,
+            ns,
+            container,
+        );
         let key = format!("{}/{}/{}/{}/{}", path, context, ns, name, container,);
 
         {

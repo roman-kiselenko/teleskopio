@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { toast } from 'sonner';
 import moment from 'moment';
+import { JumpCommand } from '@/components/ui/JumpCommand';
 
 interface PaginatedTableProps<T> {
   getPage: (args: {
@@ -14,6 +15,7 @@ interface PaginatedTableProps<T> {
   setState: (updater: (prev: Map<string, T>) => Map<string, T>) => void;
   extractKey: (item: T) => string;
   columns: any;
+  withoutJump?: Boolean;
 }
 
 export function PaginatedTable<T>({
@@ -23,6 +25,7 @@ export function PaginatedTable<T>({
   setState,
   extractKey,
   columns,
+  withoutJump,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,6 +84,7 @@ export function PaginatedTable<T>({
   const showInitialLoader = loading && data.length === 0;
   return (
     <div className="h-full h-screen overflow-y-auto">
+      {withoutJump ? <></> : <JumpCommand />}
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />

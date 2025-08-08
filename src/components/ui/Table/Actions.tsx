@@ -54,10 +54,11 @@ function Actions({
           </DropdownMenuItem>
           <DropdownMenuItem
             key="dm3"
+            onClick={() => setOpenDialog(true)}
             disabled={resource.metadata?.deletionTimestamp !== undefined}
             className="text-xs"
           >
-            <div className="flex flex-row" onClick={() => setOpenDialog(true)}>
+            <div className="flex flex-row">
               <Trash size={8} color="red" /> <span className="ml-2 text-red-500">Delete</span>
             </div>
           </DropdownMenuItem>

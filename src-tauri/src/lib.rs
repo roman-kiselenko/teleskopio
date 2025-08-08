@@ -1,5 +1,6 @@
 mod k8s;
 
+use chrono::Local;
 use lazy_static::lazy_static;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 use std::sync::{Arc, Mutex};
@@ -15,7 +16,8 @@ impl log::Log for MemoryLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let msg = format!("{} - {}", record.level(), record.args());
+            let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
+            let msg = format!("[{}] {} - {}", timestamp, record.level(), record.args());
             if let Ok(mut logs) = self.logs.lock() {
                 logs.push(msg.clone());
             }
@@ -38,7 +40,8 @@ pub fn init_logger() -> Result<(), SetLoggerError> {
     log::set_logger(&*LOGGER).map(|()| log::set_max_level(LevelFilter::Info))
 }
 
-pub fn get_logs() -> Vec<String> {
+#[tauri::command]
+fn get_logs() -> Vec<String> {
     MEMORY_LOGS.lock().unwrap().clone()
 }
 
@@ -65,6 +68,8 @@ pub fn run() {
             k8s::client::drain_node,
             k8s::client::cordon_node,
             k8s::client::uncordon_node,
+            // Settings
+            get_logs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
