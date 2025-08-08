@@ -1,12 +1,14 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import RsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/api-resources';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { HandHelping } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -42,25 +44,36 @@ const columns: ColumnDef<any>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
+      let navigate = useNavigate();
       const rs = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ReplicaSet');
-      let request = {
-        name: rs.metadata?.name,
-        namespace: rs?.metadata?.namespace,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
+      const owner = rs?.metadata?.ownerReferences[0];
+      const additional = [
+        <DropdownMenuItem
+          disabled={owner === undefined}
+          onClick={() => {
+            navigate(`/yaml/${owner.kind}/${owner.name}/${rs?.metadata?.namespace}`);
+          }}
+          className="text-xs"
+        >
+          <HandHelping />
+          Owner
+        </DropdownMenuItem>,
+      ];
       return (
         <Actions
           url={`/yaml/ReplicaSet/${rs.metadata?.name}/${rs?.metadata?.namespace}`}
           resource={rs}
+          children={additional}
           name={'ReplicaSet'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: rs.metadata?.name,
+              namespace: rs?.metadata?.namespace,
+              ...resource,
+            },
+          }}
         />
       );
     },

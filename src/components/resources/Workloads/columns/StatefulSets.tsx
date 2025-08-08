@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import SsName from '@/components/ui/Table/ResourceName';
@@ -46,23 +45,19 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const ss = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'StatefulSet');
-      let request = {
-        name: ss.metadata?.name,
-        namespace: ss?.metadata?.namespace,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/StatefulSet/${ss.metadata?.name}/${ss?.metadata?.namespace}`}
           resource={ss}
           name={'StatefulSet'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: ss.metadata?.name,
+              namespace: ss?.metadata?.namespace,
+              ...resource,
+            },
+          }}
         />
       );
     },

@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
@@ -38,23 +37,19 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const ingress = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Ingress');
-      let request = {
-        name: ingress.metadata?.name,
-        namespace: ingress?.metadata?.namespace,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/Ingress/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
           resource={ingress}
           name={'Ingress'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: ingress.metadata?.name,
+              namespace: ingress?.metadata?.namespace,
+              ...resource,
+            },
+          }}
         />
       );
     },

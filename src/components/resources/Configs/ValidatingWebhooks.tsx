@@ -1,0 +1,17 @@
+import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
+import { useValidatingWebhooksState } from '@/store/resources';
+import columns from '@/components/resources/Configs/columns/ValidatingWebhook';
+
+const ValidatingWebhooks = () => {
+  const cm = useValidatingWebhooksState();
+  return (
+    <DynamicResourceTable
+      kind="ValidatingWebhookConfiguration"
+      columns={columns}
+      state={() => cm.get() as Map<string, any>}
+      setState={cm.set}
+    />
+  );
+};
+
+export default ValidatingWebhooks;

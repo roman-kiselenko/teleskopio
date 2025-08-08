@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
@@ -28,22 +27,18 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState
         .get()
         .find((r: ApiResource) => r.kind === 'MutatingWebhookConfiguration');
-      let request = {
-        name: cm.metadata?.name,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/MutatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}`}
           resource={cm}
           name={'MutatingWebhookConfiguration'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: cm.metadata?.name,
+              ...resource,
+            },
+          }}
         />
       );
     },

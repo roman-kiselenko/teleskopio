@@ -84,6 +84,12 @@ export function useIngressesState() {
   return useHookstate(ingressesState);
 }
 
+export const endpointsState = hookstate<Map<string, any>>(new Map());
+
+export function useEndpointsState() {
+  return useHookstate(endpointsState);
+}
+
 export const ingressClassesState = hookstate<Map<string, any>>(new Map());
 
 export function useIngressClassesState() {
@@ -93,13 +99,25 @@ export function useIngressClassesState() {
 export const mutatingwebhooksState = hookstate<Map<string, any>>(new Map());
 
 export function useMutatingWebhooksState() {
-  return useHookstate(configmapsState);
+  return useHookstate(mutatingwebhooksState);
+}
+
+export const validatingWebhooksState = hookstate<Map<string, any>>(new Map());
+
+export function useValidatingWebhooksState() {
+  return useHookstate(validatingWebhooksState);
 }
 
 export const configmapsState = hookstate<Map<string, any>>(new Map());
 
 export function useConfigmapsState() {
   return useHookstate(configmapsState);
+}
+
+export const podDisruptionBudgetsState = hookstate<Map<string, any>>(new Map());
+
+export function usePodDisruptionBudgetState() {
+  return useHookstate(podDisruptionBudgetsState);
 }
 
 export const horizontalPodAutoscalersState = hookstate<Map<string, any>>(new Map());

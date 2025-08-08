@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import Actions from '@/components/ui/Table/Actions';
@@ -27,22 +26,18 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState
         .get()
         .find((r: ApiResource) => r.kind === 'HorizontalPodAutoscaler');
-      let request = {
-        name: ns.metadata?.name,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/HorizontalPodAutoscaler/${ns.metadata?.name}/${ns.metadata?.namespace}`}
           resource={ns}
           name={'HorizontalPodAutoscaler'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: ns.metadata?.name,
+              ...resource,
+            },
+          }}
         />
       );
     },

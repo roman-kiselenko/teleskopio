@@ -1,9 +1,11 @@
 import {
   Blocks,
+  Cable,
   Box,
   ShieldAlert,
   EthernetPort,
   Telescope,
+  Percent,
   Vote,
   MessageCircleX,
   Share2,
@@ -79,6 +81,7 @@ const items = [
       { title: 'MutatingWebhooks', icon: Vote, url: '/mutatingwebhooks' },
       { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/validatingwebhooks' },
       { title: 'HPA', icon: ArrowUpDown, url: '/horizontalpodautoscalers' },
+      { title: 'PodDisruptionBudget', icon: Percent, url: '/poddisruptionbudgets' },
     ],
   },
   {
@@ -89,6 +92,7 @@ const items = [
       { title: 'Ingresses', icon: EthernetPort, url: '/ingresses' },
       { title: 'IngressClasses', icon: ChevronsLeftRightEllipsis, url: '/ingressclasses' },
       { title: 'NetworkPolicies', icon: ShieldAlert, url: '/networkpolicies' },
+      { title: 'Endpoints', icon: Cable, url: '/endpoints' },
     ],
   },
   {
@@ -113,7 +117,6 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const cv = useVersionState();
   const cc = useCurrentClusterState();
   let location = useLocation();
   const { state } = useSidebar();

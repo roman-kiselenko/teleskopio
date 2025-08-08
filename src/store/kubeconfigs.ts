@@ -1,6 +1,6 @@
 import { hookstate, useHookstate } from '@hookstate/core';
 import { toast } from 'sonner';
-import { invoke } from '@tauri-apps/api/core';
+import { call } from '@/lib/api';
 
 export const kubeConfigsState = hookstate<{ configs: Object[] }>({
   configs: [],
@@ -8,7 +8,7 @@ export const kubeConfigsState = hookstate<{ configs: Object[] }>({
 
 export async function getConfigs(query: string) {
   try {
-    let configs = await invoke<any[]>('lookup_configs');
+    let configs = await call<any[]>('lookup_configs');
     if (query !== '') {
       configs = configs.filter((c) => {
         return String(c.name || '')

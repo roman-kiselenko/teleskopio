@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import Actions from '@/components/ui/Table/Actions';
@@ -25,22 +24,18 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const ns = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Namespace');
-      let request = {
-        name: ns.metadata?.name,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/Namespace/${ns.metadata?.name}/${ns.metadata?.namespace}`}
           resource={ns}
           name={'Namespace'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: ns.metadata?.name,
+              ...resource,
+            },
+          }}
         />
       );
     },

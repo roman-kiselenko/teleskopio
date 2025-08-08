@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
@@ -20,6 +19,15 @@ const columns: ColumnDef<any>[] = [
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
+  },
+  {
+    accessorKey: 'status.active',
+    id: 'active',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Active'} />),
+    cell: ({ row }) => {
+      const active = row.original.status?.active || 0;
+      return <div>{active}</div>;
+    },
   },
   {
     accessorKey: 'status.ready',
@@ -51,23 +59,19 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const job = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Job');
-      let request = {
-        name: job.metadata?.name,
-        namespace: job?.metadata?.namespace,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/Job/${job.metadata?.name}/${job?.metadata?.namespace}`}
           resource={job}
           name={'Job'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: job.metadata?.name,
+              namespace: job?.metadata?.namespace,
+              ...resource,
+            },
+          }}
         />
       );
     },

@@ -13,7 +13,7 @@ pub mod client {
         WatchParams,
     };
     use kube::config::{KubeConfigOptions, Kubeconfig, KubeconfigError};
-    use kube::core::{DynamicObject, GroupVersionKind};
+    use kube::core::{DynamicObject, GroupVersionKind, TypeMeta};
     use kube::discovery::{Discovery, Scope};
     use kube::{api::Api, discovery::ApiResource, Client, Config, Error, ResourceExt};
     use lazy_static::lazy_static;
@@ -536,10 +536,15 @@ pub mod client {
             lp = lp.continue_token(token);
         }
 
-        let result = api.list(&lp).await.map_err(GenericError::from)?;
+        let mut result = api.list(&lp).await.map_err(GenericError::from)?;
         let next_token = result.metadata.continue_;
         let resource_version = result.metadata.resource_version;
-
+        for obj in result.items.iter_mut() {
+            obj.types = Some(TypeMeta {
+                api_version: ar.api_version.clone(),
+                kind: ar.kind.clone(),
+            });
+        }
         Ok((result.items, next_token, resource_version))
     }
 

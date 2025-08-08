@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
@@ -38,23 +37,19 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const np = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'NetworkPolicy');
-      let request = {
-        name: np.metadata?.name,
-        namespace: np?.metadata?.namespace,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           resource={np}
           url={`/yaml/NetworkPolicy/${np.metadata?.name}/${np.metadata?.namespace}`}
           name={'NetworkPolicy'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: np.metadata?.name,
+              namespace: np?.metadata?.namespace,
+              ...resource,
+            },
+          }}
         />
       );
     },

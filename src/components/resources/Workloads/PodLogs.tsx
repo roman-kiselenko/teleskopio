@@ -2,9 +2,8 @@ import { ArrowBigLeft, Pencil, Scroll } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { currentClusterState } from '@/store/cluster';
+import { call } from '@/lib/api';
+import { listenEvent } from '@/lib/events';
 import { logsState, useLogsState } from '@/store/logs';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
@@ -31,14 +30,17 @@ export function PodLogs() {
     let unlisten: (() => void) | undefined;
     if (currentContainer === '') {
       let obj = yaml.load(data);
-      setPodContainers(obj.spec.containers);
+      setPodContainers(
+        obj.spec.containers
+          .concat(obj.spec.initContainers)
+          .concat(obj.spec.ephemeralContainer)
+          .filter((c) => c),
+      );
       setContainer(obj.spec.containers[0].name);
     }
     const subscribe = async () => {
       if (currentContainer === '') return;
-      const logs = await invoke<string[]>('get_pod_logs', {
-        path: currentClusterState.kube_config.get(),
-        context: currentClusterState.cluster.get(),
+      const logs = await call('get_pod_logs', {
         name: name,
         ns: ns,
         container: currentContainer,
@@ -50,8 +52,8 @@ export function PodLogs() {
         }),
       );
 
-      unlisten = await listen('pod_log_line', (event) => {
-        const payload = event.payload as {
+      unlisten = await listenEvent('pod_log_line', (ev: any) => {
+        const payload = ev as {
           pod: string;
           container: string;
           namespace: string;
@@ -66,9 +68,7 @@ export function PodLogs() {
         }
       });
 
-      await invoke('stream_pod_logs', {
-        path: currentClusterState.kube_config.get(),
-        context: currentClusterState.cluster.get(),
+      await call('stream_pod_logs', {
         name: name,
         ns: ns,
         container: currentContainer,

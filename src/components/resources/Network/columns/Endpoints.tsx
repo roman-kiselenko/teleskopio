@@ -15,6 +15,12 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
+    accessorKey: 'namespace',
+    id: 'namespace',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
+    cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
+  },
+  {
     id: 'age',
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
@@ -24,16 +30,17 @@ const columns: ColumnDef<any>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const ingress = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'IngressClass');
+      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Endpoints');
       return (
         <Actions
-          url={`/yaml/IngressClass/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
+          url={`/yaml/Endpoints/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
           resource={ingress}
-          name={'IngressClass'}
+          name={'Endpoints'}
           action={'delete_dynamic_resource'}
           request={{
             request: {
               name: ingress.metadata?.name,
+              namespace: ingress?.metadata?.namespace,
               ...resource,
             },
           }}

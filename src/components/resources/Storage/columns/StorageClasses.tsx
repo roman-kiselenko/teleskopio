@@ -1,19 +1,33 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/api-resources';
+import { Badge } from '@/components/ui/badge';
 
 const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row?.original?.metadata?.name} />),
+    cell: memo(({ row }) => {
+      return (
+        <div>
+          {row.original.metadata.annotations?.hasOwnProperty(
+            'storageclass.kubernetes.io/is-default-class',
+          ) ? (
+            <Badge className="text-xs" variant="default">
+              default
+            </Badge>
+          ) : (
+            <></>
+          )}{' '}
+          {row.original.metadata?.name}
+        </div>
+      );
+    }),
   },
   {
     accessorKey: 'provisioner',
@@ -44,22 +58,18 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const sc = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'StorageClass');
-      let request = {
-        name: sc.metadata?.name,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           resource={sc}
           url={`/yaml/StorageClass/${sc.metadata?.name}/${sc?.metadata?.namespace}`}
           name={'StorageClass'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: sc.metadata?.name,
+              ...resource,
+            },
+          }}
         />
       );
     },

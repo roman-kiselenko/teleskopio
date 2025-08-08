@@ -1,12 +1,12 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/api-resources';
+import { Badge } from '@/components/ui/badge';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -40,6 +40,29 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <div>{row.original.spec?.internalTrafficPolicy}</div>),
   },
   {
+    accessorKey: 'spec.selector',
+    id: 'Selector',
+    header: 'Selector',
+    cell: memo(({ row }) => {
+      return <div>{JSON.stringify(row.original.spec?.selector)}</div>;
+    }),
+  },
+  {
+    accessorKey: 'spec.ports',
+    id: 'Ports',
+    header: 'Ports',
+    cell: memo(({ row }) => {
+      const ports = row.original?.spec?.ports.map((p: any) => (
+        <div>
+          <Badge className="m-0.5">
+            {p.protocol}({p.port}:{p.targetPort})
+          </Badge>
+        </div>
+      ));
+      return <div>{ports}</div>;
+    }),
+  },
+  {
     id: 'age',
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
@@ -50,23 +73,19 @@ const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const service = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Service');
-      let request = {
-        name: service.metadata?.name,
-        namespace: service?.metadata?.namespace,
-        ...resource,
-      };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/Service/${service.metadata?.name}/${service.metadata?.namespace}`}
           resource={service}
           name={'Service'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{
+            request: {
+              name: service.metadata?.name,
+              namespace: service?.metadata?.namespace,
+              ...resource,
+            },
+          }}
         />
       );
     },

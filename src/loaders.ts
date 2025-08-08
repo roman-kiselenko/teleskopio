@@ -1,7 +1,6 @@
-import { invoke } from '@tauri-apps/api/core';
-import { currentClusterState } from '@/store/cluster';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/api-resources';
+import { call } from '@/lib/api';
 
 export async function Load(kind: string, name: string, namespace: string) {
   const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === kind);
@@ -13,9 +12,5 @@ export async function Load(kind: string, name: string, namespace: string) {
   if (resource.namespaced && namespace !== '') {
     request = { namespace: namespace, ...request } as any;
   }
-  return invoke<any>('get_dynamic_resource', {
-    path: currentClusterState.kube_config.get(),
-    context: currentClusterState.cluster.get(),
-    request,
-  });
+  return await call('get_dynamic_resource', { request });
 }

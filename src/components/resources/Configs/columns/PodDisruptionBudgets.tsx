@@ -2,7 +2,6 @@ import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/api-resources';
@@ -12,7 +11,25 @@ const columns: ColumnDef<any>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
+    cell: memo(({ row }) => <div>{row.original.metadata?.name}</div>),
+  },
+  {
+    accessorKey: 'healthy',
+    id: 'healthy',
+    header: memo(({ column }) => (
+      <HeaderAction column={column} name={'DesiredHealthy/CurrentHealthy'} />
+    )),
+    cell: memo(({ row }) => (
+      <div>
+        {row.original.status?.desiredHealthy}/{row.original.status?.currentHealthy}
+      </div>
+    )),
+  },
+  {
+    accessorKey: 'spec.minAvailable',
+    id: 'minAvailable',
+    header: memo(({ column }) => <HeaderAction column={column} name={'MinAvailable'} />),
+    cell: memo(({ row }) => <div>{row.original.spec?.minAvailable}</div>),
   },
   {
     id: 'age',
@@ -23,17 +40,20 @@ const columns: ColumnDef<any>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ingress = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'IngressClass');
+      const ns = row.original;
+      const resource = apiResourcesState
+        .get()
+        .find((r: ApiResource) => r.kind === 'PodDisruptionBudget');
       return (
         <Actions
-          url={`/yaml/IngressClass/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
-          resource={ingress}
-          name={'IngressClass'}
+          url={`/yaml/PodDisruptionBudget/${ns.metadata?.name}/${ns.metadata?.namespace}`}
+          resource={ns}
+          name={'PodDisruptionBudget'}
           action={'delete_dynamic_resource'}
           request={{
             request: {
-              name: ingress.metadata?.name,
+              name: ns.metadata?.name,
+              namespace: ns.metadata?.namespace,
               ...resource,
             },
           }}

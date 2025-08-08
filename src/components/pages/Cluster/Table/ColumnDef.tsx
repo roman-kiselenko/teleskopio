@@ -1,7 +1,6 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import Actions from '@/components/ui/Table/Actions';
@@ -9,7 +8,7 @@ import { cn } from '@/util';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { memo } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { call } from '@/lib/api';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/api-resources';
@@ -126,20 +125,14 @@ const columns: ColumnDef<any>[] = [
         name: node.metadata?.name,
         ...resource,
       };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       const additional = [
         <DropdownMenuItem
           key={node.metadata?.uid}
           className="text-xs"
           onClick={async () => {
             toast.promise(
-              invoke<any>(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
-                path: getKubeconfig(),
-                context: getCluster(),
+              call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
+                ...request,
                 resourceName: node.metadata?.name,
               }),
               {
@@ -182,30 +175,23 @@ const columns: ColumnDef<any>[] = [
           key={node.metadata?.uid}
           className="text-xs"
           onClick={async () => {
-            toast.promise(
-              invoke<any>('drain_node', {
-                path: getKubeconfig(),
-                context: getCluster(),
-                resourceName: node.metadata?.name,
-              }),
-              {
-                loading: 'Draining...',
-                success: () => {
-                  return (
-                    <span>
-                      Node <b>{node.metadata?.name}</b> drained
-                    </span>
-                  );
-                },
-                error: (err) => (
+            toast.promise(call('drain_node', { resourceName: node.metadata?.name }), {
+              loading: 'Draining...',
+              success: () => {
+                return (
                   <span>
-                    Cant drain <b>{node.metadata?.name}</b>
-                    <br />
-                    {err.message}
+                    Node <b>{node.metadata?.name}</b> drained
                   </span>
-                ),
+                );
               },
-            );
+              error: (err) => (
+                <span>
+                  Cant drain <b>{node.metadata?.name}</b>
+                  <br />
+                  {err.message}
+                </span>
+              ),
+            });
           }}
         >
           <BrushCleaning />
@@ -219,7 +205,7 @@ const columns: ColumnDef<any>[] = [
           resource={node}
           name={'Node'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={{ request: request }}
         />
       );
     },

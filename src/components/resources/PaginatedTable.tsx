@@ -1,15 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/util';
 import { DataTable } from '@/components/ui/DataTable';
 import { toast } from 'sonner';
 import moment from 'moment';
-import { useCurrentClusterState } from '@/store/cluster';
 
 interface PaginatedTableProps<T> {
   getPage: (args: {
-    path: string;
-    context: string;
     limit: number;
     continueToken?: string;
   }) => Promise<[T[], string | null, string]>;
@@ -28,10 +24,6 @@ export function PaginatedTable<T>({
   extractKey,
   columns,
 }: PaginatedTableProps<T>) {
-  const cc = useCurrentClusterState();
-  const kubeConfig = cc.kube_config.get();
-  const cluster = cc.cluster.get();
-
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
@@ -42,8 +34,6 @@ export function PaginatedTable<T>({
     setLoading(true);
     try {
       const [items, next, rv] = await getPage({
-        path: kubeConfig,
-        context: cluster,
         limit: 50,
         continueToken: nextToken ?? undefined,
       });

@@ -1,6 +1,5 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { getKubeconfig, getCluster } from '@/store/cluster';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
@@ -37,18 +36,13 @@ const columns: ColumnDef<any>[] = [
         namespace: role?.metadata?.namespace,
         ...resource,
       };
-      const payload = {
-        path: getKubeconfig(),
-        context: getCluster(),
-        request,
-      };
       return (
         <Actions
           url={`/yaml/Role/${role.metadata?.name}/${role.metadata?.namespace}`}
           resource={role}
           name={'Role'}
           action={'delete_dynamic_resource'}
-          payload={payload}
+          request={request}
         />
       );
     },

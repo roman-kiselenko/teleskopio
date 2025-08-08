@@ -12,9 +12,27 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import React, { useEffect, useState } from 'react';
+import { getLocalBoolean, setLocalBoolean } from '@/lib/localStorage';
+
+const CONFIRM_DELETE_KEY = 'confirm-deletion';
+
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const [confirmDeletion, setConfirmDeletion] = useState<boolean>(false);
   const apiResources = useApiResourcesState();
+  useEffect(() => {
+    const value = getLocalBoolean(CONFIRM_DELETE_KEY, false);
+    setConfirmDeletion(value);
+  }, []);
+
+  const toggleConfirmDeletion = () => {
+    const newValue = !confirmDeletion;
+    setConfirmDeletion(newValue);
+    setLocalBoolean(CONFIRM_DELETE_KEY, newValue);
+  };
+
   return (
     <div className="flex flex-row flex-grow p-2 ">
       <div className="flex flex-col">
@@ -59,7 +77,6 @@ export function SettingsPage() {
                 <div className="text-xs p-2">No cluster connected.</div>
               ) : (
                 <div className="flex flex-col h-screen overflow-auto">
-                  <div className="flex">API Resources</div>
                   <div className="flex">
                     <div className="bg-background">
                       <Table className="text-xs">

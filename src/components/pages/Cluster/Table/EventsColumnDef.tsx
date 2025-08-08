@@ -1,19 +1,23 @@
+import { Info } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'note',
     id: 'note',
     header: 'Message',
-    cell: memo(({ row }) => <div>{row.original.note}</div>),
+    cell: memo(({ row }) => {
+      return <div className="w-1/2">{row.original.note}</div>;
+    }),
   },
   {
     accessorKey: 'type',
     id: 'type',
-    header: 'Type',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Type'} />),
     cell: memo(({ row }) => {
       let color = '';
       if (row.original.type !== 'Normal') {
@@ -23,15 +27,34 @@ const columns: ColumnDef<any>[] = [
     }),
   },
   {
-    accessorKey: 'count',
-    id: 'count',
-    header: memo(({ column }) => <HeaderAction column={column} name={'Count'} />),
-    cell: memo(({ row }) => <div>{row.original.count}</div>),
+    accessorKey: 'reason',
+    id: 'reason',
+    header: 'Reason',
+    cell: memo(({ row }) => {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex flex-row items-center w-1/5">
+              <div className="mr-1">
+                <Info size={15} />{' '}
+              </div>{' '}
+              <div>{row.original.reason}</div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            {row.original.reportingInstance === undefined
+              ? ''
+              : `${row.original.reportingInstance}:`}
+            {row.original.reportingController}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }),
   },
   {
-    accessorKey: 'namespace',
+    accessorKey: 'metadata.namespace',
     id: 'namespace',
-    header: 'Namespace',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: ({ row }) => {
       return <div>{row.original.metadata?.namespace}</div>;
     },

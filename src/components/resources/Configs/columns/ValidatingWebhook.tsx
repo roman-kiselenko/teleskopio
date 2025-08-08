@@ -15,25 +15,27 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
-    id: 'age',
-    accessorFn: (row) => row?.metadata?.creationTimestamp,
+    id: 'creationTimestamp',
+    accessorFn: (row) => row.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const ingress = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'IngressClass');
+      const cm = row.original;
+      const resource = apiResourcesState
+        .get()
+        .find((r: ApiResource) => r.kind === 'ValidatingWebhookConfiguration');
       return (
         <Actions
-          url={`/yaml/IngressClass/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
-          resource={ingress}
-          name={'IngressClass'}
+          url={`/yaml/ValidatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          resource={cm}
+          name={'ValidatingWebhookConfiguration'}
           action={'delete_dynamic_resource'}
           request={{
             request: {
-              name: ingress.metadata?.name,
+              name: cm.metadata?.name,
               ...resource,
             },
           }}

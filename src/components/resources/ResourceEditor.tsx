@@ -9,8 +9,7 @@ import { useLoaderData } from 'react-router';
 import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution';
 import 'monaco-editor/esm/vs/language/json/monaco.contribution';
 import { configureMonacoYaml } from 'monaco-yaml';
-import { invoke } from '@tauri-apps/api/core';
-import { currentClusterState } from '@/store/cluster';
+import { call } from '@/lib/api';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/components/ThemeProvider';
@@ -83,26 +82,19 @@ export function ResourceEditor() {
     }
     const cleanedYaml = yaml.dump(obj);
 
-    toast.promise(
-      invoke('update_kube_object', {
-        path: currentClusterState.kube_config.get(),
-        context: currentClusterState.cluster.get(),
-        yaml: cleanedYaml,
-      }),
-      {
-        loading: 'Saving...',
-        success: () => {
-          return <span>Saving resource</span>;
-        },
-        error: (err) => (
-          <span>
-            Cant save resource
-            <br />
-            {err.message}
-          </span>
-        ),
+    toast.promise(call('update_kube_object', { yaml: cleanedYaml }), {
+      loading: 'Saving...',
+      success: () => {
+        return <span>Saving resource</span>;
       },
-    );
+      error: (err) => (
+        <span>
+          Cant save resource
+          <br />
+          {err.message}
+        </span>
+      ),
+    });
     setOriginal(value!);
   };
 

@@ -9,14 +9,17 @@ import StatefulSets from '@/components/resources/Workloads/StatefulSets';
 import Jobs from '@/components/resources/Workloads/Jobs';
 import CronJobs from '@/components/resources/Workloads/CronJobs';
 import MutatingWebhooks from '@/components/resources/Configs/MutatingWebhooks';
+import ValidatingWebhooks from '@/components/resources/Configs/ValidatingWebhooks';
 import ConfigMaps from '@/components/resources/Configs/ConfigMaps';
 import Secrets from '@/components/resources/Configs/Secrets';
 import Namespaces from '@/components/resources/Configs/Namespaces';
 import HorizontalPodAutoscalers from '@/components/resources/Configs/HorizontalPodAutoscalers';
+import PodDisruptionBudgets from '@/components/resources/Configs/PodDisruptionBudgets';
 import StorageClasses from '@/components/resources/Storage/StorageClasses';
 import Services from '@/components/resources/Network/Services';
 import IngressClasses from '@/components/resources/Network/IngressClasses';
 import Ingresses from '@/components/resources/Network/Ingresses';
+import Endpoints from '@/components/resources/Network/Endpoints';
 import NetworkPolicies from '@/components/resources/Network/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
@@ -150,6 +153,16 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    path: '/validatingwebhooks',
+    element: <Layout />,
+    children: [
+      {
+        path: '/validatingwebhooks',
+        element: <ValidatingWebhooks />,
+      },
+    ],
+  },
+  {
     path: '/configmaps',
     element: <Layout />,
     children: [
@@ -166,6 +179,16 @@ export const router = createBrowserRouter([
       {
         path: '/secrets',
         element: <Secrets />,
+      },
+    ],
+  },
+  {
+    path: '/poddisruptionbudgets',
+    element: <Layout />,
+    children: [
+      {
+        path: '/poddisruptionbudgets',
+        element: <PodDisruptionBudgets />,
       },
     ],
   },
@@ -196,6 +219,16 @@ export const router = createBrowserRouter([
       {
         path: '/services',
         element: <Services />,
+      },
+    ],
+  },
+  {
+    path: '/endpoints',
+    element: <Layout />,
+    children: [
+      {
+        path: '/endpoints',
+        element: <Endpoints />,
       },
     ],
   },
