@@ -7,6 +7,7 @@ import {
   SquareTerminal,
   SquareMousePointer,
   Ruler,
+  Rss,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AgeCell from '@/components/ui/Table/AgeCell';
@@ -150,6 +151,17 @@ const columns: ColumnDef<any>[] = [
               >
                 {' '}
                 <Trash size={8} color="red" /> <span className="text-red-500">Delete</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                key="dm4"
+                className="text-xs"
+                onClick={() =>
+                  navigate(`/events/${pod.kind}/${pod?.metadata?.uid}/${pod?.metadata?.namespace}`)
+                }
+              >
+                <div className="flex flex-row">
+                  <Rss size={8} /> <span className="ml-2">Events</span>
+                </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

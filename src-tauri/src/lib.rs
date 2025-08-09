@@ -61,6 +61,8 @@ pub fn run() {
             k8s::client::lookup_configs,
             k8s::client::get_version,
             k8s::client::update_kube_object,
+            // Common
+            k8s::client::events_dynamic_resource,
             // Pod
             k8s::client::get_pod_logs,
             k8s::client::stream_pod_logs,

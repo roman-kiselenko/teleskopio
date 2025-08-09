@@ -21,6 +21,18 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
+    accessorKey: 'status.numberReady',
+    id: 'NumberReady',
+    header: memo(({ column }) => <HeaderAction column={column} name={'NumberReady'} />),
+    cell: memo(({ row }) => <div>{row.original.status?.numberReady}</div>),
+  },
+  {
+    accessorKey: 'spec.updateStrategy.type',
+    id: 'updateStrategy',
+    header: memo(({ column }) => <HeaderAction column={column} name={'UpdateStrategy'} />),
+    cell: memo(({ row }) => <div>{row.original.spec.updateStrategy.type}</div>),
+  },
+  {
     id: 'age',
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),

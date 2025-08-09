@@ -20,7 +20,7 @@ const subscribeNodeEvents = async (rv: string) => {
 const subscribeEventEvents = async (rv: string) => {
   const apiResource = apiResourcesState
     .get()
-    .find((r: ApiResource) => r.kind === 'Event' && r.group === 'events.k8s.io');
+    .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
   const request = {
     ...apiResource,
     resource_version: rv,
@@ -90,7 +90,7 @@ const getEventsPage = async ({
 }) => {
   const apiResource = apiResourcesState
     .get()
-    .find((r: ApiResource) => r.kind === 'Event' && r.group === 'events.k8s.io');
+    .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
   return await call('list_dynamic_resource', {
     limit: limit,
     continueToken: continueToken,

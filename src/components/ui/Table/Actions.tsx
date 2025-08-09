@@ -1,4 +1,4 @@
-import { SquareMousePointer, MoreHorizontal, ClipboardCopy, Trash } from 'lucide-react';
+import { SquareMousePointer, MoreHorizontal, ClipboardCopy, Trash, Rss } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +60,19 @@ function Actions({
           >
             <div className="flex flex-row">
               <Trash size={8} color="red" /> <span className="ml-2 text-red-500">Delete</span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            key="dm4"
+            className="text-xs"
+            onClick={() =>
+              navigate(
+                `/events/${resource.kind}/${resource?.metadata?.uid}/${resource?.metadata?.namespace}`,
+              )
+            }
+          >
+            <div className="flex flex-row">
+              <Rss size={8} /> <span className="ml-2">Events</span>
             </div>
           </DropdownMenuItem>
           {children ? (

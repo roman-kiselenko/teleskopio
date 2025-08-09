@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { ClusterPage } from './components/pages/Cluster';
 import Pods from '@/components/resources/Workloads/Pods';
+import { ResourceEvents } from '@/components/resources/ResourceEvents';
 import Deployments from '@/components/resources/Workloads/Deployments';
 import DaemonSets from '@/components/resources/Workloads/DaemonSets';
 import { PodLogs } from '@/components/resources/Workloads/PodLogs';
@@ -316,6 +317,22 @@ export const router = createBrowserRouter([
           };
         },
         element: <ResourceEditor />,
+      },
+    ],
+  },
+  {
+    path: '/events',
+    element: <Layout />,
+    children: [
+      {
+        path: '/events/:kind/:uid/:namespace/',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            uid: params.uid,
+            namespace: params.namespace,
+          };
+        },
+        element: <ResourceEvents />,
       },
     ],
   },

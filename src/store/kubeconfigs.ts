@@ -16,7 +16,6 @@ export async function getConfigs(query: string) {
           .includes(query.toLowerCase());
       });
     }
-    console.log('found configs', configs);
     kubeConfigsState.configs.set(configs);
   } catch (error: any) {
     toast.error('Error! Cant load configs\n' + error.message);

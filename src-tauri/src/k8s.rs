@@ -4,6 +4,7 @@ pub mod client {
     use futures_util::io::{AsyncBufReadExt, BufReader};
     use futures_util::stream::StreamExt;
     use k8s_openapi::api::core::v1::{Node, Pod};
+    use k8s_openapi::api::events::v1::Event;
     use k8s_openapi::api::policy::v1::Eviction;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::DeleteOptions;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
@@ -503,6 +504,23 @@ pub mod client {
         let version_info: Value = client.request(req).await?;
         log::info!("cluster version {}", version_info);
         Ok(version_info)
+    }
+
+    #[tauri::command]
+    pub async fn events_dynamic_resource(
+        path: &str,
+        context: &str,
+        namespace: &str,
+        uid: &str,
+    ) -> Result<Vec<Event>, GenericError> {
+        log::info!("events {:?} {:?} {:?} {:?}", path, context, namespace, uid);
+
+        let client = get_client(path, context).await?;
+        let events_api: Api<Event> = Api::namespaced(client, &namespace);
+
+        let lp = ListParams::default().fields(&format!("regarding.uid={}", uid));
+        let events = events_api.list(&lp).await?;
+        Ok(events.items)
     }
 
     #[tauri::command]

@@ -1,18 +1,15 @@
-import { Info, Package } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { NavLink } from 'react-router-dom';
 
 const columns: ColumnDef<any>[] = [
   {
-    accessorKey: 'note',
-    id: 'note',
+    accessorKey: 'message',
+    id: 'message',
     header: 'Message',
     cell: memo(({ row }) => {
-      return <div className="w-1/2">{row.original.note}</div>;
+      return <div className="w-1/2">{row.original.message}</div>;
     }),
   },
   {
@@ -32,24 +29,7 @@ const columns: ColumnDef<any>[] = [
     id: 'reason',
     header: 'Reason',
     cell: memo(({ row }) => {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex flex-row items-center w-1/5">
-              <div className="mr-1">
-                <Info size={15} />{' '}
-              </div>{' '}
-              <div>{row.original.reason}</div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            {row.original.reportingInstance === undefined
-              ? ''
-              : `${row.original.reportingInstance}:`}
-            {row.original.reportingController}
-          </TooltipContent>
-        </Tooltip>
-      );
+      return <div>{row.original.reason}</div>;
     }),
   },
   {
@@ -58,19 +38,6 @@ const columns: ColumnDef<any>[] = [
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: ({ row }) => {
       return <div>{row.original.metadata?.namespace}</div>;
-    },
-  },
-  {
-    accessorKey: 'regarding',
-    id: 'object',
-    header: 'Object',
-    cell: ({ row }) => {
-      return (
-        <div className="flex flex-row w-full items-center">
-          <Package size={16} className="mr-1" />
-          <div className="text-xs">{row?.original.regarding.kind}</div>
-        </div>
-      );
     },
   },
   {
