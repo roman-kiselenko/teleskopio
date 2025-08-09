@@ -1,5 +1,5 @@
 import Editor, { useMonaco } from '@monaco-editor/react';
-import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-react';
+import { Save, ArrowBigLeft, Shredder, Plus, Rss, Minus, Pencil, Map } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import podschema from '@/schema/pod.json';
@@ -171,10 +171,6 @@ export function ResourceEditor() {
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />
         </Button>
-        <Button className="text-xs">
-          <Pencil />
-          {namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}
-        </Button>
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
           <Save />
         </Button>
@@ -203,6 +199,10 @@ export function ResourceEditor() {
         <Button title="increase font" className="text-xs bg-gray-500" onClick={() => changeFont(1)}>
           <Plus />
         </Button>
+        <div className="flex flex-row items-center text-xs">
+          <Pencil className="mr-1" size={14} />
+          {namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}
+        </div>
       </div>
 
       <Editor

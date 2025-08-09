@@ -1,4 +1,4 @@
-import { ArrowBigLeft, Pencil, Scroll } from 'lucide-react';
+import { ArrowBigLeft, Scroll, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useEffect, useRef, useState } from 'react';
@@ -73,7 +73,7 @@ export function PodLogs() {
 
       await call('stream_pod_logs', {
         name: name,
-        ns: ns,
+        namespace: ns,
         container: currentContainer,
       });
     };
@@ -123,10 +123,7 @@ export function PodLogs() {
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />
         </Button>
-        <Button className="text-xs">
-          <Pencil />
-          {ns}/{name}/{currentContainer}
-        </Button>
+
         <Button
           onClick={() => setAutoScroll((prev) => !prev)}
           className={`text-xs ${autoScroll ? 'bg-gray-500' : 'bg-green-500'}`}
@@ -149,8 +146,14 @@ export function PodLogs() {
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
           placeholder="Filter..."
-          className="text-xs"
+          className="w-1/6 text-xs"
         />
+        <div className="flex flex-row items-center text-xs">
+          <ScrollText className="mr-1" size={14} />
+          <span>
+            {ns}/{name}/{currentContainer}
+          </span>
+        </div>
       </div>
       <div
         ref={containerRef}

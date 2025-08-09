@@ -524,6 +524,57 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn list_events_dynamic_resource(
+        path: &str,
+        context: &str,
+        limit: u32,
+        continue_token: Option<String>,
+        uid: &str,
+        request: ListRequest,
+    ) -> Result<(Vec<DynamicObject>, Option<String>, Option<String>), GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version;
+        let kind = request.kind;
+        log::info!(
+            "list events {:?} {:?} {:?} {:?} {:?} {:?}",
+            kind,
+            path,
+            context,
+            uid,
+            limit,
+            continue_token
+        );
+
+        let client = get_client(path, context).await?;
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = Api::all_with(client, &ar);
+
+        let mut lp = ListParams::default();
+        lp = lp.limit(limit);
+        lp = lp.fields(&format!("involvedObject.uid={}", uid));
+        if let Some(token) = &continue_token {
+            lp = lp.continue_token(token);
+        }
+
+        let mut result = api.list(&lp).await.map_err(GenericError::from)?;
+        let next_token = result.metadata.continue_;
+        let resource_version = result.metadata.resource_version;
+        for obj in result.items.iter_mut() {
+            obj.types = Some(TypeMeta {
+                api_version: ar.api_version.clone(),
+                kind: ar.kind.clone(),
+            });
+        }
+        Ok((result.items, next_token, resource_version))
+    }
+
+    #[tauri::command]
     pub async fn list_dynamic_resource(
         path: &str,
         context: &str,
@@ -741,11 +792,110 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn watch_events_dynamic_resource(
+        app: tauri::AppHandle,
+        path: &str,
+        uid: &str,
+        context: &str,
+        request: WatchRequest,
+    ) -> Result<(), GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version.clone();
+        let kind = request.kind.clone();
+        let namespaced = request.namespaced;
+        let namespace = request.namespace.clone();
+        let rv_string = request.resource_version.clone().unwrap();
+        log::info!(
+            "watch events {:?} {:?} {:?} {:?} {:?}",
+            kind,
+            path,
+            uid,
+            context,
+            rv_string
+        );
+        let client = get_client(path, context).await?;
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind: kind.clone(),
+        };
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = Api::all_with(client, &ar);
+
+        // watcher
+        let mut wp: WatchParams = WatchParams::default();
+        wp = wp.fields(&format!("involvedObject.uid={}", uid));
+        let rv_string = request.resource_version.unwrap();
+        let event_name_updated = format!("{}-updated", uid);
+
+        {
+            let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+            let key = (path.to_string(), context.to_string(), uid.to_string());
+            let key_clone = key.clone();
+
+            if let Some(old_handle) = handles.remove(&key) {
+                log::warn!("Aborting existing watcher for {:?}", key);
+                old_handle.abort();
+            }
+
+            let app_clone = app.clone();
+            let api_clone = api.clone();
+
+            let handle = spawn(async move {
+                let mut stream = match api_clone.watch(&wp, &rv_string).await {
+                    Ok(s) => s.boxed(),
+                    Err(e) => {
+                        eprintln!("watch failed: {:?}", e);
+                        return;
+                    }
+                };
+
+                while let Some(status) = stream.next().await {
+                    match status {
+                        Ok(WatchEvent::Added(p))
+                        | Ok(WatchEvent::Modified(p))
+                        | Ok(WatchEvent::Deleted(p)) => {
+                            let _ = app_clone.emit(&event_name_updated, &p);
+                        }
+                        Ok(_) => {}
+                        Err(err) => {
+                            eprintln!("watch stream error: {:?}", err);
+                            break;
+                        }
+                    }
+                }
+
+                log::info!("watcher ended for {:?}", key);
+            });
+
+            handles.insert(key_clone, handle);
+        }
+
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn stop_watch_events(path: &str, context: &str, uid: &str) -> Result<(), String> {
+        let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+        let key = (path.to_string(), context.to_string(), uid.to_string());
+
+        if let Some(handle) = handles.remove(&key) {
+            log::info!("Stopping watcher for {:?}", key);
+            handle.abort();
+            Ok(())
+        } else {
+            log::warn!("No watcher found for {:?}", key);
+            Err(format!("No watcher found for {:?}", key))
+        }
+    }
+
+    #[tauri::command]
     pub async fn get_pod_logs(
         path: &str,
         context: &str,
         name: &str,
-        ns: &str,
+        namespace: &str,
         container: &str,
         tail_lines: Option<i64>,
     ) -> Result<Vec<String>, GenericError> {
@@ -754,13 +904,13 @@ pub mod client {
             path,
             context,
             name,
-            ns,
+            namespace,
             container,
             tail_lines,
         );
 
         let client = get_client(path, context).await?;
-        let pods: Api<Pod> = Api::namespaced(client, ns);
+        let pods: Api<Pod> = Api::namespaced(client, namespace);
         let mut lp = LogParams {
             ..Default::default()
         };
@@ -779,7 +929,7 @@ pub mod client {
         path: &str,
         context: &str,
         name: &str,
-        ns: &str,
+        namespace: &str,
         container: &str,
     ) -> Result<(), GenericError> {
         log::info!(
@@ -787,10 +937,10 @@ pub mod client {
             path,
             context,
             name,
-            ns,
+            namespace,
             container,
         );
-        let key = format!("{}/{}/{}/{}/{}", path, context, ns, name, container,);
+        let key = format!("{}/{}/{}/{}/{}", path, context, namespace, name, container,);
 
         {
             let streams = ACTIVE_STREAMS.lock().unwrap();
@@ -802,7 +952,7 @@ pub mod client {
 
         let client = get_client(path, context).await?;
 
-        let pods: Api<Pod> = Api::namespaced(client, ns);
+        let pods: Api<Pod> = Api::namespaced(client, namespace);
 
         let mut lp = LogParams {
             follow: true,
@@ -818,7 +968,7 @@ pub mod client {
         let mut lines = BufReader::new(reader).lines();
 
         let pod_name = name.to_string();
-        let ns = ns.to_string();
+        let ns = namespace.to_string();
         let app_clone = app.clone();
         {
             let mut streams = ACTIVE_STREAMS.lock().unwrap();

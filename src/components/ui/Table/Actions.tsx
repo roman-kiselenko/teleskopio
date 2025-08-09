@@ -67,7 +67,7 @@ function Actions({
             className="text-xs"
             onClick={() =>
               navigate(
-                `/events/${resource.kind}/${resource?.metadata?.uid}/${resource?.metadata?.namespace}`,
+                `/events/${resource.kind}/${resource?.metadata?.uid}/${resource?.metadata?.namespace}/${resource?.metadata.name}`,
               )
             }
           >

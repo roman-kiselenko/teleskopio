@@ -325,10 +325,11 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: '/events/:kind/:uid/:namespace/',
+        path: '/events/:kind/:uid/:namespace/:name',
         loader: async ({ params }: { params: any }) => {
           return {
             uid: params.uid,
+            name: params.name,
             namespace: params.namespace,
           };
         },

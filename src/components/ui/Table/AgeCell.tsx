@@ -18,7 +18,7 @@ function AgeCell({ age }: { age: string }) {
   }, [age]);
 
   return (
-    <div title={''} className={'flex flex-col'}>
+    <div title={age} className={'flex flex-col'}>
       <div className="w-full">{value}</div>
     </div>
   );

@@ -1,10 +1,8 @@
-import { ArrowBigLeft, Pencil, Scroll } from 'lucide-react';
+import { ArrowBigLeft, Rss } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { call } from '@/lib/api';
-import { listenEvent } from '@/lib/events';
-import { resourceEventsState, useResourceEventsState } from '@/store/resource-events';
+import { listenEvent, stopWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
 import { JumpCommand } from '@/components/ui/JumpCommand';
@@ -13,14 +11,16 @@ import { ColumnDef } from '@tanstack/react-table';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
 import AgeCell from '@/components/ui/Table/AgeCell';
-import { DataTable } from '@/components/ui/DataTable';
+import { PaginatedTable } from '@/components/resources/PaginatedTable';
+import { apiResourcesState } from '@/store/api-resources';
+import type { ApiResource } from '@/types';
 
 const columns: ColumnDef<any>[] = [
   {
-    accessorKey: 'note',
-    id: 'note',
-    header: 'Note',
-    cell: memo(({ row }) => <div>{row.original.note} </div>),
+    accessorKey: 'message',
+    id: 'message',
+    header: 'Message',
+    cell: memo(({ row }) => <div>{row.original.message}</div>),
   },
   {
     accessorKey: 'reason',
@@ -49,22 +49,60 @@ const columns: ColumnDef<any>[] = [
 ];
 
 export function ResourceEvents() {
-  const { uid, namespace } = useLoaderData();
+  const { uid, namespace, name } = useLoaderData();
   const version = useVersionState();
-  const eventsState = useResourceEventsState();
+  const [events, setEvents] = useState<Map<string, any>>(new Map());
   let navigate = useNavigate();
 
   useEffect(() => {
-    const subscribe = async () => {
-      const events = await call('events_dynamic_resource', {
-        uid: uid,
-        namespace: namespace,
+    let unlisten: (() => void) | undefined;
+    const listenEvents = async () => {
+      unlisten = await listenEvent(`${uid}-updated`, (ev: any) => {
+        if (ev?.involvedObject?.uid === uid) {
+          setEvents((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(ev.metadata?.uid as string, ev);
+            return newMap;
+          });
+        }
       });
-      eventsState.set(events);
     };
-    subscribe();
-    return () => {};
+    listenEvents();
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+      stopWatcher(uid);
+    };
   }, []);
+
+  const subscribeEvents = async (rv: string) => {
+    const resource = apiResourcesState
+      .get()
+      .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
+    await call('watch_events_dynamic_resource', {
+      uid: uid,
+      request: {
+        ...resource,
+        resource_version: rv,
+      },
+    });
+  };
+
+  const getPage = async ({ limit, continueToken }: { limit: number; continueToken?: string }) => {
+    const resource = apiResourcesState
+      .get()
+      .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
+
+    return await call('list_events_dynamic_resource', {
+      limit: limit,
+      continueToken,
+      uid: uid,
+      request: {
+        ...resource,
+      },
+    });
+  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -85,15 +123,23 @@ export function ResourceEvents() {
         </div>
       </div>
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
-        <div>
-          <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
-            <ArrowBigLeft />
-          </Button>
+        <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
+          <ArrowBigLeft />
+        </Button>
+        <div className="flex flex-row items-center text-xs">
+          <Rss className="mr-1" size={14} />
+          <span>{namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}</span>
         </div>
       </div>
-      <div className="w-full h-screen overflow-y-auto text-xs p-0">
-        <DataTable columns={columns} data={eventsState.get() as []} />
-      </div>
+      <PaginatedTable
+        subscribeEvents={subscribeEvents}
+        getPage={getPage}
+        state={() => events as Map<string, any>}
+        setState={setEvents}
+        extractKey={(item) => item.metadata?.uid as string}
+        columns={columns}
+        withoutJump={true}
+      />
     </div>
   );
 }

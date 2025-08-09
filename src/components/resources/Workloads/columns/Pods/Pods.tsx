@@ -117,7 +117,8 @@ const columns: ColumnDef<any>[] = [
         namespace: pod?.metadata?.namespace,
         ...resource,
       };
-      const owner = pod?.metadata?.ownerReferences[0];
+      const owner =
+        pod?.metadata?.ownerReferences?.length > 0 ? pod?.metadata?.ownerReferences[0] : undefined;
       return (
         <div>
           <DropdownMenu>
@@ -156,7 +157,9 @@ const columns: ColumnDef<any>[] = [
                 key="dm4"
                 className="text-xs"
                 onClick={() =>
-                  navigate(`/events/${pod.kind}/${pod?.metadata?.uid}/${pod?.metadata?.namespace}`)
+                  navigate(
+                    `/events/${pod.kind}/${pod?.metadata?.uid}/${pod?.metadata?.namespace}/${pod?.metadata.name}`,
+                  )
                 }
               >
                 <div className="flex flex-row">
