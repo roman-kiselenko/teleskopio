@@ -19,6 +19,7 @@ loader.config({ monaco });
 import yaml from 'js-yaml';
 import { JumpCommand } from '@/components/ui/JumpCommand';
 import { useVersionState } from '@/store/version';
+import { Fonts, FONT_KEY } from '@/settings';
 
 export function ResourceEditor() {
   let navigate = useNavigate();
@@ -32,6 +33,11 @@ export function ResourceEditor() {
   const [minimap, setMinimap] = useState(true);
   const [stripManagedFields, setStripManagedFields] = useState(false);
   const version = useVersionState();
+  const [selectedFont] = useState<string>(() => {
+    return (
+      Fonts.find((f) => f.className === localStorage.getItem(FONT_KEY))?.label || 'Cascadia Code'
+    );
+  });
 
   useEffect(() => {
     if (!monaco || !editorRef.current) return;
@@ -125,19 +131,22 @@ export function ResourceEditor() {
   function handleEditorDidMount(editor: any, monaco: any) {
     editorRef.current = editor;
     let schema = podschema;
-    configureMonacoYaml(monaco, {
-      enableSchemaRequest: false,
-      validate: true,
-      hover: true,
-      completion: true,
-      schemas: [
-        {
-          uri: `file://schema/object.json`,
-          fileMatch: ['*'],
-          schema: schema,
-        },
-      ],
-    });
+    // loader.init().then((monaco) => {
+    //   monaco.editor.setTheme(LightTheme);
+    // });
+    // configureMonacoYaml(monaco, {
+    //   enableSchemaRequest: false,
+    //   validate: true,
+    //   hover: true,
+    //   completion: true,
+    //   schemas: [
+    //     {
+    //       uri: `file://schema/object.json`,
+    //       fileMatch: ['*'],
+    //       schema: schema,
+    //     },
+    //   ],
+    // });
   }
 
   return (
@@ -198,7 +207,12 @@ export function ResourceEditor() {
 
       <Editor
         language="yaml"
-        options={{ minimap: { enabled: minimap }, fontSize: fontSize, automaticLayout: true }}
+        options={{
+          minimap: { enabled: minimap },
+          fontFamily: selectedFont,
+          fontSize: fontSize,
+          automaticLayout: true,
+        }}
         value={original}
         theme={theme === 'dark' ? 'vs-dark' : 'light'}
         onMount={handleEditorDidMount}

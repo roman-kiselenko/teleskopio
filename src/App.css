@@ -1,7 +1,10 @@
-@import '@fontsource/geist-mono';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'tailwindcss-animated';
+@import '@fontsource/geist-mono';
+@import '@fontsource/cascadia-code';
+@import '@fontsource/iosevka';
+@import '@fontsource/jetbrains-mono';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -10,17 +13,30 @@
 }
 
 body {
-  /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; */
-  font-family: 'Geist Mono', sans-serif;
+  font-family: var(--app-font, 'Cascadia Code');
   font-optical-sizing: auto;
-  font-weight: 300;
+  font-weight: 400;
   font-style: normal;
   overflow: hidden;
 }
 
+.jetbrains {
+  --app-font: 'JetBrains Mono';
+}
+
+.cascadia {
+  --app-font: 'Cascadia Code';
+}
+
+.geist {
+  --app-font: 'Geist Mono';
+}
+
+.iosevka {
+  --app-font: 'Iosevka';
+}
+
 :root {
-  --font-geist-sans: 'Geist Sans', sans-serif;
-  --font-geist-mono: 'Geist Mono', monospace;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);

@@ -15,15 +15,34 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { call } from '@/lib/api';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+import { Fonts, FONT_KEY } from '@/settings';
 
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [logs, setLogs] = useState([]);
   const apiResources = useApiResourcesState();
 
+  const [selectedFont, setSelectedFont] = useState<string>(() => {
+    return localStorage.getItem(FONT_KEY) || 'cascadia';
+  });
+
   useEffect(() => {
     fetchLogs();
-  }, []);
+    document.body.classList.remove(...Fonts.map((f) => f.className));
+    document.body.classList.add(selectedFont);
+    localStorage.setItem(FONT_KEY, selectedFont);
+  }, [selectedFont]);
+
   const fetchLogs = async () => {
     const logsResponse = await call('get_logs');
     setLogs(logsResponse);
@@ -36,6 +55,9 @@ export function SettingsPage() {
           <TabsList>
             <TabsTrigger key="theme" value="theme" className="text-xs">
               Theme
+            </TabsTrigger>
+            <TabsTrigger key="font" value="font" className="text-xs">
+              Font
             </TabsTrigger>
             <TabsTrigger key="api-resources" value="api-resources" className="text-xs">
               API Resources
@@ -69,6 +91,23 @@ export function SettingsPage() {
                 </Label>
               </div>
             </RadioGroup>
+          </TabsContent>
+          <TabsContent value="font">
+            <Select onValueChange={(v) => setSelectedFont(v)} defaultValue={selectedFont}>
+              <SelectTrigger className="p-2 text-xs w-[180px]">
+                <SelectValue placeholder="Select a font" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup className="text-xs">
+                  <SelectLabel>Fonts</SelectLabel>
+                  {Fonts.map((font) => (
+                    <SelectItem className="text-xs" value={font.className}>
+                      {font.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </TabsContent>
           <TabsContent value="api-resources">
             {apiResources.get().slice().length === 0 ? (

@@ -1,9 +1,10 @@
-import { Info } from 'lucide-react';
+import { Info, Package } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { NavLink } from 'react-router-dom';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -57,6 +58,19 @@ const columns: ColumnDef<any>[] = [
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: ({ row }) => {
       return <div>{row.original.metadata?.namespace}</div>;
+    },
+  },
+  {
+    accessorKey: 'regarding',
+    id: 'object',
+    header: 'Object',
+    cell: ({ row }) => {
+      return (
+        <div className="flex flex-row w-full items-center">
+          <Package size={16} className="mr-1" />
+          <div className="text-xs">{row?.original.regarding.kind}</div>
+        </div>
+      );
     },
   },
   {

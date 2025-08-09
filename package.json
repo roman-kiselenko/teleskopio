@@ -10,7 +10,10 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@fontsource/cascadia-code": "^5.2.2",
     "@fontsource/geist-mono": "^5.2.6",
+    "@fontsource/iosevka": "^5.2.5",
+    "@fontsource/jetbrains-mono": "^5.2.6",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@hookstate/core": "^4.0.2",

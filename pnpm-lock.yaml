@@ -8,7 +8,16 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/cascadia-code':
+        specifier: ^5.2.2
+        version: 5.2.2
       '@fontsource/geist-mono':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/iosevka':
+        specifier: ^5.2.5
+        version: 5.2.5
+      '@fontsource/jetbrains-mono':
         specifier: ^5.2.6
         version: 5.2.6
       '@fortawesome/free-solid-svg-icons':
@@ -606,8 +615,17 @@ packages:
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
+  '@fontsource/cascadia-code@5.2.2':
+    resolution: {integrity: sha512-snTU9kuaH7N7QUySXF5/hGDwrxnkkwow3hi9IMnck+fxtc+5ZMj7dNPZZ8kvsiygA0Vn+uFuexkqckm1o1ilPg==}
+
   '@fontsource/geist-mono@5.2.6':
     resolution: {integrity: sha512-I3hsRP+8Gmhk35cwlPAR4w5xqk7e5pro2F1o51ZmB+lN+dPcwN3jYHKN+u0E5AMuiQKpTdkrqfEpvBjzQax3cQ==}
+
+  '@fontsource/iosevka@5.2.5':
+    resolution: {integrity: sha512-Zv/UHJodDug1LcnWv2u2+GPp3oWP3U6Xp16cJOsqqZQNsCu8sA/ttT331N0NypxBZ+7c8szlSRlYDcy9liZ8pw==}
+
+  '@fontsource/jetbrains-mono@5.2.6':
+    resolution: {integrity: sha512-nz//dBr99hXZmHp10wgNI00qThWImkzRR5PQjvRM+rpmuHO5rYBJCqPPWufidCvmkkryXx/GOP/lgqsM3R3Org==}
 
   '@fortawesome/fontawesome-common-types@6.7.2':
     resolution: {integrity: sha512-Zs+YeHUC5fkt7Mg1l6XTniei3k4bwG/yo3iFUtZWd/pMx9g3fdvkSK9E0FOC+++phXOka78uJcYb8JaFkW52Xg==}
@@ -3789,7 +3807,13 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
+  '@fontsource/cascadia-code@5.2.2': {}
+
   '@fontsource/geist-mono@5.2.6': {}
+
+  '@fontsource/iosevka@5.2.5': {}
+
+  '@fontsource/jetbrains-mono@5.2.6': {}
 
   '@fortawesome/fontawesome-common-types@6.7.2': {}
 

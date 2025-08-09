@@ -6,6 +6,7 @@ import {
   ScrollText,
   SquareTerminal,
   SquareMousePointer,
+  Ruler,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AgeCell from '@/components/ui/Table/AgeCell';
@@ -174,6 +175,10 @@ const columns: ColumnDef<any>[] = [
               <DropdownMenuItem disabled className="text-xs">
                 <SquareTerminal />
                 Attach
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled className="text-xs">
+                <Ruler />
+                Metrics
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
