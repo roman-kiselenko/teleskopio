@@ -6,6 +6,7 @@ pub mod client {
     use k8s_openapi::api::core::v1::{Node, Pod};
     use k8s_openapi::api::events::v1::Event;
     use k8s_openapi::api::policy::v1::Eviction;
+    use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::DeleteOptions;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
     use k8s_openapi::apimachinery::pkg::apis::meta::v1::Status;
@@ -261,6 +262,39 @@ pub mod client {
                     version: ar.version.clone(),
                     kind: ar.kind.clone(),
                     namespaced: namespaced,
+                });
+            }
+        }
+
+        Ok(result)
+    }
+    #[tauri::command]
+    pub async fn list_crd_resources(
+        path: &str,
+        context: &str,
+    ) -> Result<Vec<ApiResourceInfo>, GenericError> {
+        log::info!("list_crd_resources {} {}", path, context);
+        let client = get_client(path, context).await?;
+
+        let crds: Api<CustomResourceDefinition> = Api::all(client.clone());
+        let list = crds
+            .list(&Default::default())
+            .await
+            .map_err(GenericError::from)?;
+
+        let mut result = Vec::new();
+
+        for crd in list {
+            let spec = crd.spec;
+            let group = spec.group;
+            let namespaced = spec.scope == "Namespaced";
+
+            for version in spec.versions {
+                result.push(ApiResourceInfo {
+                    group: group.clone(),
+                    version: version.name.clone(),
+                    kind: spec.names.kind.clone(),
+                    namespaced,
                 });
             }
         }

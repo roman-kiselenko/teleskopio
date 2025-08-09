@@ -10,6 +10,7 @@ import { call } from '@/lib/api';
 import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';
 import { apiResourcesState } from '@/store/api-resources';
+import { crdResourcesState } from '@/store/crd-resources';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -45,6 +46,7 @@ const columns: ColumnDef<Cluster>[] = [
             setVersion(data.gitVersion);
             setCurrentCluster(cluster, path);
             apiResourcesState.set(await call('list_apiresources', {}));
+            crdResourcesState.set(await call('list_crd_resources', {}));
             navigate('/cluster');
             return (
               <span>

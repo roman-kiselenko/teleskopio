@@ -3,6 +3,11 @@ import {
   Cable,
   Box,
   ShieldAlert,
+  LayoutDashboard,
+  Wallet,
+  SlidersHorizontal,
+  Layers,
+  Columns3Cog,
   EthernetPort,
   Telescope,
   Percent,
@@ -27,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useCurrentClusterState } from '@/store/cluster';
 import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -43,6 +49,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
+import { useCrdResourcesState } from '@/store/crd-resources';
 
 export const items = [
   {
@@ -81,6 +88,8 @@ export const items = [
       { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/validatingwebhooks' },
       { title: 'HPA', icon: ArrowUpDown, url: '/horizontalpodautoscalers' },
       { title: 'PodDisruptionBudget', icon: Percent, url: '/poddisruptionbudgets' },
+      { title: 'ResourceQuotas', icon: Wallet, url: '/resourcequotas' },
+      { title: 'LimitRanges', icon: SlidersHorizontal, url: '/limitranges' },
     ],
   },
   {
@@ -108,6 +117,11 @@ export const items = [
     ],
   },
   {
+    title: 'CRD',
+    icon: Columns3Cog,
+    submenu: [{ title: 'Definitions', icon: Layers, url: '/crds' }],
+  },
+  {
     title: 'Settings',
     icon: Settings,
     url: '/settings',
@@ -119,14 +133,36 @@ export function AppSidebar() {
   const cc = useCurrentClusterState();
   let location = useLocation();
   const { state } = useSidebar();
+  const crds = useCrdResourcesState();
+  const [sidebarItems, setSidebarItems] = useState<any>([]);
 
+  useEffect(() => {
+    setSidebarItems(
+      items.map((x) => {
+        if (x.title === 'CRD') {
+          return {
+            ...x,
+            submenu: [
+              ...x.submenu,
+              ...crds.get().map((crd) => ({
+                title: crd.kind,
+                icon: LayoutDashboard,
+                url: `/customresources/${crd.kind}/${crd.group}/${crd.version}`,
+              })),
+            ],
+          };
+        }
+        return x;
+      }),
+    );
+  }, [crds]);
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
             <SidebarTrigger className="p-4" title="collapse" />
-            {items.map((item) => (
+            {sidebarItems.map((item: any) => (
               <Collapsible key={item.title} className="group/collapsible">
                 <SidebarMenuItem
                   className={cn(

@@ -54,6 +54,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // Api Resources
             k8s::client::list_apiresources,
+            k8s::client::list_crd_resources,
             k8s::client::list_dynamic_resource,
             k8s::client::get_dynamic_resource,
             k8s::client::delete_dynamic_resource,

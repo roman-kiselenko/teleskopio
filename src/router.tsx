@@ -11,7 +11,11 @@ import Jobs from '@/components/resources/Workloads/Jobs';
 import CronJobs from '@/components/resources/Workloads/CronJobs';
 import MutatingWebhooks from '@/components/resources/Configs/MutatingWebhooks';
 import ValidatingWebhooks from '@/components/resources/Configs/ValidatingWebhooks';
+import CustomResourceDefinitions from '@/components/resources/CRD/CustomResourceDefinitions';
+import CustomResources from '@/components/resources/CustomResources/CustomResources';
 import ConfigMaps from '@/components/resources/Configs/ConfigMaps';
+import ResourceQuotas from '@/components/resources/Configs/ResourceQuotas';
+import LimitRanges from '@/components/resources/Configs/LimitRanges';
 import Secrets from '@/components/resources/Configs/Secrets';
 import Namespaces from '@/components/resources/Configs/Namespaces';
 import HorizontalPodAutoscalers from '@/components/resources/Configs/HorizontalPodAutoscalers';
@@ -300,6 +304,53 @@ export const router = createBrowserRouter([
       {
         path: '/settings',
         element: <SettingsPage />,
+      },
+    ],
+  },
+  {
+    path: '/limitranges',
+    element: <Layout />,
+    children: [
+      {
+        path: '/limitranges',
+        element: <LimitRanges />,
+      },
+    ],
+  },
+  {
+    path: '/crds',
+    element: <Layout />,
+    children: [
+      {
+        path: '/crds',
+        element: <CustomResourceDefinitions />,
+      },
+    ],
+  },
+  {
+    path: '/resourcequotas',
+    element: <Layout />,
+    children: [
+      {
+        path: '/resourcequotas',
+        element: <ResourceQuotas />,
+      },
+    ],
+  },
+  {
+    path: '/customresources',
+    element: <Layout />,
+    children: [
+      {
+        path: '/customresources/:kind/:group/:version',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            group: params.group,
+            kind: params.kind,
+            version: params.version,
+          };
+        },
+        element: <CustomResources />,
       },
     ],
   },

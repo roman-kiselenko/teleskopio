@@ -102,6 +102,30 @@ export function useMutatingWebhooksState() {
   return useHookstate(mutatingwebhooksState);
 }
 
+export const crdsState = hookstate<Map<string, any>>(new Map());
+
+export function useCrdsState() {
+  return useHookstate(crdsState);
+}
+
+export const crsState = hookstate<Map<string, any>>(new Map());
+
+export function useCrsState() {
+  return useHookstate(crsState);
+}
+
+export const limitRangesState = hookstate<Map<string, any>>(new Map());
+
+export function useLimitRangesState() {
+  return useHookstate(limitRangesState);
+}
+
+export const resourceQuotasState = hookstate<Map<string, any>>(new Map());
+
+export function useResourceQuotasState() {
+  return useHookstate(resourceQuotasState);
+}
+
 export const validatingWebhooksState = hookstate<Map<string, any>>(new Map());
 
 export function useValidatingWebhooksState() {
