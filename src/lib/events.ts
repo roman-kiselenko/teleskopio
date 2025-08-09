@@ -13,8 +13,14 @@ export async function listenEvent<T>(
   return unlisten;
 }
 
-export async function stopWatcher(uid: string) {
+export async function stopEventsWatcher(uid: string) {
   const path = currentClusterState.kube_config.get();
   const context = currentClusterState.cluster.get();
   invoke('stop_watch_events', { path, context, uid }).catch(console.error);
+}
+
+export async function stopLogsWatcher(name: string, namespace: string, container: string) {
+  const path = currentClusterState.kube_config.get();
+  const context = currentClusterState.cluster.get();
+  invoke('stop_pod_log_stream', { path, context, name, namespace, container }).catch(console.error);
 }

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useEffect, useRef, useState } from 'react';
 import { call } from '@/lib/api';
-import { listenEvent } from '@/lib/events';
+import { listenEvent, stopLogsWatcher } from '@/lib/events';
 import { logsState, useLogsState } from '@/store/logs';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
@@ -82,6 +82,8 @@ export function PodLogs() {
 
     return () => {
       if (unlisten) unlisten();
+      if (currentContainer === '') return;
+      stopLogsWatcher(name, ns, currentContainer);
     };
   }, [currentContainer]);
 

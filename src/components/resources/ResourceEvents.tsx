@@ -2,7 +2,7 @@ import { ArrowBigLeft, Rss } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { call } from '@/lib/api';
-import { listenEvent, stopWatcher } from '@/lib/events';
+import { listenEvent, stopEventsWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
 import { JumpCommand } from '@/components/ui/JumpCommand';
@@ -72,7 +72,7 @@ export function ResourceEvents() {
       if (unlisten) {
         unlisten();
       }
-      stopWatcher(uid);
+      stopEventsWatcher(uid);
     };
   }, []);
 

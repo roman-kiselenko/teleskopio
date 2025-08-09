@@ -69,6 +69,7 @@ pub fn run() {
             // Pod
             k8s::client::get_pod_logs,
             k8s::client::stream_pod_logs,
+            k8s::client::stop_pod_log_stream,
             // Node
             k8s::client::drain_node,
             k8s::client::cordon_node,

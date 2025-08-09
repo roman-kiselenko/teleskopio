@@ -1,6 +1,6 @@
 pub mod client {
     use dirs::home_dir;
-    use either::Either;
+    use futures::future::AbortHandle;
     use futures_util::io::{AsyncBufReadExt, BufReader};
     use futures_util::stream::StreamExt;
     use k8s_openapi::api::core::v1::{Node, Pod};
@@ -213,7 +213,7 @@ pub mod client {
             Mutex::new(HashMap::new());
     }
 
-    static ACTIVE_STREAMS: Lazy<Mutex<HashMap<String, ()>>> =
+    static ACTIVE_STREAMS: Lazy<Mutex<HashMap<String, AbortHandle>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));
 
     pub fn has_reflector(path: &str, context: &str, resource: &str) -> bool {
@@ -802,8 +802,6 @@ pub mod client {
         let group = request.group.unwrap_or_default();
         let version = request.version.clone();
         let kind = request.kind.clone();
-        let namespaced = request.namespaced;
-        let namespace = request.namespace.clone();
         let rv_string = request.resource_version.clone().unwrap();
         log::info!(
             "watch events {:?} {:?} {:?} {:?} {:?}",
@@ -932,15 +930,7 @@ pub mod client {
         namespace: &str,
         container: &str,
     ) -> Result<(), GenericError> {
-        log::info!(
-            "stream_pod_logs path={:?} context={:?} name={:?} ns={:?} container={:?}",
-            path,
-            context,
-            name,
-            namespace,
-            container,
-        );
-        let key = format!("{}/{}/{}/{}/{}", path, context, namespace, name, container,);
+        let key = format!("{}/{}/{}/{}/{}", path, context, namespace, name, container);
 
         {
             let streams = ACTIVE_STREAMS.lock().unwrap();
@@ -951,54 +941,81 @@ pub mod client {
         }
 
         let client = get_client(path, context).await?;
-
         let pods: Api<Pod> = Api::namespaced(client, namespace);
 
         let mut lp = LogParams {
             follow: true,
+            container: Some(container.to_string()),
             ..Default::default()
         };
-        lp.container = Some(container.to_string());
 
         let reader = pods
             .log_stream(name, &lp)
             .await
-            .map_err(|e| GenericError::from(e))?;
+            .map_err(GenericError::from)?;
 
         let mut lines = BufReader::new(reader).lines();
 
         let pod_name = name.to_string();
         let ns = namespace.to_string();
         let app_clone = app.clone();
+
+        let (abort_handle, abort_reg) = AbortHandle::new_pair();
+
         {
             let mut streams = ACTIVE_STREAMS.lock().unwrap();
-            streams.insert(key.clone(), ());
+            streams.insert(key.clone(), abort_handle);
         }
-        tokio::spawn(async move {
-            while let Some(line) = lines.next().await {
-                match line {
-                    Ok(line) => {
-                        let _ = app_clone.emit(
-                            "pod_log_line",
-                            LogLineEvent {
-                                container: lp.container.clone().unwrap_or_default(),
-                                pod: pod_name.clone(),
-                                namespace: ns.clone(),
-                                line,
-                            },
-                        );
-                    }
-                    Err(err) => {
-                        log::error!("Error reading log line: {}", err);
-                        break;
+
+        tokio::spawn(futures::future::Abortable::new(
+            async move {
+                while let Some(line) = lines.next().await {
+                    match line {
+                        Ok(line) => {
+                            let _ = app_clone.emit(
+                                "pod_log_line",
+                                LogLineEvent {
+                                    container: lp.container.clone().unwrap_or_default(),
+                                    pod: pod_name.clone(),
+                                    namespace: ns.clone(),
+                                    line,
+                                },
+                            );
+                        }
+                        Err(err) => {
+                            log::error!("Error reading log line: {}", err);
+                            break;
+                        }
                     }
                 }
-            }
 
-            let mut streams = ACTIVE_STREAMS.lock().unwrap();
-            streams.remove(&key);
-            log::info!("Stream closed for {}", key);
-        });
+                let mut streams = ACTIVE_STREAMS.lock().unwrap();
+                streams.remove(&key);
+                log::info!("Stream closed for {}", key);
+            },
+            abort_reg,
+        ));
+
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn stop_pod_log_stream(
+        path: &str,
+        context: &str,
+        namespace: &str,
+        name: &str,
+        container: &str,
+    ) -> Result<(), GenericError> {
+        let key = format!("{}/{}/{}/{}/{}", path, context, namespace, name, container);
+
+        let mut streams = ACTIVE_STREAMS.lock().unwrap();
+        if let Some(abort_handle) = streams.remove(&key) {
+            abort_handle.abort();
+            log::info!("Aborted pod log stream for {}", key);
+        } else {
+            log::warn!("No active stream found for {}", key);
+        }
 
         Ok(())
     }
