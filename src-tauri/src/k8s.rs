@@ -557,7 +557,11 @@ pub mod client {
 
         let mut lp = ListParams::default();
         lp = lp.limit(limit);
-        lp = lp.fields(&format!("involvedObject.uid={}", uid));
+        if gvk.group == "" {
+            lp = lp.fields(&format!("involvedObject.uid={}", uid))
+        } else {
+            lp = lp.fields(&format!("regarding.uid={}", uid));
+        }
         if let Some(token) = &continue_token {
             lp = lp.continue_token(token);
         }
@@ -720,8 +724,6 @@ pub mod client {
         let group = request.group.unwrap_or_default();
         let version = request.version.clone();
         let kind = request.kind.clone();
-        let namespaced = request.namespaced;
-        let namespace = request.namespace.clone();
         let rv_string = request.resource_version.clone().unwrap();
         log::info!("watch {:?} {:?} {:?} {:?}", kind, path, context, rv_string);
         let client = get_client(path, context).await?;
@@ -823,7 +825,13 @@ pub mod client {
 
         // watcher
         let mut wp: WatchParams = WatchParams::default();
-        wp = wp.fields(&format!("involvedObject.uid={}", uid));
+        if gvk.group == "" {
+            wp = wp
+                .fields(&format!("involvedObject.uid={}", uid))
+                .timeout(294);
+        } else {
+            wp = wp.fields(&format!("regarding.uid={}", uid)).timeout(294);
+        }
         let rv_string = request.resource_version.unwrap();
         let event_name_updated = format!("{}-updated", uid);
 

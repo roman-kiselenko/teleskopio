@@ -6,7 +6,7 @@ import { listenEvent, stopEventsWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
 import { JumpCommand } from '@/components/ui/JumpCommand';
-import { useVersionState } from '@/store/version';
+import { useVersionState, getVersion } from '@/store/version';
 import { ColumnDef } from '@tanstack/react-table';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
@@ -14,13 +14,23 @@ import AgeCell from '@/components/ui/Table/AgeCell';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { apiResourcesState } from '@/store/api-resources';
 import type { ApiResource } from '@/types';
+import { compareVersions } from 'compare-versions';
 
 const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'message',
     id: 'message',
     header: 'Message',
-    cell: memo(({ row }) => <div>{row.original.message}</div>),
+    cell: memo(({ row }) => {
+      const version = useVersionState();
+      return (
+        <div>
+          {compareVersions(version.version.get(), '1.20') === 1
+            ? row.original.note
+            : row.original.message}
+        </div>
+      );
+    }),
   },
   {
     accessorKey: 'reason',
@@ -77,9 +87,13 @@ export function ResourceEvents() {
   }, []);
 
   const subscribeEvents = async (rv: string) => {
-    const resource = apiResourcesState
-      .get()
-      .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
+    const resource = apiResourcesState.get().find((r: ApiResource) => {
+      if (compareVersions(version.version.get(), '1.20') === 1) {
+        return r.kind === 'Event' && r.group === 'events.k8s.io';
+      } else {
+        return r.kind === 'Event' && r.group === '';
+      }
+    });
     await call('watch_events_dynamic_resource', {
       uid: uid,
       request: {
@@ -90,9 +104,13 @@ export function ResourceEvents() {
   };
 
   const getPage = async ({ limit, continueToken }: { limit: number; continueToken?: string }) => {
-    const resource = apiResourcesState
-      .get()
-      .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
+    const resource = apiResourcesState.get().find((r: ApiResource) => {
+      if (compareVersions(version.version.get(), '1.20') === 1) {
+        return r.kind === 'Event' && r.group === 'events.k8s.io';
+      } else {
+        return r.kind === 'Event' && r.group === '';
+      }
+    });
 
     return await call('list_events_dynamic_resource', {
       limit: limit,

@@ -44,6 +44,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "compare-versions": "^6.1.1",
     "cronstrue": "^3.1.0",
     "dayjs": "^1.11.13",
     "javascript-time-ago": "^2.5.11",
