@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { usePodDisruptionBudgetState } from '@/store/resources';
-import columns from '@/components/resources/Configs/columns/PodDisruptionBudgets';
+import columns from '@/components/resources/Configuration/columns/PodDisruptionBudgets';
 
 const PodDisruptionBudgets = () => {
   const ns = usePodDisruptionBudgetState();

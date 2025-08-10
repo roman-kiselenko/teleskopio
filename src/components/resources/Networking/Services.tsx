@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useServicesState } from '@/store/resources';
-import columns from '@/components/resources/Network/columns/Services';
+import columns from '@/components/resources/Networking/columns/Services';
 
 const Services = () => {
   const sv = useServicesState();

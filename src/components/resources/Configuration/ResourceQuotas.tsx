@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useResourceQuotasState } from '@/store/resources';
-import columns from '@/components/resources/Configs/columns/ResourceQuotas';
+import columns from '@/components/resources/Configuration/columns/ResourceQuotas';
 
 const ResourceQuotas = () => {
   const rq = useResourceQuotasState();

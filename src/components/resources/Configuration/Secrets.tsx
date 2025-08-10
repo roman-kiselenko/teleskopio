@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useSecretsState } from '@/store/resources';
-import columns from '@/components/resources/Configs/columns/Secrets';
+import columns from '@/components/resources/Configuration/columns/Secrets';
 
 const Secrets = () => {
   const ss = useSecretsState();

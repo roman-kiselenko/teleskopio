@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useNetworkPoliciesState } from '@/store/resources';
-import columns from '@/components/resources/Network/columns/NetworkPolicies';
+import columns from '@/components/resources/Networking/columns/NetworkPolicies';
 
 const NetworkPolicies = () => {
   const np = useNetworkPoliciesState();

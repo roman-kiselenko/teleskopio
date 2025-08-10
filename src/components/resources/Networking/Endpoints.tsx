@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useEndpointsState } from '@/store/resources';
-import columns from '@/components/resources/Network/columns/Endpoints';
+import columns from '@/components/resources/Networking/columns/Endpoints';
 
 const Endpoints = () => {
   const ing = useEndpointsState();

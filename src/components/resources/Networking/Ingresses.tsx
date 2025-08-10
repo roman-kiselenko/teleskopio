@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useIngressesState } from '@/store/resources';
-import columns from '@/components/resources/Network/columns/Ingresses';
+import columns from '@/components/resources/Networking/columns/Ingresses';
 
 const Ingresses = () => {
   const ing = useIngressesState();

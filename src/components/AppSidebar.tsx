@@ -7,6 +7,7 @@ import {
   Wallet,
   SlidersHorizontal,
   Layers,
+  ShieldUser,
   Columns3Cog,
   EthernetPort,
   Telescope,
@@ -49,8 +50,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
-import { useCrdResourcesState } from '@/store/crd-resources';
-import { useCrdsState } from '@/store/resources';
+import { useCrdsState } from '@/store/crd-resources';
 
 export const items = [
   {
@@ -63,7 +63,7 @@ export const items = [
     title: 'Cluster',
     url: '/cluster',
     icon: Waypoints,
-    submenu: [],
+    submenu: [{ title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' }],
   },
   {
     title: 'Workloads',
@@ -79,12 +79,11 @@ export const items = [
     ],
   },
   {
-    title: 'Configs',
+    title: 'Configuration',
     icon: Search,
     submenu: [
       { title: 'ConfigMaps', icon: FileSliders, url: '/configmaps' },
       { title: 'Secrets', icon: VenetianMask, url: '/secrets' },
-      { title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' },
       { title: 'MutatingWebhooks', icon: Vote, url: '/mutatingwebhooks' },
       { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/validatingwebhooks' },
       { title: 'HPA', icon: ArrowUpDown, url: '/horizontalpodautoscalers' },
@@ -94,7 +93,7 @@ export const items = [
     ],
   },
   {
-    title: 'Network',
+    title: 'Networking',
     icon: Network,
     submenu: [
       { title: 'Services', icon: Share2, url: '/services' },
@@ -110,18 +109,22 @@ export const items = [
     submenu: [{ title: 'StorageClasses', icon: HardDriveDownload, url: '/storageclasses' }],
   },
   {
-    title: 'Access',
+    title: 'Administration',
+    icon: ShieldUser,
+    submenu: [
+      { title: 'MutatingWebhooks', icon: Vote, url: '/mutatingwebhooks' },
+      { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/validatingwebhooks' },
+    ],
+  },
+  {
+    title: 'Access Control',
     icon: GlobeLock,
     submenu: [
       { title: 'Roles', icon: PersonStanding, url: '/roles' },
       { title: 'ServiceAccounts', icon: GlobeLock, url: '/serviceaccounts' },
     ],
   },
-  {
-    title: 'CRD',
-    icon: Columns3Cog,
-    submenu: [{ title: 'Definitions', icon: Layers, url: '/crds' }],
-  },
+
   {
     title: 'Settings',
     icon: Settings,
@@ -134,30 +137,31 @@ export function AppSidebar() {
   const cc = useCurrentClusterState();
   let location = useLocation();
   const { state } = useSidebar();
-  const crs = useCrdResourcesState();
   const crds = useCrdsState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
 
   useEffect(() => {
-    setSidebarItems(
-      items.map((x) => {
-        if (x.title === 'CRD') {
-          return {
-            ...x,
-            submenu: [
-              ...x.submenu,
-              ...crs.get().map((crd) => ({
-                title: crd.group,
-                icon: LayoutDashboard,
-                url: `/customresources/${crd.kind}/${crd.group}/${crd.version}`,
-              })),
-            ],
-          };
-        }
-        return x;
-      }),
-    );
-  }, [crs, crds]);
+    let newSidebar = items;
+    const crdArray = Array.from(crds.get().values());
+    if (crdArray.length > 0) {
+      const submenu = crdArray.map((crd: any) => {
+        const version = crd.spec.versions?.find((x) => x.storage);
+        return {
+          title: crd.spec.group,
+          icon: LayoutDashboard,
+          url: `/customresources/${crd.spec.names.kind}/${crd.spec.group}/${version.name}`,
+        };
+      });
+      const newItem = {
+        title: 'CRD',
+        icon: Columns3Cog,
+        submenu: [{ title: 'Definitions', icon: Layers, url: '/crds' }, ...submenu],
+      };
+      const insertIndex = Math.max(0, items.length - 1);
+      newSidebar = [...items.slice(0, insertIndex), newItem, ...items.slice(insertIndex)];
+    }
+    setSidebarItems(newSidebar);
+  }, [crds]);
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>

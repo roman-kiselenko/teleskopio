@@ -1,9 +1,7 @@
 import { hookstate, useHookstate } from '@hookstate/core';
 
-import { ApiResource } from '@/types';
+export const crdsState = hookstate<Map<string, any>>(new Map());
 
-export const crdResourcesState = hookstate<ApiResource[]>([]);
-
-export function useCrdResourcesState() {
-  return useHookstate(crdResourcesState);
+export function useCrdsState() {
+  return useHookstate(crdsState);
 }

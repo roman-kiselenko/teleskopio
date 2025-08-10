@@ -12,7 +12,6 @@ import { call } from '@/lib/api';
 import { useNavigate } from 'react-router';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useCrdResourcesState } from '@/store/crd-resources';
 
 function Actions({
   resource,
@@ -31,7 +30,6 @@ function Actions({
 }) {
   let navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
-  const crds = useCrdResourcesState();
   return (
     <div>
       <DropdownMenu>
@@ -109,11 +107,6 @@ function Actions({
                 toast.promise(call(action, request), {
                   loading: 'Deleting...',
                   success: () => {
-                    if (resource.kind === 'CustomResourceDefinition') {
-                      crds.set((prev) => {
-                        return [...prev.filter((r) => r.group === resource.group)];
-                      });
-                    }
                     return (
                       <span>
                         Terminating {name} <b>{resource.metadata.name}</b>

@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useLimitRangesState } from '@/store/resources';
-import columns from '@/components/resources/Configs/columns/LimitRanges';
+import columns from '@/components/resources/Configuration/columns/LimitRanges';
 
 const LimitRanges = () => {
   const lr = useLimitRangesState();

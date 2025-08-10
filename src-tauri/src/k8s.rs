@@ -272,7 +272,7 @@ pub mod client {
     pub async fn list_crd_resources(
         path: &str,
         context: &str,
-    ) -> Result<Vec<ApiResourceInfo>, GenericError> {
+    ) -> Result<(Vec<CustomResourceDefinition>, Option<String>), GenericError> {
         log::info!("list_crd_resources {} {}", path, context);
         let client = get_client(path, context).await?;
 
@@ -282,24 +282,8 @@ pub mod client {
             .await
             .map_err(GenericError::from)?;
 
-        let mut result = Vec::new();
-
-        for crd in list {
-            let spec = crd.spec;
-            let group = spec.group;
-            let namespaced = spec.scope == "Namespaced";
-
-            for version in spec.versions {
-                result.push(ApiResourceInfo {
-                    group: group.clone(),
-                    version: version.name.clone(),
-                    kind: spec.names.kind.clone(),
-                    namespaced,
-                });
-            }
-        }
-
-        Ok(result)
+        let resource_version = list.metadata.resource_version.clone();
+        Ok((list.items, resource_version))
     }
 
     #[tauri::command]
