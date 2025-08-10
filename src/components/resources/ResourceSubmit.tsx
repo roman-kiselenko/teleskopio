@@ -1,11 +1,7 @@
 import Editor, { useMonaco } from '@monaco-editor/react';
-import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-react';
+import { Save, ArrowBigLeft, Minus, Plus, Map, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import podschema from '@/schema/pod.json';
-import deploymentschema from '@/schema/deployment.json';
-import daemonsetschema from '@/schema/daemonset.json';
-import { useLoaderData } from 'react-router';
 import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution';
 import 'monaco-editor/esm/vs/language/json/monaco.contribution';
 import { configureMonacoYaml } from 'monaco-yaml';
@@ -20,17 +16,15 @@ import yaml from 'js-yaml';
 import { Header } from '@/components/Header';
 import { Fonts, FONT_KEY } from '@/settings';
 
-export function ResourceEditor() {
+export function ResourceSubmit() {
   let navigate = useNavigate();
   const { theme } = useTheme();
-  const { name, namespace, data } = useLoaderData();
   const monaco = useMonaco();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [original, setOriginal] = useState(data);
+  const [original, setOriginal] = useState('# Put your YAML here...');
   const [hasErrors, setHasErrors] = useState(false);
   const [fontSize, setFontsize] = useState(14);
   const [minimap, setMinimap] = useState(true);
-  const [stripManagedFields, setStripManagedFields] = useState(false);
   const [selectedFont] = useState<string>(() => {
     return (
       Fonts.find((f) => f.className === localStorage.getItem(FONT_KEY))?.label || 'Cascadia Code'
@@ -83,20 +77,18 @@ export function ResourceEditor() {
     }
 
     const value = editorRef.current?.getValue();
-    let obj = yaml.load(value);
-    if (stripManagedFields && obj?.metadata?.managedFields) {
-      delete obj.metadata.managedFields;
-    }
-    const cleanedYaml = yaml.dump(obj);
-
-    toast.promise(call('update_kube_object', { yaml: cleanedYaml }), {
-      loading: 'Saving...',
-      success: () => {
-        return <span>Saving resource</span>;
+    toast.promise(call('create_kube_object', { yaml: value }), {
+      loading: 'Creating...',
+      success: (data) => {
+        return (
+          <span>
+            {data.kind} {data.metadata.namespace} {data.metadata.name} created
+          </span>
+        );
       },
       error: (err) => (
         <span>
-          Cant save resource
+          Cant create resource
           <br />
           {err.message}
         </span>
@@ -105,30 +97,9 @@ export function ResourceEditor() {
     setOriginal(value!);
   };
 
-  const handleToggle = () => {
-    setStripManagedFields(stripManagedFields);
-
-    try {
-      const editor = editorRef.current;
-      if (!editor) return;
-
-      const raw = editor.getValue();
-      const obj = yaml.load(raw) as any;
-
-      if (obj?.metadata?.managedFields) {
-        delete obj.metadata.managedFields;
-        const newYaml = yaml.dump(obj);
-        editor.setValue(newYaml);
-      }
-    } catch (err) {
-      toast.error('Invalid YAML');
-      console.error(err);
-    }
-  };
-
   function handleEditorDidMount(editor: any, monaco: any) {
     editorRef.current = editor;
-    let schema = podschema;
+    // let schema = podschema;
     // loader.init().then((monaco) => {
     //   monaco.editor.setTheme(LightTheme);
     // });
@@ -158,14 +129,6 @@ export function ResourceEditor() {
           <Save />
         </Button>
         <Button
-          title="strip managedFields"
-          className="text-xs bg-orange-500"
-          disabled={hasErrors}
-          onClick={handleToggle}
-        >
-          <Shredder />
-        </Button>
-        <Button
           title="toggle minimap"
           className="text-xs bg-gray-500"
           onClick={() => setMinimap(!minimap)}
@@ -182,10 +145,6 @@ export function ResourceEditor() {
         <Button title="increase font" className="text-xs bg-gray-500" onClick={() => changeFont(1)}>
           <Plus />
         </Button>
-        <div className="flex flex-row items-center text-xs">
-          <Pencil className="mr-1" size={14} />
-          {namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}
-        </div>
       </div>
 
       <Editor

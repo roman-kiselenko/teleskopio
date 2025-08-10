@@ -29,6 +29,7 @@ import NetworkPolicies from '@/components/resources/Networking/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
 import { ResourceEditor } from '@/components/resources/ResourceEditor';
+import { ResourceSubmit } from '@/components/resources/ResourceSubmit';
 import { Load } from '@/loaders';
 import { StartPage } from './components/pages/Start';
 import { SettingsPage } from '@/components/pages/Settings';
@@ -334,6 +335,16 @@ export const router = createBrowserRouter([
       {
         path: '/resourcequotas',
         element: <ResourceQuotas />,
+      },
+    ],
+  },
+  {
+    path: '/createkubernetesresource',
+    element: <Layout />,
+    children: [
+      {
+        path: '/createkubernetesresource',
+        element: <ResourceSubmit />,
       },
     ],
   },

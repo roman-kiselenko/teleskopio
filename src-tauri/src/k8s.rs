@@ -287,6 +287,61 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn create_kube_object(
+        path: &str,
+        context: &str,
+        yaml: &str,
+    ) -> Result<DynamicObject, GenericError> {
+        log::info!("create_kube_object {} {} {}", path, context, yaml);
+        let dyn_obj: DynamicObject = serde_yaml::from_str(&yaml)
+            .map_err(|e| GenericError::new(format!("YAML parse error: {e}")))?;
+
+        let name = dyn_obj.name_any();
+        let namespace = dyn_obj.namespace();
+
+        let client = get_client(&path, context).await?;
+
+        let discovery = Discovery::new(client.clone())
+            .run()
+            .await
+            .map_err(|e| GenericError::from(e))?;
+
+        let type_meta = dyn_obj.types.clone().unwrap();
+        let api_version = type_meta.api_version;
+        let kind = type_meta.kind;
+
+        let (group, version) = match api_version.split_once('/') {
+            Some((g, v)) => (g.to_string(), v.to_string()),
+            None => ("".to_string(), api_version), // core group
+        };
+
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+
+        let (ar, caps) = discovery
+            .resolve_gvk(&gvk)
+            .ok_or(GenericError::new(format!("GVK not found in discovery")))?;
+
+        let api: Api<DynamicObject> = match caps.scope {
+            Scope::Namespaced => {
+                let ns = namespace.unwrap_or_else(|| "default".into());
+                Api::namespaced_with(client, &ns, &ar)
+            }
+            Scope::Cluster => Api::all_with(client, &ar),
+        };
+
+        let obj = api
+            .create(&PostParams::default(), &dyn_obj)
+            .await
+            .map_err(|e| GenericError::from(e))?;
+
+        Ok(obj)
+    }
+
+    #[tauri::command]
     pub async fn update_kube_object(
         path: &str,
         context: &str,

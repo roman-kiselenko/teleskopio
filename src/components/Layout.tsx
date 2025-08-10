@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { ThumbsUp, Loader, Info, CircleAlert, OctagonMinus } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -26,6 +27,13 @@ export default function Layout() {
           <Outlet />
         </main>
         <Toaster
+          icons={{
+            success: <ThumbsUp color="green" size={18} />,
+            info: <Info size={18} />,
+            warning: <CircleAlert color="orange" size={18} />,
+            error: <OctagonMinus color="red" size={18} />,
+            loading: <Loader size={18} />,
+          }}
           theme={theme}
           visibleToasts={1}
           toastOptions={{

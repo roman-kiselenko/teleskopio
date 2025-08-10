@@ -62,6 +62,7 @@ pub fn run() {
             k8s::client::lookup_configs,
             k8s::client::get_version,
             k8s::client::update_kube_object,
+            k8s::client::create_kube_object,
             // Common
             k8s::client::events_dynamic_resource,
             k8s::client::list_events_dynamic_resource,
