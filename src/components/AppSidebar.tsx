@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
 import { useCrdResourcesState } from '@/store/crd-resources';
+import { useCrdsState } from '@/store/resources';
 
 export const items = [
   {
@@ -133,7 +134,8 @@ export function AppSidebar() {
   const cc = useCurrentClusterState();
   let location = useLocation();
   const { state } = useSidebar();
-  const crds = useCrdResourcesState();
+  const crs = useCrdResourcesState();
+  const crds = useCrdsState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
 
   useEffect(() => {
@@ -144,8 +146,8 @@ export function AppSidebar() {
             ...x,
             submenu: [
               ...x.submenu,
-              ...crds.get().map((crd) => ({
-                title: crd.kind,
+              ...crs.get().map((crd) => ({
+                title: crd.group,
                 icon: LayoutDashboard,
                 url: `/customresources/${crd.kind}/${crd.group}/${crd.version}`,
               })),
@@ -155,7 +157,7 @@ export function AppSidebar() {
         return x;
       }),
     );
-  }, [crds]);
+  }, [crs, crds]);
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>

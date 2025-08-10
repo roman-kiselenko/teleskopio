@@ -6,7 +6,7 @@ import { listenEvent, stopEventsWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
 import { JumpCommand } from '@/components/ui/JumpCommand';
-import { useVersionState, getVersion } from '@/store/version';
+import { useVersionState } from '@/store/version';
 import { ColumnDef } from '@tanstack/react-table';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';

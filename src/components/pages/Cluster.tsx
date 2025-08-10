@@ -7,6 +7,8 @@ import { listenEvent } from '@/lib/events';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { apiResourcesState } from '@/store/api-resources';
 import { ApiResource } from '@/types';
+import { getVersion } from '@/store/version';
+import { compareVersions } from 'compare-versions';
 
 const subscribeNodeEvents = async (rv: string) => {
   const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
@@ -18,11 +20,15 @@ const subscribeNodeEvents = async (rv: string) => {
 };
 
 const subscribeEventEvents = async (rv: string) => {
-  const apiResource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
+  const resource = apiResourcesState.get().find((r: ApiResource) => {
+    if (compareVersions(getVersion(), '1.20') === 1) {
+      return r.kind === 'Event' && r.group === 'events.k8s.io';
+    } else {
+      return r.kind === 'Event' && r.group === '';
+    }
+  });
   const request = {
-    ...apiResource,
+    ...resource,
     resource_version: rv,
   };
   await call('watch_dynamic_resource', { request });
@@ -88,9 +94,13 @@ const getEventsPage = async ({
   limit: number;
   continueToken?: string;
 }) => {
-  const apiResource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === 'Event' && r.group === '');
+  const apiResource = apiResourcesState.get().find((r: ApiResource) => {
+    if (compareVersions(getVersion(), '1.20') === 1) {
+      return r.kind === 'Event' && r.group === 'events.k8s.io';
+    } else {
+      return r.kind === 'Event' && r.group === '';
+    }
+  });
   return await call('list_dynamic_resource', {
     limit: limit,
     continueToken: continueToken,

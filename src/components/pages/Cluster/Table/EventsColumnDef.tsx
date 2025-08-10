@@ -2,6 +2,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
+import { compareVersions } from 'compare-versions';
+import { useVersionState } from '@/store/version';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -9,7 +11,14 @@ const columns: ColumnDef<any>[] = [
     id: 'message',
     header: 'Message',
     cell: memo(({ row }) => {
-      return <div className="w-1/2">{row.original.message}</div>;
+      const version = useVersionState();
+      return (
+        <div>
+          {compareVersions(version.version.get(), '1.20') === 1
+            ? row.original.note
+            : row.original.message}
+        </div>
+      );
     }),
   },
   {

@@ -127,6 +127,7 @@ export function SettingsPage() {
                     {apiResources
                       .get()
                       .slice()
+                      .sort()
                       .map((a: any, index: number) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">{a.group}</TableCell>
