@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { call } from '@/lib/api';
 import { listenEvent, stopEventsWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
-import { useLoaderData } from 'react-router';
-import { JumpCommand } from '@/components/ui/JumpCommand';
 import { useVersionState } from '@/store/version';
+import { useLoaderData } from 'react-router';
 import { ColumnDef } from '@tanstack/react-table';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
+import { Header } from '@/components/Header';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { apiResourcesState } from '@/store/api-resources';
@@ -124,22 +124,7 @@ export function ResourceEvents() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex flex-row justify-between">
-        <div>
-          <JumpCommand />
-        </div>
-        <div>
-          {version.version.get() === '' ? (
-            <></>
-          ) : (
-            <p className="text-muted-foreground p-2 pt-3.5 text-xs">
-              <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium opacity-100 select-none">
-                {version.version.get()}
-              </kbd>
-            </p>
-          )}
-        </div>
-      </div>
+      <Header />
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />

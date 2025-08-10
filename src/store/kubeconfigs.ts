@@ -19,7 +19,7 @@ export async function getConfigs(query: string) {
     kubeConfigsState.configs.set(configs);
   } catch (error: any) {
     toast.error('Error! Cant load configs\n' + error.message);
-    console.log('Error! Cant load configs\n' + error.message);
+    console.error('Error! Cant load configs\n' + error.message);
   }
 }
 
