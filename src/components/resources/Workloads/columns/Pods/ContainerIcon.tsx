@@ -1,16 +1,11 @@
 import { Container as Icon } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { IIoK8sApiCoreV1ContainerStatus } from 'kubernetes-models/v1/ContainerStatus';
 import timeAgo from '@/timeAgo';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 
-interface ContainerStatus extends IIoK8sApiCoreV1ContainerStatus {
-  containerType: string;
-}
-
-function ContainerIcon({ container }: { container: ContainerStatus }) {
+function ContainerIcon({ container }: { container: any }) {
   const [value, setValue] = useState(container.state?.running?.startedAt);
   useEffect(() => {
     const updateValue = () => {

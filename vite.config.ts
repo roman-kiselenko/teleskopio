@@ -1,11 +1,10 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 import tailwindcss from '@tailwindcss/vite';
-
+import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [tailwindcss(), react()],
@@ -18,9 +17,9 @@ export default defineConfig(async () => ({
       fs: resolve(__dirname, 'src/fs.ts'),
     },
   },
-  optimizeDeps: {
-    exclude: ['monaco-yaml/yaml.worker.js'],
-  },
+  // optimizeDeps: {
+  //   exclude: ['monaco-yaml/yaml.worker.js'],
+  // },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors

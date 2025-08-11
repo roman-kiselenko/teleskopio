@@ -84,8 +84,6 @@ export const items = [
     submenu: [
       { title: 'ConfigMaps', icon: FileSliders, url: '/configmaps' },
       { title: 'Secrets', icon: VenetianMask, url: '/secrets' },
-      { title: 'MutatingWebhooks', icon: Vote, url: '/mutatingwebhooks' },
-      { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/validatingwebhooks' },
       { title: 'HPA', icon: ArrowUpDown, url: '/horizontalpodautoscalers' },
       { title: 'PodDisruptionBudget', icon: Percent, url: '/poddisruptionbudgets' },
       { title: 'ResourceQuotas', icon: Wallet, url: '/resourcequotas' },
@@ -173,7 +171,7 @@ export function AppSidebar() {
                   className={cn(
                     'text-xs',
                     state === 'collapsed' ? 'hidden' : '',
-                    item.title !== 'Main' && item.title !== 'Settings' && cc.cluster.get() === ''
+                    item.title !== 'Main' && item.title !== 'Settings' && cc.context.get() === ''
                       ? 'pointer-events-none opacity-50'
                       : '',
                   )}

@@ -1,54 +1,59 @@
-import Editor, { useMonaco } from '@monaco-editor/react';
-import { Save, ArrowBigLeft, Minus, Plus, Map, Check } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
+import { Save, ArrowBigLeft, Shredder, Plus, Minus, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution';
-import 'monaco-editor/esm/vs/language/json/monaco.contribution';
-import { configureMonacoYaml } from 'monaco-yaml';
-import { call } from '@/lib/api';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/components/ThemeProvider';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { loader } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
-loader.config({ monaco });
+import { toast } from 'sonner';
+import { call } from '@/lib/api';
+import { useNavigate } from 'react-router-dom';
 import yaml from 'js-yaml';
-import { Header } from '@/components/Header';
+import { useTheme } from '@/components/ThemeProvider';
 import { Fonts, FONT_KEY } from '@/settings';
+loader.config({ monaco });
 
-export function ResourceSubmit() {
-  let navigate = useNavigate();
+const yamlTokens = {
+  tokenizer: {
+    root: [
+      [/#.*/, 'comment', ''],
+      [/\b(true|false|null)\b/, 'keyword', ''],
+      [/\b[0-9]+(\.[0-9]+)?\b/, 'number', ''],
+      [/".*?"/, 'string', ''],
+      [/'.*?'/, 'string', ''],
+      [/[^:]+:/, 'key', ''],
+    ],
+  },
+};
+
+export default function ResourceEditor() {
   const { theme } = useTheme();
-  const monaco = useMonaco();
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [original, setOriginal] = useState('# Put your YAML here...');
-  const [hasErrors, setHasErrors] = useState(false);
+  let navigate = useNavigate();
   const [fontSize, setFontsize] = useState(14);
+  const [hasErrors, setHasErrors] = useState(false);
   const [minimap, setMinimap] = useState(true);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [original, setOriginal] = useState('');
+  const [stripManagedFields, setStripManagedFields] = useState(false);
   const [selectedFont] = useState<string>(() => {
     return (
       Fonts.find((f) => f.className === localStorage.getItem(FONT_KEY))?.label || 'Cascadia Code'
     );
   });
 
-  useEffect(() => {
-    if (!monaco || !editorRef.current) return;
-
-    const model = editorRef.current.getModel();
-
-    const checkMarkers = () => {
-      const markers = monaco.editor.getModelMarkers({ resource: model?.uri });
-      setHasErrors(markers.length > 0);
-    };
-
-    const disposable = monaco.editor.onDidChangeMarkers(() => {
-      checkMarkers();
+  const handleEditorMount: OnMount = (editor, monacoInstance) => {
+    editorRef.current = editor;
+    monacoInstance.languages.register({ id: 'yaml' });
+    monaco.languages.setMonarchTokensProvider('yaml', yamlTokens as any);
+    monaco.languages.setLanguageConfiguration('yaml', {
+      comments: {
+        lineComment: '#',
+      },
+      brackets: [
+        ['{', '}'],
+        ['[', ']'],
+      ],
     });
-
-    checkMarkers();
-
-    return () => disposable.dispose();
-  }, [monaco, editorRef.current]);
+  };
 
   const changeFont = async (size: number) => {
     if (size < 0 && fontSize >= 10) {
@@ -77,7 +82,21 @@ export function ResourceSubmit() {
     }
 
     const value = editorRef.current?.getValue();
-    toast.promise(call('create_kube_object', { yaml: value }), {
+
+    if (value === '') {
+      toast.error(
+        <div className="flex flex-col">
+          <div>Resource cant be empty.</div>
+        </div>,
+      );
+      return;
+    }
+    let obj = yaml.load(value);
+    if (stripManagedFields && obj?.metadata?.managedFields) {
+      delete obj.metadata.managedFields;
+    }
+    const cleanedYaml = yaml.dump(obj);
+    toast.promise(call('create_kube_object', { yaml: cleanedYaml }), {
       loading: 'Creating...',
       success: (data) => {
         return (
@@ -97,36 +116,42 @@ export function ResourceSubmit() {
     setOriginal(value!);
   };
 
-  function handleEditorDidMount(editor: any, monaco: any) {
-    editorRef.current = editor;
-    // let schema = podschema;
-    // loader.init().then((monaco) => {
-    //   monaco.editor.setTheme(LightTheme);
-    // });
-    // configureMonacoYaml(monaco, {
-    //   enableSchemaRequest: false,
-    //   validate: true,
-    //   hover: true,
-    //   completion: true,
-    //   schemas: [
-    //     {
-    //       uri: `file://schema/object.json`,
-    //       fileMatch: ['*'],
-    //       schema: schema,
-    //     },
-    //   ],
-    // });
-  }
+  const handleToggle = () => {
+    setStripManagedFields(stripManagedFields);
 
+    try {
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      const raw = editor.getValue();
+      const obj = yaml.load(raw) as any;
+
+      if (obj?.metadata?.managedFields) {
+        delete obj.metadata.managedFields;
+        const newYaml = yaml.dump(obj);
+        editor.setValue(newYaml);
+      }
+    } catch (err) {
+      toast.error('Invalid YAML');
+      console.error(err);
+    }
+  };
   return (
     <div className="h-screen flex flex-col">
-      <Header />
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />
         </Button>
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
           <Save />
+        </Button>
+        <Button
+          title="strip managedFields"
+          className="text-xs bg-orange-500"
+          disabled={hasErrors}
+          onClick={handleToggle}
+        >
+          <Shredder />
         </Button>
         <Button
           title="toggle minimap"
@@ -146,19 +171,19 @@ export function ResourceSubmit() {
           <Plus />
         </Button>
       </div>
-
       <Editor
-        language="yaml"
+        height="90vh"
+        defaultLanguage="yaml"
         options={{
           minimap: { enabled: minimap },
           fontFamily: selectedFont,
           fontSize: fontSize,
           automaticLayout: true,
         }}
+        onChange={(value) => setOriginal(value || '')}
         value={original}
         theme={theme === 'dark' ? 'vs-dark' : 'light'}
-        onMount={handleEditorDidMount}
-        onChange={(value) => setOriginal(value || '')}
+        onMount={handleEditorMount}
       />
     </div>
   );

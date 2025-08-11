@@ -100,8 +100,8 @@ export function SettingsPage() {
               <SelectContent>
                 <SelectGroup className="text-xs">
                   <SelectLabel>Fonts</SelectLabel>
-                  {Fonts.map((font) => (
-                    <SelectItem className="text-xs" value={font.className}>
+                  {Fonts.map((font, index) => (
+                    <SelectItem key={index} className="text-xs" value={font.className}>
                       {font.label}
                     </SelectItem>
                   ))}

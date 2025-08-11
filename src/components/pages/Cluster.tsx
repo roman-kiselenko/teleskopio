@@ -9,6 +9,7 @@ import { apiResourcesState } from '@/store/api-resources';
 import { ApiResource } from '@/types';
 import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
+import { debounce } from 'lodash';
 
 const subscribeNodeEvents = async (rv: string) => {
   const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
@@ -52,21 +53,29 @@ const listenNodeEvents = async () => {
   });
 };
 
+const updateData = debounce((ev) => {
+  eventsState.set((prev) => {
+    const newMap = new Map(prev);
+    newMap.set(ev.metadata.uid, ev);
+    return newMap;
+  });
+}, 300);
+
+const deleteData = debounce((ev) => {
+  eventsState.set((prev) => {
+    const newMap = new Map(prev);
+    newMap.delete(ev.metadata.uid);
+    return newMap;
+  });
+}, 300);
+
 const listenEventEvents = async () => {
   await listenEvent('Event-deleted', (ev: any) => {
-    eventsState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(ev.metadata.uid);
-      return newMap;
-    });
+    deleteData(ev);
   });
 
   await listenEvent('Event-updated', (ev: any) => {
-    eventsState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.set(ev.metadata.uid, ev);
-      return newMap;
-    });
+    updateData(ev);
   });
 };
 

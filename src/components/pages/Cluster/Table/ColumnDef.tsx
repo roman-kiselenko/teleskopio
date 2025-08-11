@@ -25,19 +25,14 @@ const columns: ColumnDef<any>[] = [
     id: 'role',
     header: 'Role',
     cell: ({ row }) => {
+      const node = row.original.metadata;
+      const controlPlane =
+        node?.labels?.hasOwnProperty('node-role.kubernetes.io/control-plane') ||
+        node?.labels?.hasOwnProperty('node-role.kubernetes.io/controlplane');
       return (
         <div>
-          <Badge
-            className="text-xs"
-            variant={
-              row.original.metadata?.labels?.hasOwnProperty('node-role.kubernetes.io/control-plane')
-                ? 'destructive'
-                : 'default'
-            }
-          >
-            {row.original.metadata?.labels?.hasOwnProperty('node-role.kubernetes.io/control-plane')
-              ? 'control plane'
-              : 'worker'}
+          <Badge className="text-xs" variant={controlPlane ? 'destructive' : 'default'}>
+            {controlPlane ? 'control plane' : 'worker'}
           </Badge>
         </div>
       );
@@ -128,7 +123,6 @@ const columns: ColumnDef<any>[] = [
       const additional = (
         <div>
           <DropdownMenuItem
-            key={node.metadata?.uid}
             className="text-xs"
             onClick={async () => {
               toast.promise(
@@ -173,7 +167,6 @@ const columns: ColumnDef<any>[] = [
             )}
           </DropdownMenuItem>
           <DropdownMenuItem
-            key={node.metadata?.uid}
             className="text-xs"
             onClick={async () => {
               toast.promise(call('drain_node', { resourceName: node.metadata?.name }), {

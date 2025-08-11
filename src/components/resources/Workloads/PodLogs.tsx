@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Header } from '@/components/Header';
 
 export function PodLogs() {
   const { name, ns, data } = useLoaderData();
@@ -103,7 +102,6 @@ export function PodLogs() {
   };
   return (
     <div className="h-screen flex flex-col">
-      <Header />
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />

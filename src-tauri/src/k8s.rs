@@ -40,6 +40,7 @@ pub mod client {
     pub struct Cluster {
         name: String,
         path: String,
+        current_context: Option<String>,
         server: Option<String>,
     }
 
@@ -412,20 +413,38 @@ pub mod client {
             .filter_entry(|e| !is_excluded(e))
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
-            .flat_map(|e| {
-                let kube_config = e.path().to_str().map(|s| s.to_string()).unwrap();
-                let kube_config_clone = kube_config.clone();
-                let config = fs::read_to_string(kube_config).map_err(|e| {
-                    println!("error {:?}", e);
-                    GenericError::from(e)
-                });
-                let kube_config_yaml = Kubeconfig::from_yaml(config.unwrap().as_str())
-                    .expect("cant parse kube_config");
-                Some(kube_config_yaml.clusters.into_iter().map(move |c| Cluster {
-                    name: c.name.clone(),
-                    server: Some(c.cluster.unwrap().server.unwrap()),
-                    path: kube_config_clone.clone(),
-                }))
+            .filter_map(|e| {
+                let kube_config = e.path().to_str()?.to_string();
+                let content = match fs::read_to_string(&kube_config) {
+                    Ok(c) => c,
+                    Err(err) => {
+                        log::debug!("Skip file {}, can't read: {}", kube_config, err);
+                        return None;
+                    }
+                };
+                if !content.contains("apiVersion") {
+                    return None;
+                }
+                match Kubeconfig::from_yaml(&content) {
+                    Ok(kube_config_yaml) => {
+                        let current_context = kube_config_yaml.current_context.clone();
+                        let clusters = kube_config_yaml
+                            .clusters
+                            .into_iter()
+                            .map(|c| Cluster {
+                                name: c.name.clone(),
+                                server: c.cluster.and_then(|cc| cc.server),
+                                path: kube_config.clone(),
+                                current_context: current_context.clone(),
+                            })
+                            .collect::<Vec<_>>();
+                        Some(clusters)
+                    }
+                    Err(err) => {
+                        log::debug!("Skip file {}, parse error: {}", kube_config, err);
+                        None
+                    }
+                }
             })
             .flatten()
             .collect();

@@ -22,12 +22,6 @@ const columns: ColumnDef<Cluster>[] = [
     cell: memo(({ row }) => <div>{row.original.name}</div>),
   },
   {
-    accessorKey: 'path',
-    id: 'path',
-    header: memo(({ column }) => <HeaderAction column={column} name={'Path'} />),
-    cell: memo(({ row }) => <div>{row.original.path}</div>),
-  },
-  {
     accessorKey: 'server',
     id: 'server',
     header: 'Server',
@@ -42,12 +36,12 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const crdResources = useCrdsState();
-      const get_version = async (cluster: string, path: any) => {
-        toast.promise(call('get_version', { context: cluster, path: path }), {
+      const get_version = async (context: string, path: any) => {
+        toast.promise(call('get_version', { context: context, path: path }), {
           loading: 'Connecting...',
           success: async (data: { gitVersion: string }) => {
             setVersion(data.gitVersion);
-            setCurrentCluster(cluster, path);
+            setCurrentCluster(context, path);
             // The logic below is about CRD section
             // we must watch CRDs and update api resources
             apiResourcesState.set(await call('list_apiresources', {}));
@@ -87,13 +81,13 @@ const columns: ColumnDef<Cluster>[] = [
             navigate('/cluster');
             return (
               <span>
-                Successfully connected to <b>{cluster}</b> <b>{data.gitVersion}</b>
+                Successfully connected to <b>{context}</b> <b>{data.gitVersion}</b>
               </span>
             );
           },
           error: (err) => (
             <span>
-              Cant connect to <b>{cluster}</b>
+              Cant connect to <b>{context}</b>
               <br />
               {err.message}
             </span>
@@ -102,10 +96,16 @@ const columns: ColumnDef<Cluster>[] = [
       };
       return (
         <Button
-          className="text-xs"
+          className="text-xs hover:bg-green-300"
           variant="outline"
           size="sm"
-          onClick={async () => await get_version(row.original.name, row.original.path)}
+          onClick={async () => {
+            if (row.original?.current_context === '') {
+              toast.error('There is no current context in config');
+            } else {
+              await get_version(row.original.current_context as string, row.original.path);
+            }
+          }}
         >
           <Unplug className="h-2 w-2" />
           Connect

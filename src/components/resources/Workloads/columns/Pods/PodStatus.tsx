@@ -1,9 +1,8 @@
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/util';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Pod, IPodStatus } from 'kubernetes-models/v1';
 
-function PodStatus({ pod }: { pod: Pod }) {
+function PodStatus({ pod }: { pod: any }) {
   let phase = pod?.status?.phase ?? 'Unknown';
   let terminating = false;
   let color = 'text-green-500';
@@ -17,7 +16,7 @@ function PodStatus({ pod }: { pod: Pod }) {
   } else if (phase === 'Pending') {
     color = 'text-orange-500';
     blink = true;
-  } else if (phase === ('Evicted' as IPodStatus['phase'])) {
+  } else if (phase === 'Evicted') {
     color = 'text-gray-500';
   } else if (phase === 'Succeeded') {
     color = 'text-green-600';

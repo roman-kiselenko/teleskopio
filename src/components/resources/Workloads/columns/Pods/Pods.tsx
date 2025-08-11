@@ -120,7 +120,7 @@ const columns: ColumnDef<any>[] = [
       const owner =
         pod?.metadata?.ownerReferences?.length > 0 ? pod?.metadata?.ownerReferences[0] : undefined;
       return (
-        <div>
+        <div className="flex flex-row justify-center w-full">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">

@@ -4,6 +4,7 @@ use chrono::Local;
 use lazy_static::lazy_static;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 use std::sync::{Arc, Mutex};
+use tauri::Manager;
 
 struct MemoryLogger {
     logs: Arc<Mutex<Vec<String>>>,
@@ -79,6 +80,30 @@ pub fn run() {
             // Settings
             get_logs,
         ])
+        .setup(|_app| {
+            let _window = _app.get_webview_window("main").unwrap();
+
+            #[cfg(target_os = "macos")]
+            {
+                use tauri_nspanel::cocoa;
+                use tauri_nspanel::cocoa::appkit::NSWindow;
+                use tauri_nspanel::cocoa::appkit::NSWindowTitleVisibility;
+                use tauri_nspanel::cocoa::base::BOOL;
+
+                unsafe {
+                    let id = _window.ns_window().unwrap() as cocoa::base::id;
+                    id.setHasShadow_(BOOL::from(false));
+                    id.setTitleVisibility_(NSWindowTitleVisibility::NSWindowTitleHidden);
+                }
+            }
+
+            #[cfg(debug_assertions)]
+            {
+                _window.open_devtools();
+            }
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

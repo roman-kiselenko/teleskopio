@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "teleskopio",
   "version": "0.0.1",
-  "identifier": "com.teleskopio.app",
+  "identifier": "com.teleskop.io",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",

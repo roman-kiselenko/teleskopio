@@ -1,35 +1,40 @@
-import Editor, { useMonaco } from '@monaco-editor/react';
+import { useRef, useState } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import podschema from '@/schema/pod.json';
-import deploymentschema from '@/schema/deployment.json';
-import daemonsetschema from '@/schema/daemonset.json';
-import { useLoaderData } from 'react-router';
-import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution';
-import 'monaco-editor/esm/vs/language/json/monaco.contribution';
-import { configureMonacoYaml } from 'monaco-yaml';
-import { call } from '@/lib/api';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/components/ThemeProvider';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { loader } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
-loader.config({ monaco });
+import { toast } from 'sonner';
+import { call } from '@/lib/api';
+import { useNavigate } from 'react-router-dom';
 import yaml from 'js-yaml';
-import { Header } from '@/components/Header';
+import { useTheme } from '@/components/ThemeProvider';
 import { Fonts, FONT_KEY } from '@/settings';
+import { useLoaderData } from 'react-router';
+loader.config({ monaco });
 
-export function ResourceEditor() {
-  let navigate = useNavigate();
+const yamlTokens = {
+  tokenizer: {
+    root: [
+      [/#.*/, 'comment', ''],
+      [/\b(true|false|null)\b/, 'keyword', ''],
+      [/\b[0-9]+(\.[0-9]+)?\b/, 'number', ''],
+      [/".*?"/, 'string', ''],
+      [/'.*?'/, 'string', ''],
+      [/[^:]+:/, 'key', ''],
+    ],
+  },
+};
+
+export default function ResourceEditor() {
   const { theme } = useTheme();
+  let navigate = useNavigate();
   const { name, namespace, data } = useLoaderData();
-  const monaco = useMonaco();
+  const [fontSize, setFontsize] = useState(14);
+  const [hasErrors, setHasErrors] = useState(false);
+  const [minimap, setMinimap] = useState(true);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [original, setOriginal] = useState(data);
-  const [hasErrors, setHasErrors] = useState(false);
-  const [fontSize, setFontsize] = useState(14);
-  const [minimap, setMinimap] = useState(true);
   const [stripManagedFields, setStripManagedFields] = useState(false);
   const [selectedFont] = useState<string>(() => {
     return (
@@ -37,24 +42,20 @@ export function ResourceEditor() {
     );
   });
 
-  useEffect(() => {
-    if (!monaco || !editorRef.current) return;
-
-    const model = editorRef.current.getModel();
-
-    const checkMarkers = () => {
-      const markers = monaco.editor.getModelMarkers({ resource: model?.uri });
-      setHasErrors(markers.length > 0);
-    };
-
-    const disposable = monaco.editor.onDidChangeMarkers(() => {
-      checkMarkers();
+  const handleEditorMount: OnMount = (editor, monacoInstance) => {
+    editorRef.current = editor;
+    monacoInstance.languages.register({ id: 'yaml' });
+    monaco.languages.setMonarchTokensProvider('yaml', yamlTokens as any);
+    monaco.languages.setLanguageConfiguration('yaml', {
+      comments: {
+        lineComment: '#',
+      },
+      brackets: [
+        ['{', '}'],
+        ['[', ']'],
+      ],
     });
-
-    checkMarkers();
-
-    return () => disposable.dispose();
-  }, [monaco, editorRef.current]);
+  };
 
   const changeFont = async (size: number) => {
     if (size < 0 && fontSize >= 10) {
@@ -63,7 +64,6 @@ export function ResourceEditor() {
       setFontsize(fontSize + 1);
     }
   };
-
   const onSave = async () => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -125,31 +125,8 @@ export function ResourceEditor() {
       console.error(err);
     }
   };
-
-  function handleEditorDidMount(editor: any, monaco: any) {
-    editorRef.current = editor;
-    let schema = podschema;
-    // loader.init().then((monaco) => {
-    //   monaco.editor.setTheme(LightTheme);
-    // });
-    // configureMonacoYaml(monaco, {
-    //   enableSchemaRequest: false,
-    //   validate: true,
-    //   hover: true,
-    //   completion: true,
-    //   schemas: [
-    //     {
-    //       uri: `file://schema/object.json`,
-    //       fileMatch: ['*'],
-    //       schema: schema,
-    //     },
-    //   ],
-    // });
-  }
-
   return (
     <div className="h-screen flex flex-col">
-      <Header />
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft />
@@ -187,19 +164,19 @@ export function ResourceEditor() {
           {namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}
         </div>
       </div>
-
       <Editor
-        language="yaml"
+        height="90vh"
+        defaultLanguage="yaml"
         options={{
           minimap: { enabled: minimap },
           fontFamily: selectedFont,
           fontSize: fontSize,
           automaticLayout: true,
         }}
+        onChange={(value) => setOriginal(value || '')}
         value={original}
         theme={theme === 'dark' ? 'vs-dark' : 'light'}
-        onMount={handleEditorDidMount}
-        onChange={(value) => setOriginal(value || '')}
+        onMount={handleEditorMount}
       />
     </div>
   );

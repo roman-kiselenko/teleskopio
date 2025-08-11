@@ -7,9 +7,9 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
   let request = {
     ...payload,
   };
-  if (currentClusterState.kube_config.get() !== '' && currentClusterState.cluster.get() !== '') {
+  if (currentClusterState.kube_config.get() !== '' && currentClusterState.context.get() !== '') {
     request.path = currentClusterState.kube_config.get();
-    request.context = currentClusterState.cluster.get();
+    request.context = currentClusterState.context.get();
   }
   try {
     console.debug(`[Tauri] invoke ${action} ${JSON.stringify(request)}`);

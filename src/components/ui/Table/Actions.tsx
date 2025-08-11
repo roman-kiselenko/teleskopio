@@ -31,7 +31,7 @@ function Actions({
   let navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   return (
-    <div>
+    <div className="flex flex-row justify-center w-full">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">

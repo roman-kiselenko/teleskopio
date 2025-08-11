@@ -5,4 +5,5 @@ export const Fonts = [
   { label: 'Cascadia Code', className: 'cascadia' },
   { label: 'Geist Code', className: 'geist' },
   { label: 'Iosevka', className: 'iosevka' },
+  { label: 'Roboto Mono', className: 'roboto' },
 ];
