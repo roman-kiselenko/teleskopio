@@ -59,7 +59,7 @@ const updateData = debounce((ev) => {
     newMap.set(ev.metadata.uid, ev);
     return newMap;
   });
-}, 300);
+}, 100);
 
 const deleteData = debounce((ev) => {
   eventsState.set((prev) => {
@@ -67,7 +67,7 @@ const deleteData = debounce((ev) => {
     newMap.delete(ev.metadata.uid);
     return newMap;
   });
-}, 300);
+}, 100);
 
 const listenEventEvents = async () => {
   await listenEvent('Event-deleted', (ev: any) => {

@@ -17,6 +17,7 @@ const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
+    meta: { className: 'min-w-[30ch] max-w-[30ch]' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
     cell: memo(({ row }) => <div>{row.original.metadata?.name}</div>),
   },
@@ -24,6 +25,7 @@ const columns: ColumnDef<any>[] = [
     accessorFn: (row) => row.metadata?.labels,
     id: 'role',
     header: 'Role',
+    meta: { className: 'min-w-[15ch] max-w-[15ch]' },
     cell: ({ row }) => {
       const node = row.original.metadata;
       const controlPlane =
@@ -40,12 +42,14 @@ const columns: ColumnDef<any>[] = [
   },
   {
     accessorKey: 'spec.podCIDR',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     id: 'podCIDR',
     header: memo(({ column }) => <HeaderAction column={column} name={'PodCIDR'} />),
     cell: memo(({ row }) => <div>{row.original.spec?.podCIDR}</div>),
   },
   {
     accessorFn: (row) => row.status?.addresses?.find((a) => a.type === 'InternalIP'),
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     id: 'InternalIP',
     header: memo(({ column }) => <HeaderAction column={column} name={'InternalIP'} />),
     cell: ({ row }) => {
@@ -56,6 +60,7 @@ const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'status.nodeInfo.kubeletVersion',
     id: 'kubeletVersion',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     header: 'Kubelet',
     cell: ({ row }) => {
       const name = row.original.status?.nodeInfo?.kubeletVersion;
@@ -75,6 +80,7 @@ const columns: ColumnDef<any>[] = [
   },
   {
     id: 'kubeletReady',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     accessorFn: (row) => row.status?.conditions?.find((c) => c.reason === 'KubeletReady'),
     header: memo(({ column }) => <HeaderAction column={column} name={'Status'} />),
     cell: ({ row }) => {
@@ -104,12 +110,14 @@ const columns: ColumnDef<any>[] = [
   },
   {
     id: 'age',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     cell: ({ row }) => {
       const node = row.original;
       const cordoned = node.spec?.taints?.find(

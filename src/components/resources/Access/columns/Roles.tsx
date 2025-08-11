@@ -10,24 +10,28 @@ import { apiResourcesState } from '@/store/api-resources';
 const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
+    meta: { className: 'min-w-[30ch] max-w-[30ch]' },
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
     cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
+    meta: { className: 'min-w-[20ch] max-w-[20ch]' },
     id: 'namespace',
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
     id: 'age',
+    meta: { className: 'min-w-[20ch] max-w-[20ch]' },
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
+    meta: { className: 'min-w-[20ch] max-w-[20ch]' },
     cell: ({ row }) => {
       const role = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Role');

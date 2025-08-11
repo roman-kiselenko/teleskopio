@@ -10,18 +10,21 @@ import { apiResourcesState } from '@/store/api-resources';
 const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
+    meta: { className: 'min-w-[30ch] max-w-[30ch]' },
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
     cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
   },
   {
     id: 'creationTimestamp',
+    meta: { className: 'min-w-[20ch] max-w-[20ch]' },
     accessorFn: (row) => row.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     cell: ({ row }) => {
       const cm = row.original;
       const resource = apiResourcesState

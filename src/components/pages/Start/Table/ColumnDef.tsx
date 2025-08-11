@@ -12,12 +12,14 @@ import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';
 import { apiResourcesState } from '@/store/api-resources';
 import { useCrdsState } from '@/store/crd-resources';
+import { useloadingStateState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 
 const columns: ColumnDef<Cluster>[] = [
   {
     accessorKey: 'name',
     id: 'name',
+    meta: { className: 'max-w-[35ch] truncate' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
     cell: memo(({ row }) => <div>{row.original.name}</div>),
   },
@@ -36,7 +38,9 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const crdResources = useCrdsState();
+      const loading = useloadingStateState();
       const get_version = async (context: string, path: any) => {
+        loading.set(true);
         toast.promise(call('get_version', { context: context, path: path }), {
           loading: 'Connecting...',
           success: async (data: { gitVersion: string }) => {
@@ -78,6 +82,7 @@ const columns: ColumnDef<Cluster>[] = [
                 return newMap;
               });
             });
+            loading.set(false);
             navigate('/cluster');
             return (
               <span>
@@ -85,13 +90,16 @@ const columns: ColumnDef<Cluster>[] = [
               </span>
             );
           },
-          error: (err) => (
-            <span>
-              Cant connect to <b>{context}</b>
-              <br />
-              {err.message}
-            </span>
-          ),
+          error: (err) => {
+            loading.set(false);
+            return (
+              <span>
+                Cant connect to <b>{context}</b>
+                <br />
+                {err.message}
+              </span>
+            );
+          },
         });
       };
       return (

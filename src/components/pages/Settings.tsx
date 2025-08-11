@@ -72,19 +72,19 @@ export function SettingsPage() {
               defaultValue={theme}
               onValueChange={(value) => setTheme(value as Theme)}
             >
-              <div onClick={() => setTheme('light')} className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <RadioGroupItem value="light" id="option-one" />
                 <Label className="text-xs" htmlFor="option-one">
                   Light
                 </Label>
               </div>
-              <div onClick={() => setTheme('dark')} className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <RadioGroupItem value="dark" id="option-two" />
                 <Label className="text-xs" htmlFor="option-two">
                   Dark
                 </Label>
               </div>
-              <div onClick={() => setTheme('system')} className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <RadioGroupItem value="system" id="option-three" />
                 <Label className="text-xs" htmlFor="option-three">
                   System

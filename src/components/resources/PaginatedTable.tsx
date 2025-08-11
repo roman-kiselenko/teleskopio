@@ -32,7 +32,6 @@ export function PaginatedTable<T>({
   const [loading, setLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const version = useVersionState();
 
   const loadPage = async () => {
     if (loading) return;

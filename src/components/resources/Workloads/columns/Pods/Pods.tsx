@@ -35,23 +35,27 @@ const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',
     id: 'name',
+    meta: { className: 'min-w-[35ch] max-w-[35ch] truncate' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
     cell: memo(({ row }) => <PodName name={row?.original?.metadata?.name} />),
   },
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: memo(({ row }) => <div>{row?.original?.metadata?.namespace}</div>),
   },
   {
     accessorKey: 'spec.nodeName',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     id: 'nodename',
     header: memo(({ column }) => <HeaderAction column={column} name={'Node'} />),
     cell: memo(({ row }) => <div>{row?.original?.spec?.nodeName}</div>),
   },
   {
     accessorKey: 'containers',
+    meta: { className: 'min-w-[20ch] max-w-[20ch]' },
     header: 'Containers',
     id: 'containers',
     cell: memo(({ row }) => {
@@ -82,6 +86,7 @@ const columns: ColumnDef<any>[] = [
   },
   {
     accessorFn: (row) => row?.status?.podIP ?? '',
+    meta: { className: 'min-w-[15ch] max-w-[15ch]' },
     id: 'pod_ip',
     header: memo(({ column }) => <HeaderAction column={column} name={'PodIP'} />),
     cell: memo(({ row }) => <div>{row?.original?.status?.podIP}</div>),
@@ -89,23 +94,27 @@ const columns: ColumnDef<any>[] = [
   {
     accessorFn: (row) => row?.status?.qosClass ?? '',
     id: 'qos',
+    meta: { className: 'min-w-[15ch] max-w-[15ch]' },
     header: memo(({ column }) => <HeaderAction column={column} name={'QOS'} />),
     cell: memo(({ row }) => <div>{row?.original?.status?.qosClass}</div>),
   },
   {
     accessorKey: 'status.phase',
+    meta: { className: 'min-w-[15ch] max-w-[15ch]' },
     id: 'phase',
     header: memo(({ column }) => <HeaderAction column={column} name={'Status'} />),
     cell: memo(({ row }) => <PodStatus pod={row.original} />),
   },
   {
     id: 'age',
+    meta: { className: 'min-w-[7ch] max-w-[7ch]' },
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
   {
     id: 'actions',
+    meta: { className: 'min-w-[7ch] max-w-[7ch]' },
     cell: memo(({ row }) => {
       const [openDialog, setOpenDialog] = useState(false);
       const pod = row.original;

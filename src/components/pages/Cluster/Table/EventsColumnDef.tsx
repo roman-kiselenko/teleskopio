@@ -10,20 +10,22 @@ const columns: ColumnDef<any>[] = [
     accessorKey: 'message',
     id: 'message',
     header: 'Message',
+    meta: { className: 'min-w-[50ch] max-w-[50ch]' },
     cell: memo(({ row }) => {
       const version = useVersionState();
       return (
-        <div>
+        <span>
           {compareVersions(version.version.get(), '1.20') === 1
             ? row.original.note
             : row.original.message}
-        </div>
+        </span>
       );
     }),
   },
   {
     accessorKey: 'type',
     id: 'type',
+    meta: { className: 'min-w-[20ch] max-w-[20ch] truncate' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Type'} />),
     cell: memo(({ row }) => {
       let color = '';
@@ -37,6 +39,7 @@ const columns: ColumnDef<any>[] = [
     accessorKey: 'reason',
     id: 'reason',
     header: 'Reason',
+    meta: { className: 'min-w-[20ch] max-w-[20ch] truncate' },
     cell: memo(({ row }) => {
       return <div>{row.original.reason}</div>;
     }),
@@ -44,6 +47,7 @@ const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.namespace',
     id: 'namespace',
+    meta: { className: 'min-w-[20ch] max-w-[20ch] truncate' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: ({ row }) => {
       return <div>{row.original.metadata?.namespace}</div>;
@@ -51,6 +55,7 @@ const columns: ColumnDef<any>[] = [
   },
   {
     id: 'age',
+    meta: { className: 'min-w-[10ch] max-w-[10ch] truncate' },
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),

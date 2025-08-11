@@ -13,7 +13,7 @@ export function Header() {
   let location = useLocation();
 
   return (
-    <div className="flex flex-row pt-3 px-2 items-center justify-between">
+    <div className="flex flex-row pt-3 pb-1 px-2 items-center justify-between">
       <div className="">
         <JumpCommand />
       </div>
@@ -32,7 +32,7 @@ export function Header() {
         {clusterState.context.get() === '' ? (
           <></>
         ) : (
-          <p className="text-muted-foreground text-xs pr-1">
+          <p className="text-muted-foreground text-xs pr-2">
             <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium opacity-100 select-none">
               {clusterState.context.get()}
             </kbd>

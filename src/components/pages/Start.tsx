@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useloadingStateState } from '@/store/loader';
 import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Start/Table/ColumnDef';
@@ -9,6 +11,7 @@ export function StartPage() {
   const configs = useConfigsState();
   const searchQuery = useSearchState();
   const query = searchQuery.q.get();
+  const loading = useloadingStateState();
 
   const fetchData = useCallback(async () => {
     await getConfigs(query);
@@ -35,6 +38,11 @@ export function StartPage() {
       </div>
       <div className="grid grid-cols-1">
         <div className="h-24 col-span-2">
+          {loading.get() && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+            </div>
+          )}
           <DataTable noResult={true} columns={columns as any} data={configs.configs.get() as any} />
         </div>
       </div>
