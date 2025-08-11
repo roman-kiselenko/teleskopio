@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { loader } from '@monaco-editor/react';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
@@ -11,6 +11,7 @@ import yaml from 'js-yaml';
 import { useTheme } from '@/components/ThemeProvider';
 import { Fonts, FONT_KEY } from '@/settings';
 import { useLoaderData } from 'react-router';
+
 loader.config({ monaco });
 
 const yamlTokens = {

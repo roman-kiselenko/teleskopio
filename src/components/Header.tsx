@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
+import { NamespaceSelector } from '@/components/NamespaceSelector';
 
 export function Header() {
   const version = useVersionState();
@@ -28,6 +29,9 @@ export function Header() {
           </div>
         </div>
       )}
+      <div className="flex flex-row pr-2">
+        <NamespaceSelector />
+      </div>
       <div className="flex flex-row">
         {clusterState.context.get() === '' ? (
           <></>

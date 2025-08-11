@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from 'monaco-editor';
 import { loader } from '@monaco-editor/react';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
