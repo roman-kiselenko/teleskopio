@@ -150,6 +150,7 @@ export function ClusterPage() {
                   state={() => nodesState.get() as Map<string, any>}
                   setState={nodesState.set}
                   extractKey={(p: any) => p.metadata.uid}
+                  namespaced={false}
                   columns={columns}
                 />
               </div>
@@ -163,6 +164,7 @@ export function ClusterPage() {
                   state={() => eventsState.get() as Map<string, any>}
                   setState={eventsState.set}
                   extractKey={(p: any) => p.metadata.uid}
+                  namespaced={false}
                   columns={eventsColumns}
                   withoutJump={true}
                 />

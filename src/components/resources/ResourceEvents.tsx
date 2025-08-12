@@ -143,6 +143,7 @@ export function ResourceEvents() {
         setState={setEvents}
         extractKey={(item) => item.metadata?.uid as string}
         columns={columns}
+        namespaced={false}
         withoutJump={true}
       />
     </div>

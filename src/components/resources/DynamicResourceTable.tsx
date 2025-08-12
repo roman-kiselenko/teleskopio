@@ -85,6 +85,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       setState={setState}
       extractKey={(item) => item.metadata?.uid as string}
       columns={columns}
+      namespaced={getApiResource().namespaced}
       withoutJump={withoutJump}
     />
   );

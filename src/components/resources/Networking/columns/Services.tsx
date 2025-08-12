@@ -34,12 +34,6 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <div>{row.original.spec?.clusterIP}</div>),
   },
   {
-    accessorKey: 'spec.internalTrafficPolicy',
-    id: 'internalTrafficPolicy',
-    header: memo(({ column }) => <HeaderAction column={column} name={'InternalTrafficPolicy'} />),
-    cell: memo(({ row }) => <div>{row.original.spec?.internalTrafficPolicy}</div>),
-  },
-  {
     accessorKey: 'spec.selector',
     id: 'Selector',
     header: 'Selector',

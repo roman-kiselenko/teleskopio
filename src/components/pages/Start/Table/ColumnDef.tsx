@@ -11,6 +11,7 @@ import { listenEvent } from '@/lib/events';
 import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';
 import { apiResourcesState } from '@/store/api-resources';
+import { useNamespacesState } from '@/store/namespaces';
 import { useCrdsState } from '@/store/crd-resources';
 import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
@@ -40,6 +41,7 @@ const columns: ColumnDef<Cluster>[] = [
       const navigate = useNavigate();
       const crdResources = useCrdsState();
       const loading = useloadingState();
+      const namespaces = useNamespacesState();
       const get_version = async (context: string, path: any) => {
         loading.set(true);
         const clusterVersion = await call('get_version', { context: context, path: path });
@@ -52,6 +54,12 @@ const columns: ColumnDef<Cluster>[] = [
         if (resources.length > 0) {
           toast.info(<div>CRD Resources loaded: {resources.length}</div>);
         }
+        const [ns] = await call('list_dynamic_resource', {
+          request: {
+            ...apiResourcesState.get().find((r: ApiResource) => r.kind === 'Namespace'),
+          },
+        });
+        namespaces.set([{ metadata: { name: 'all' } }, ...ns]);
         const resource = apiResourcesState
           .get()
           .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');

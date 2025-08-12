@@ -656,7 +656,7 @@ pub mod client {
     pub async fn list_dynamic_resource(
         path: &str,
         context: &str,
-        limit: u32,
+        limit: Option<u32>,
         continue_token: Option<String>,
         request: ListRequest,
     ) -> Result<(Vec<DynamicObject>, Option<String>, Option<String>), GenericError> {
@@ -683,7 +683,9 @@ pub mod client {
         let api: Api<DynamicObject> = Api::all_with(client, &ar);
 
         let mut lp = ListParams::default();
-        lp = lp.limit(limit);
+        if let Some(l) = &limit {
+            lp = lp.limit(*l);
+        }
         if let Some(token) = &continue_token {
             lp = lp.continue_token(token);
         }

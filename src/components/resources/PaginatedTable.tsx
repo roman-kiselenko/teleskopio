@@ -4,7 +4,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { toast } from 'sonner';
 import moment from 'moment';
 import { Header } from '@/components/Header';
-import { useVersionState } from '@/store/version';
+import { useSelectedNamespacesState } from '@/store/namespaces';
 
 interface PaginatedTableProps<T> {
   getPage: (args: {
@@ -16,6 +16,7 @@ interface PaginatedTableProps<T> {
   setState: (updater: (prev: Map<string, T>) => Map<string, T>) => void;
   extractKey: (item: T) => string;
   columns: any;
+  namespaced?: Boolean;
   withoutJump?: Boolean;
 }
 
@@ -26,12 +27,14 @@ export function PaginatedTable<T>({
   setState,
   extractKey,
   columns,
+  namespaced,
   withoutJump,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const selectedNamespace = useSelectedNamespacesState();
 
   const loadPage = async () => {
     if (loading) return;
@@ -79,11 +82,14 @@ export function PaginatedTable<T>({
 
     observer.current.observe(loaderRef.current);
     return () => observer.current?.disconnect();
-  }, [nextToken, loading]);
+  }, [nextToken, loading, selectedNamespace]);
 
-  const data = Array.from(state().values()).sort((a: any, b: any) =>
-    moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
-  );
+  const ns = selectedNamespace.get();
+  const data = Array.from(state().values())
+    .sort((a: any, b: any) =>
+      moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
+    )
+    .filter((x: any) => !namespaced || !ns || ns === 'all' || x.metadata.namespace === ns);
   const showInitialLoader = loading && data.length === 0;
   return (
     <div className="h-full h-screen overflow-y-auto">
