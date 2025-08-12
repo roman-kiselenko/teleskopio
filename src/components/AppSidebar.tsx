@@ -33,7 +33,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useCurrentClusterState } from '@/store/cluster';
-import { useloadingStateState } from '@/store/loader';
+import { useloadingState } from '@/store/loader';
 import { NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -136,7 +136,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const crds = useCrdsState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
-  const loading = useloadingStateState();
+  const loading = useloadingState();
 
   useEffect(() => {
     let newSidebar = items;

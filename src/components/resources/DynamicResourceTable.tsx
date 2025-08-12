@@ -6,6 +6,7 @@ import { listenEvent } from '@/lib/events';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
 import { currentClusterState } from '@/store/cluster';
+import { addSubscription } from '@/lib/subscriptionManager';
 
 interface DynamicResourceTableProps<T> {
   kind: string;
@@ -38,23 +39,27 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     });
   };
 
-  const listenEvents = () => {
+  const listenEvents = async () => {
     const context = currentClusterState.context.get();
-    listenEvent(`${kind}-${context}-deleted`, (ev: any) => {
-      setState((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(ev.metadata?.uid as string);
-        return newMap;
-      });
-    });
+    await addSubscription(
+      listenEvent(`${kind}-${context}-deleted`, (ev: any) => {
+        setState((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(ev.metadata?.uid as string);
+          return newMap;
+        });
+      }),
+    );
 
-    listenEvent(`${kind}-${context}-updated`, (ev: any) => {
-      setState((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(ev.metadata?.uid as string, ev);
-        return newMap;
-      });
-    });
+    await addSubscription(
+      listenEvent(`${kind}-${context}-updated`, (ev: any) => {
+        setState((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(ev.metadata?.uid as string, ev);
+          return newMap;
+        });
+      }),
+    );
   };
 
   const getPage = async ({ limit, continueToken }: { limit: number; continueToken?: string }) => {

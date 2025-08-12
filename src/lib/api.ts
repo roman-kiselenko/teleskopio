@@ -17,7 +17,9 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
     return await invoke<T>(action, request);
   } catch (error: any) {
     console.error(`[Tauri API Error] "${action}" ${JSON.stringify(request)} failed:`, error);
-    toast.error(error.message);
+    if (error.message) {
+      toast.error(error.message);
+    }
     throw error;
   }
 }

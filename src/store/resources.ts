@@ -167,3 +167,37 @@ export const eventsState = hookstate<Map<string, any>>(new Map());
 export function useEventsState() {
   return useHookstate(eventsState);
 }
+
+export function flushAllStates() {
+  [
+    daemonSetsState,
+    eventsState,
+    nodesState,
+    namespacesState,
+    horizontalPodAutoscalersState,
+    podDisruptionBudgetsState,
+    configmapsState,
+    validatingWebhooksState,
+    resourceQuotasState,
+    limitRangesState,
+    crsState,
+    crdsState,
+    mutatingwebhooksState,
+    ingressClassesState,
+    endpointsState,
+    ingressesState,
+    networkpoliciesState,
+    rolesState,
+    serviceaccountsState,
+    servicesState,
+    storageclassesState,
+    secretsState,
+    statefulSetsState,
+    jobsState,
+    cronJobsState,
+    replicaSetsState,
+    podsState,
+    deploymentsState,
+    daemonSetsState,
+  ].forEach((x) => x.set(new Map()));
+}

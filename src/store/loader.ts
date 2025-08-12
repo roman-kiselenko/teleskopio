@@ -2,7 +2,7 @@ import { hookstate, useHookstate } from '@hookstate/core';
 
 const loadingState = hookstate<Boolean>(false);
 
-export function useloadingStateState() {
+export function useloadingState() {
   return useHookstate(loadingState);
 }
 

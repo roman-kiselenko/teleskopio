@@ -12,7 +12,7 @@ import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';
 import { apiResourcesState } from '@/store/api-resources';
 import { useCrdsState } from '@/store/crd-resources';
-import { useloadingStateState } from '@/store/loader';
+import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { addSubscription } from '@/lib/subscriptionManager';
 
@@ -39,7 +39,7 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const crdResources = useCrdsState();
-      const loading = useloadingStateState();
+      const loading = useloadingState();
       const get_version = async (context: string, path: any) => {
         loading.set(true);
         const clusterVersion = await call('get_version', { context: context, path: path });

@@ -52,7 +52,9 @@ export function PaginatedTable<T>({
       setNextToken(next);
     } catch (e: any) {
       console.error('Error loading page:', e);
-      toast.error('Error loading page\n' + e.message);
+      if (e.message) {
+        toast.error(`Error loading data for table: ${e.message}`);
+      }
     } finally {
       setLoading(false);
     }

@@ -11,6 +11,7 @@ import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
 import { debounce } from 'lodash';
 import { currentClusterState } from '@/store/cluster';
+import { addSubscription } from '@/lib/subscriptionManager';
 
 const subscribeNodeEvents = async (rv: string) => {
   const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
@@ -38,21 +39,25 @@ const subscribeEventEvents = async (rv: string) => {
 
 const listenNodeEvents = async () => {
   const context = currentClusterState.context.get();
-  await listenEvent(`Node-${context}-deleted`, (node: any) => {
-    nodesState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(node.metadata.uid);
-      return newMap;
-    });
-  });
+  await addSubscription(
+    listenEvent(`Node-${context}-deleted`, (node: any) => {
+      nodesState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(node.metadata.uid);
+        return newMap;
+      });
+    }),
+  );
 
-  await listenEvent(`Node-${context}-updated`, (node: any) => {
-    nodesState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.set(node.metadata.uid, node);
-      return newMap;
-    });
-  });
+  await addSubscription(
+    listenEvent(`Node-${context}-updated`, (node: any) => {
+      nodesState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(node.metadata.uid, node);
+        return newMap;
+      });
+    }),
+  );
 };
 
 const updateData = debounce((ev) => {
@@ -73,13 +78,17 @@ const deleteData = debounce((ev) => {
 
 const listenEventEvents = async () => {
   const context = currentClusterState.context.get();
-  await listenEvent(`Event-${context}-deleted`, (ev: any) => {
-    deleteData(ev);
-  });
+  await addSubscription(
+    listenEvent(`Event-${context}-deleted`, (ev: any) => {
+      deleteData(ev);
+    }),
+  );
 
-  await listenEvent(`Event-${context}-updated`, (ev: any) => {
-    updateData(ev);
-  });
+  await addSubscription(
+    listenEvent(`Event-${context}-updated`, (ev: any) => {
+      updateData(ev);
+    }),
+  );
 };
 
 const getNodesPage = async ({

@@ -1,11 +1,16 @@
 import { JumpCommand } from '@/components/ui/JumpCommand';
-import { useVersionState } from '@/store/version';
-import { useCurrentClusterState } from '@/store/cluster';
-import { Plus } from 'lucide-react';
+import { useVersionState, setVersion } from '@/store/version';
+import { useCurrentClusterState, setCurrentCluster } from '@/store/cluster';
+import { Plus, Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
 import { NamespaceSelector } from '@/components/NamespaceSelector';
+import { toast } from 'sonner';
+import { removeAllSubscriptions } from '@/lib/subscriptionManager';
+import { flushAllStates } from '@/store/resources';
+import { apiResourcesState } from '@/store/api-resources';
+import { crdsState } from '@/store/crd-resources';
 
 export function Header() {
   const version = useVersionState();
@@ -51,6 +56,26 @@ export function Header() {
             </kbd>
           </p>
         )}
+      </div>
+      <div className="text-muted-foreground">
+        <div className="pl-2 flex items-center">
+          <Button
+            title="disconnect cluster"
+            className="bg-red-500 hover:bg-red-400"
+            onClick={() => {
+              toast.warning(<div>Disconnect cluster</div>);
+              setCurrentCluster('', '');
+              setVersion('');
+              apiResourcesState.set([]);
+              crdsState.set(new Map<string, any>());
+              flushAllStates();
+              removeAllSubscriptions();
+              navigate('/');
+            }}
+          >
+            <Unplug className="" size={16} />
+          </Button>
+        </div>
       </div>
     </div>
   );

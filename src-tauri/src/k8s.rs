@@ -213,32 +213,12 @@ pub mod client {
     type Key = (String, String, String); // (path, context, resource)
 
     lazy_static! {
-        static ref REFLECTOR_HANDLES: Mutex<HashMap<Key, JoinHandle<()>>> =
+        static ref WATCHER_HANDLES: Mutex<HashMap<Key, JoinHandle<()>>> =
             Mutex::new(HashMap::new());
     }
 
     static ACTIVE_STREAMS: Lazy<Mutex<HashMap<String, AbortHandle>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));
-
-    pub fn has_reflector(path: &str, context: &str, resource: &str) -> bool {
-        let map = REFLECTOR_HANDLES.lock().unwrap();
-        map.contains_key(&(path.to_string(), context.to_string(), resource.to_string()))
-    }
-
-    pub fn insert_reflector(
-        path: String,
-        context: String,
-        resource: String,
-        handle: JoinHandle<()>,
-    ) {
-        let mut map = REFLECTOR_HANDLES.lock().unwrap();
-        map.insert((path, context, resource), handle);
-    }
-
-    pub fn remove_reflector(path: &str, context: &str, resource: &str) {
-        let mut map = REFLECTOR_HANDLES.lock().unwrap();
-        map.remove(&(path.to_string(), context.to_string(), resource.to_string()));
-    }
 
     #[tauri::command]
     pub async fn list_apiresources(
@@ -270,6 +250,7 @@ pub mod client {
 
         Ok(result)
     }
+
     #[tauri::command]
     pub async fn list_crd_resources(
         path: &str,
@@ -836,7 +817,7 @@ pub mod client {
         let event_name_deleted = format!("{}-{}-deleted", kind, context);
 
         {
-            let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+            let mut handles = WATCHER_HANDLES.lock().unwrap();
             let key = (
                 path.to_string(),
                 context.to_string(),
@@ -844,6 +825,7 @@ pub mod client {
             );
             let key_clone = key.clone();
 
+            // We need recreate watcher every time function called
             if let Some(old_handle) = handles.remove(&key) {
                 log::warn!("Aborting existing watcher for {:?}", key);
                 old_handle.abort();
@@ -860,7 +842,7 @@ pub mod client {
                         return;
                     }
                 };
-
+                log::info!("start new watcher for {:?}", key);
                 while let Some(status) = stream.next().await {
                     match status {
                         Ok(WatchEvent::Added(p)) | Ok(WatchEvent::Modified(p)) => {
@@ -929,7 +911,7 @@ pub mod client {
         let event_name_updated = format!("{}-{}-updated", uid, context);
 
         {
-            let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+            let mut handles = WATCHER_HANDLES.lock().unwrap();
             let key = (path.to_string(), context.to_string(), uid.to_string());
             let key_clone = key.clone();
 
@@ -950,6 +932,7 @@ pub mod client {
                     }
                 };
 
+                log::info!("start new watcher for {:?}", key);
                 while let Some(status) = stream.next().await {
                     match status {
                         Ok(WatchEvent::Added(p))
@@ -976,7 +959,7 @@ pub mod client {
 
     #[tauri::command]
     pub async fn stop_watch_events(path: &str, context: &str, uid: &str) -> Result<(), String> {
-        let mut handles = REFLECTOR_HANDLES.lock().unwrap();
+        let mut handles = WATCHER_HANDLES.lock().unwrap();
         let key = (path.to_string(), context.to_string(), uid.to_string());
 
         if let Some(handle) = handles.remove(&key) {
