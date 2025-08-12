@@ -14,6 +14,7 @@ import { apiResourcesState } from '@/store/api-resources';
 import { useCrdsState } from '@/store/crd-resources';
 import { useloadingStateState } from '@/store/loader';
 import type { ApiResource } from '@/types';
+import { addSubscription } from '@/lib/subscriptionManager';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -41,70 +42,58 @@ const columns: ColumnDef<Cluster>[] = [
       const loading = useloadingStateState();
       const get_version = async (context: string, path: any) => {
         loading.set(true);
-        toast.promise(call('get_version', { context: context, path: path }), {
-          loading: 'Connecting...',
-          success: async (data: { gitVersion: string }) => {
-            setVersion(data.gitVersion);
-            setCurrentCluster(context, path);
-            // The logic below is about CRD section
-            // we must watch CRDs and update api resources
-            apiResourcesState.set(await call('list_apiresources', {}));
-            const [resources, rv] = await call('list_crd_resources', {});
-            const resource = apiResourcesState
-              .get()
-              .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
-            await call('watch_dynamic_resource', {
-              request: {
-                ...resource,
-                resource_version: rv,
-              },
-            });
-            listenEvent(`CustomResourceDefinition-deleted`, async (ev: any) => {
-              crdResources.set((prev) => {
-                const newMap = new Map(prev);
-                newMap.delete(ev.metadata?.uid as string);
-                return newMap;
-              });
-              apiResourcesState.set(await call('list_apiresources', {}));
-            });
-            listenEvent(`CustomResourceDefinition-updated`, async (ev: any) => {
-              crdResources.set((prev) => {
-                const newMap = new Map(prev);
-                newMap.set(ev.metadata?.uid as string, ev);
-                return newMap;
-              });
-              apiResourcesState.set(await call('list_apiresources', {}));
-            });
-            resources.forEach((x) => {
-              crdResources.set((prev) => {
-                const newMap = new Map(prev);
-                newMap.set(x.metadata?.uid as string, x);
-                return newMap;
-              });
-            });
-            loading.set(false);
-            navigate('/cluster');
-            return (
-              <span>
-                Successfully connected to <b>{context}</b> <b>{data.gitVersion}</b>
-              </span>
-            );
-          },
-          error: (err) => {
-            loading.set(false);
-            return (
-              <span>
-                Cant connect to <b>{context}</b>
-                <br />
-                {err.message}
-              </span>
-            );
+        const clusterVersion = await call('get_version', { context: context, path: path });
+        setVersion(clusterVersion.gitVersion);
+        setCurrentCluster(context, path);
+        toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
+        apiResourcesState.set(await call('list_apiresources', {}));
+        toast.info(<div>API Resources loaded: {apiResourcesState.get().length}</div>);
+        const [resources, rv] = await call('list_crd_resources', {});
+        if (resources.length > 0) {
+          toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+        }
+        const resource = apiResourcesState
+          .get()
+          .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
+        await call('watch_dynamic_resource', {
+          request: {
+            ...resource,
+            resource_version: rv,
           },
         });
+        await addSubscription(
+          listenEvent(`CustomResourceDefinition-${context}-deleted`, async (ev: any) => {
+            crdResources.set((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(ev.metadata?.uid as string);
+              return newMap;
+            });
+            apiResourcesState.set(await call('list_apiresources', {}));
+          }),
+        );
+        await addSubscription(
+          listenEvent(`CustomResourceDefinition-${context}-updated`, async (ev: any) => {
+            crdResources.set((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(ev.metadata?.uid as string, ev);
+              return newMap;
+            });
+            apiResourcesState.set(await call('list_apiresources', {}));
+          }),
+        );
+        resources.forEach((x) => {
+          crdResources.set((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(x.metadata?.uid as string, x);
+            return newMap;
+          });
+        });
+        loading.set(false);
+        navigate('/cluster');
       };
       return (
         <Button
-          className="text-xs hover:bg-green-300"
+          className="text-xs"
           variant="outline"
           size="sm"
           onClick={async () => {

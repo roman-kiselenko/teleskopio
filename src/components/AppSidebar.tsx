@@ -4,6 +4,7 @@ import {
   Box,
   ShieldAlert,
   LayoutDashboard,
+  ChevronRight,
   Wallet,
   SlidersHorizontal,
   Layers,
@@ -32,9 +33,9 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useCurrentClusterState } from '@/store/cluster';
+import { useloadingStateState } from '@/store/loader';
 import { NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Sidebar,
@@ -46,7 +47,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSubItem,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
@@ -133,33 +133,51 @@ export const items = [
 
 export function AppSidebar() {
   const cc = useCurrentClusterState();
-  let location = useLocation();
   const { state } = useSidebar();
   const crds = useCrdsState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
+  const loading = useloadingStateState();
 
   useEffect(() => {
     let newSidebar = items;
     const crdArray = Array.from(crds.get().values());
     if (crdArray.length > 0) {
-      const submenu = crdArray.map((crd: any) => {
-        const version = crd.spec.versions?.find((x) => x.storage);
+      const crdMap = new Map<string, any[]>();
+      crdArray.forEach((crd: any) => {
+        const data = crdMap.get(crd.spec.group);
+        if (data) {
+          crdMap.set(crd.spec.group, [...data, crd]);
+        } else {
+          crdMap.set(crd.spec.group, [crd]);
+        }
+      });
+      const submenu = [...crdMap.keys()].map((k) => {
+        const submenuItems = (crdMap.get(k) || []).map((v: any) => {
+          const version = v.spec.versions?.find((x) => x.storage);
+          return {
+            title: v.spec.names.kind,
+            icon: LayoutDashboard,
+            url: `/customresources/${v.spec.names.kind}/${v.spec.group}/${version.name}`,
+          };
+        });
         return {
-          title: crd.spec.group,
+          title: k,
           icon: LayoutDashboard,
-          url: `/customresources/${crd.spec.names.kind}/${crd.spec.group}/${version.name}`,
+          url: '',
+          submenu: submenuItems,
         };
       });
       const newItem = {
         title: 'CRD',
         icon: Columns3Cog,
+        url: '',
         submenu: [{ title: 'Definitions', icon: Layers, url: '/crds' }, ...submenu],
       };
       const insertIndex = Math.max(0, items.length - 1);
       newSidebar = [...items.slice(0, insertIndex), newItem, ...items.slice(insertIndex)];
     }
     setSidebarItems(newSidebar);
-  }, [crds]);
+  }, [crds, loading]);
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarContent>
@@ -171,19 +189,17 @@ export function AppSidebar() {
                   className={cn(
                     'text-xs',
                     state === 'collapsed' ? 'hidden' : '',
-                    item.title !== 'Main' && item.title !== 'Settings' && cc.context.get() === ''
+                    (item.title !== 'Main' &&
+                      item.title !== 'Settings' &&
+                      cc.context.get() === '') ||
+                      loading.get()
                       ? 'pointer-events-none opacity-50'
                       : '',
                   )}
                   key={item.title}
                 >
                   {item?.url ? (
-                    <SidebarMenuButton isActive={location.pathname === item?.url}>
-                      <NavLink to={item.url} className="flex flex-row w-full items-center">
-                        <item.icon size={18} className="mr-1" />
-                        <div className="text-xs">{item.title}</div>
-                      </NavLink>
-                    </SidebarMenuButton>
+                    <MenuItem item={item} />
                   ) : (
                     <CollapsibleTrigger className="w-full" asChild>
                       <SidebarMenuButton>
@@ -200,21 +216,8 @@ export function AppSidebar() {
                   )}
                   <CollapsibleContent>
                     <SidebarMenuSub className="gap-0 mx-0 px-0 border-none">
-                      {item.submenu.map((i) => (
-                        <SidebarMenuSubItem className="flex w-full" key={i.title}>
-                          <SidebarMenuButton
-                            className="p-1"
-                            isActive={location.pathname === i?.url}
-                          >
-                            <NavLink
-                              to={i.url}
-                              className="peer/menu-button flex flex-row w-full items-center gap-0 overflow-hidden rounded-md text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 text-xs !gap-0"
-                            >
-                              <i.icon size={18} className="mr-1 text-gray-500 ml-2" />
-                              <div className="text-xs">{i.title}</div>
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuSubItem>
+                      {item.submenu.map((i, index) => (
+                        <SubmenuItem key={index} item={i} />
                       ))}
                     </SidebarMenuSub>
                   </CollapsibleContent>
@@ -239,5 +242,53 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+function SubmenuItem({ item }: { item: any }) {
+  if (item?.submenu?.length) {
+    return (
+      <SidebarMenuItem>
+        <Collapsible className="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90">
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton>
+              <ChevronRight size={20} className="transition-transform" />
+              <span className="text-xs">{item.title}</span>
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {item.submenu.map((subItem, index) => (
+                <MenuItem key={index} item={subItem} />
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </Collapsible>
+      </SidebarMenuItem>
+    );
+  }
+  return (
+    <SidebarMenuSubItem className="flex w-full" key={item.title}>
+      <SidebarMenuButton className="p-1" isActive={location.pathname === item?.url}>
+        <NavLink
+          to={item.url}
+          className="peer/menu-button flex flex-row w-full items-center gap-0 overflow-hidden rounded-md text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 text-xs !gap-0"
+        >
+          <item.icon size={18} className="mr-1 text-gray-500 ml-2" />
+          <div className="text-xs">{item.title}</div>
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuSubItem>
+  );
+}
+
+function MenuItem({ item }: { item: any }) {
+  return (
+    <SidebarMenuButton isActive={location.pathname === item?.url}>
+      <NavLink to={item.url} className="flex flex-row w-full items-center">
+        <item.icon size={18} className="mr-1" />
+        <div className="text-xs">{item.title}</div>
+      </NavLink>
+    </SidebarMenuButton>
   );
 }

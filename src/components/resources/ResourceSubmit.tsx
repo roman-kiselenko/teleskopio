@@ -53,6 +53,7 @@ export default function ResourceEditor() {
         ['[', ']'],
       ],
     });
+    editor.focus();
   };
 
   const changeFont = async (size: number) => {

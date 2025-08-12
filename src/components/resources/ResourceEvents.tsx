@@ -15,6 +15,7 @@ import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { apiResourcesState } from '@/store/api-resources';
 import type { ApiResource } from '@/types';
 import { compareVersions } from 'compare-versions';
+import { currentClusterState } from '@/store/cluster';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -67,7 +68,8 @@ export function ResourceEvents() {
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     const listenEvents = async () => {
-      unlisten = await listenEvent(`${uid}-updated`, (ev: any) => {
+      const context = currentClusterState.context.get();
+      unlisten = await listenEvent(`${uid}-${context}-updated`, (ev: any) => {
         if (ev?.involvedObject?.uid === uid) {
           setEvents((prev) => {
             const newMap = new Map(prev);

@@ -35,7 +35,7 @@ export default function Layout() {
             loading: <Loader size={18} />,
           }}
           theme={theme}
-          visibleToasts={1}
+          visibleToasts={3}
           toastOptions={{
             className: '!text-xs',
             style: {

@@ -10,6 +10,7 @@ import { ApiResource } from '@/types';
 import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
 import { debounce } from 'lodash';
+import { currentClusterState } from '@/store/cluster';
 
 const subscribeNodeEvents = async (rv: string) => {
   const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
@@ -36,7 +37,8 @@ const subscribeEventEvents = async (rv: string) => {
 };
 
 const listenNodeEvents = async () => {
-  await listenEvent('Node-deleted', (node: any) => {
+  const context = currentClusterState.context.get();
+  await listenEvent(`Node-${context}-deleted`, (node: any) => {
     nodesState.set((prev) => {
       const newMap = new Map(prev);
       newMap.delete(node.metadata.uid);
@@ -44,7 +46,7 @@ const listenNodeEvents = async () => {
     });
   });
 
-  await listenEvent('Node-updated', (node: any) => {
+  await listenEvent(`Node-${context}-updated`, (node: any) => {
     nodesState.set((prev) => {
       const newMap = new Map(prev);
       newMap.set(node.metadata.uid, node);
@@ -70,11 +72,12 @@ const deleteData = debounce((ev) => {
 }, 100);
 
 const listenEventEvents = async () => {
-  await listenEvent('Event-deleted', (ev: any) => {
+  const context = currentClusterState.context.get();
+  await listenEvent(`Event-${context}-deleted`, (ev: any) => {
     deleteData(ev);
   });
 
-  await listenEvent('Event-updated', (ev: any) => {
+  await listenEvent(`Event-${context}-updated`, (ev: any) => {
     updateData(ev);
   });
 };

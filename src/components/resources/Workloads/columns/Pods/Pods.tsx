@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import ContainerIcon from '@/components/resources/Workloads/columns/Pods/ContainerIcon';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import PodName from '@/components/ui/Table/ResourceName';
+import PodName from '@/components/resources/Workloads/columns/Pods/PodName';
 import PodStatus from '@/components/resources/Workloads/columns/Pods/PodStatus';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
@@ -37,7 +37,7 @@ const columns: ColumnDef<any>[] = [
     id: 'name',
     meta: { className: 'min-w-[35ch] max-w-[35ch] truncate' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <PodName name={row?.original?.metadata?.name} />),
+    cell: memo(({ row }) => <PodName pod={row?.original} />),
   },
   {
     accessorKey: 'metadata.namespace',
@@ -45,13 +45,6 @@ const columns: ColumnDef<any>[] = [
     meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
     cell: memo(({ row }) => <div>{row?.original?.metadata?.namespace}</div>),
-  },
-  {
-    accessorKey: 'spec.nodeName',
-    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
-    id: 'nodename',
-    header: memo(({ column }) => <HeaderAction column={column} name={'Node'} />),
-    cell: memo(({ row }) => <div>{row?.original?.spec?.nodeName}</div>),
   },
   {
     accessorKey: 'containers',

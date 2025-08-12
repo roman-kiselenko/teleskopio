@@ -1,5 +1,7 @@
 pub mod client {
     use dirs::home_dir;
+    use std::{thread, time::Duration};
+
     use futures::future::AbortHandle;
     use futures_util::io::{AsyncBufReadExt, BufReader};
     use futures_util::stream::StreamExt;
@@ -251,7 +253,6 @@ pub mod client {
             .map_err(GenericError::from)?;
 
         let mut result = Vec::new();
-
         for group in discovery.groups() {
             for (ar, caps) in group.recommended_resources() {
                 let namespaced = match caps.scope {
@@ -831,8 +832,8 @@ pub mod client {
         // watcher
         let wp: WatchParams = WatchParams::default();
         let rv_string = request.resource_version.unwrap();
-        let event_name_updated = format!("{}-updated", kind);
-        let event_name_deleted = format!("{}-deleted", kind);
+        let event_name_updated = format!("{}-{}-updated", kind, context);
+        let event_name_deleted = format!("{}-{}-deleted", kind, context);
 
         {
             let mut handles = REFLECTOR_HANDLES.lock().unwrap();
@@ -855,7 +856,7 @@ pub mod client {
                 let mut stream = match api_clone.watch(&wp, &rv_string).await {
                     Ok(s) => s.boxed(),
                     Err(e) => {
-                        eprintln!("watch failed: {:?}", e);
+                        log::warn!("watch failed for {:?} {:?}", key, e);
                         return;
                     }
                 };
@@ -870,7 +871,7 @@ pub mod client {
                         }
                         Ok(_) => {}
                         Err(err) => {
-                            eprintln!("watch stream error: {:?}", err);
+                            log::warn!("watch failed for {:?} {:?}", key, err);
                             break;
                         }
                     }
@@ -925,7 +926,7 @@ pub mod client {
             wp = wp.fields(&format!("regarding.uid={}", uid)).timeout(294);
         }
         let rv_string = request.resource_version.unwrap();
-        let event_name_updated = format!("{}-updated", uid);
+        let event_name_updated = format!("{}-{}-updated", uid, context);
 
         {
             let mut handles = REFLECTOR_HANDLES.lock().unwrap();
@@ -944,7 +945,7 @@ pub mod client {
                 let mut stream = match api_clone.watch(&wp, &rv_string).await {
                     Ok(s) => s.boxed(),
                     Err(e) => {
-                        eprintln!("watch failed: {:?}", e);
+                        log::warn!("watch failed for {:?} {:?}", key, e);
                         return;
                     }
                 };
@@ -958,7 +959,7 @@ pub mod client {
                         }
                         Ok(_) => {}
                         Err(err) => {
-                            eprintln!("watch stream error: {:?}", err);
+                            log::warn!("watch failed for {:?} {:?}", key, err);
                             break;
                         }
                     }
@@ -1059,7 +1060,12 @@ pub mod client {
         let pod_name = name.to_string();
         let ns = namespace.to_string();
         let app_clone = app.clone();
-
+        let event_path = format!(
+            "pod_log_line_{}_{}_{}",
+            pod_name.clone(),
+            ns.clone(),
+            context,
+        );
         let (abort_handle, abort_reg) = AbortHandle::new_pair();
 
         {
@@ -1073,7 +1079,7 @@ pub mod client {
                     match line {
                         Ok(line) => {
                             let _ = app_clone.emit(
-                                "pod_log_line",
+                                event_path.as_str(),
                                 LogLineEvent {
                                     container: lp.container.clone().unwrap_or_default(),
                                     pod: pod_name.clone(),

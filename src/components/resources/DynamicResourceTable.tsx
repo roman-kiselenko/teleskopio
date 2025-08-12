@@ -5,6 +5,7 @@ import { call } from '@/lib/api';
 import { listenEvent } from '@/lib/events';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
+import { currentClusterState } from '@/store/cluster';
 
 interface DynamicResourceTableProps<T> {
   kind: string;
@@ -38,7 +39,8 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   };
 
   const listenEvents = () => {
-    listenEvent(`${kind}-deleted`, (ev: any) => {
+    const context = currentClusterState.context.get();
+    listenEvent(`${kind}-${context}-deleted`, (ev: any) => {
       setState((prev) => {
         const newMap = new Map(prev);
         newMap.delete(ev.metadata?.uid as string);
@@ -46,7 +48,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       });
     });
 
-    listenEvent(`${kind}-updated`, (ev: any) => {
+    listenEvent(`${kind}-${context}-updated`, (ev: any) => {
       setState((prev) => {
         const newMap = new Map(prev);
         newMap.set(ev.metadata?.uid as string, ev);

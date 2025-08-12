@@ -7,6 +7,7 @@ import { listenEvent, stopLogsWatcher } from '@/lib/events';
 import { logsState, useLogsState } from '@/store/logs';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
+import { currentClusterState } from '@/store/cluster';
 import yaml from 'js-yaml';
 import {
   Select,
@@ -51,8 +52,8 @@ export function PodLogs() {
           return { c: currentContainer, l: l };
         }),
       );
-
-      unlisten = await listenEvent('pod_log_line', (ev: any) => {
+      const context = currentClusterState.context.get();
+      unlisten = await listenEvent(`pod_log_line_${name}_${ns}_${context}`, (ev: any) => {
         const payload = ev as {
           pod: string;
           container: string;
