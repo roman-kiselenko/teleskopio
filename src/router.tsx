@@ -17,7 +17,7 @@ import ConfigMaps from '@/components/resources/Configuration/ConfigMaps';
 import ResourceQuotas from '@/components/resources/Configuration/ResourceQuotas';
 import LimitRanges from '@/components/resources/Configuration/LimitRanges';
 import Secrets from '@/components/resources/Configuration/Secrets';
-import Namespaces from '@/components/resources/Configuration/Namespaces';
+import Namespaces from '@/components/resources/Cluster/Namespaces';
 import HorizontalPodAutoscalers from '@/components/resources/Configuration/HorizontalPodAutoscalers';
 import PodDisruptionBudgets from '@/components/resources/Configuration/PodDisruptionBudgets';
 import StorageClasses from '@/components/resources/Storage/StorageClasses';

@@ -3,6 +3,7 @@ import {
   Cable,
   Box,
   ShieldAlert,
+  PcCase,
   LayoutDashboard,
   ChevronRight,
   Wallet,
@@ -34,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useCurrentClusterState } from '@/store/cluster';
 import { useloadingState } from '@/store/loader';
+import { useLocation } from 'react-router';
 import { NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -50,7 +52,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
-import { useCrdsState } from '@/store/crd-resources';
+import { useCrdsState } from '@/store/crdResources';
 
 export const items = [
   {
@@ -61,9 +63,12 @@ export const items = [
   },
   {
     title: 'Cluster',
-    url: '/cluster',
     icon: Waypoints,
-    submenu: [{ title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' }],
+    url: '',
+    submenu: [
+      { title: 'Nodes', icon: PcCase, url: '/cluster' },
+      { title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' },
+    ],
   },
   {
     title: 'Workloads',
@@ -156,7 +161,6 @@ export function AppSidebar() {
           const version = v.spec.versions?.find((x) => x.storage);
           return {
             title: v.spec.names.kind,
-            icon: LayoutDashboard,
             url: `/customresources/${v.spec.names.kind}/${v.spec.group}/${version.name}`,
           };
         });
@@ -192,7 +196,8 @@ export function AppSidebar() {
                     (item.title !== 'Main' &&
                       item.title !== 'Settings' &&
                       cc.context.get() === '') ||
-                      loading.get()
+                      loading.get() ||
+                      (item.title === 'Main' && cc.context.get() !== '')
                       ? 'pointer-events-none opacity-50'
                       : '',
                   )}
@@ -246,6 +251,7 @@ export function AppSidebar() {
 }
 
 function SubmenuItem({ item }: { item: any }) {
+  let location = useLocation();
   if (item?.submenu?.length) {
     return (
       <SidebarMenuItem>
@@ -283,10 +289,11 @@ function SubmenuItem({ item }: { item: any }) {
 }
 
 function MenuItem({ item }: { item: any }) {
+  let location = useLocation();
   return (
     <SidebarMenuButton isActive={location.pathname === item?.url}>
       <NavLink to={item.url} className="flex flex-row w-full items-center">
-        <item.icon size={18} className="mr-1" />
+        {item?.icon ? <item.icon size={18} className="mr-1" /> : <></>}
         <div className="text-xs">{item.title}</div>
       </NavLink>
     </SidebarMenuButton>

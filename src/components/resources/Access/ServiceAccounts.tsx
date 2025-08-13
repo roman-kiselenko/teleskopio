@@ -7,6 +7,7 @@ const ServiceAccounts = () => {
   return (
     <DynamicResourceTable
       kind="ServiceAccount"
+      group=""
       columns={columns}
       state={() => sa.get() as Map<string, any>}
       setState={sa.set}

@@ -7,6 +7,7 @@ const ValidatingWebhooks = () => {
   return (
     <DynamicResourceTable
       kind="ValidatingWebhookConfiguration"
+      group="admissionregistration.k8s.io"
       columns={columns}
       state={() => cm.get() as Map<string, any>}
       setState={cm.set}

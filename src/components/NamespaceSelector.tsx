@@ -1,6 +1,7 @@
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
 import { useState } from 'react';
-import { useNamespacesState, useSelectedNamespacesState } from '@/store/namespaces';
+import { useSelectedNamespacesState } from '@/store/selectedNamespace';
+import { useNamespacesState } from '@/store/resources';
 
 import { cn } from '@/util';
 import { Button } from '@/components/ui/button';
@@ -14,18 +15,13 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-type Namespace = {
-  metadata: {
-    name: string;
-    [key: string]: any;
-  };
-  [key: string]: any;
-};
-
 export function NamespaceSelector() {
   const [open, setOpen] = useState(false);
   const namespaces = useNamespacesState();
   const selectedNamespace = useSelectedNamespacesState();
+  const namespaceArray = [{ metadata: { name: 'all' } }].concat(
+    Array.from(namespaces.get().values()),
+  );
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -36,9 +32,9 @@ export function NamespaceSelector() {
           className="h-7 text-muted-foreground text-sm px-2 py-1 pl-0 border-none shadow-none focus:ring-0 focus:outline-none bg-transparent text-xs w-[300px] justify-between"
         >
           {selectedNamespace.get()
-            ? namespaces.get().find((ns: Namespace) => ns.metadata.name === selectedNamespace.get())
+            ? namespaceArray.find((ns: any) => ns.metadata.name === selectedNamespace.get())
                 ?.metadata.name
-            : 'Namespace...'}
+            : 'Namespaces...'}
           <ChevronsUpDownIcon className="ml-2 h-2 w-2 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -48,7 +44,7 @@ export function NamespaceSelector() {
           <CommandList>
             <CommandEmpty className="text-center text-xs p-2">No namespace found.</CommandEmpty>
             <CommandGroup>
-              {namespaces.get().map((ns: any, index: number) => (
+              {namespaceArray.map((ns: any, index: number) => (
                 <CommandItem
                   className="text-xs"
                   key={index}

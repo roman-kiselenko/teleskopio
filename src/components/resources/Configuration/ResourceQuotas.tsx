@@ -7,6 +7,7 @@ const ResourceQuotas = () => {
   return (
     <DynamicResourceTable
       kind="ResourceQuota"
+      group=""
       columns={columns}
       state={() => rq.get() as Map<string, any>}
       setState={rq.set}

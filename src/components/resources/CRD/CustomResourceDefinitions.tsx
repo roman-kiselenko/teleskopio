@@ -7,6 +7,7 @@ const CustomResourceDefinitions = () => {
   return (
     <DynamicResourceTable
       kind="CustomResourceDefinition"
+      group="apiextensions.k8s.io"
       columns={columns}
       state={() => crd.get() as Map<string, any>}
       setState={crd.set}

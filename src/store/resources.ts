@@ -1,4 +1,4 @@
-import { hookstate, useHookstate } from '@hookstate/core';
+import { hookstate, useHookstate, State } from '@hookstate/core';
 
 export const daemonSetsState = hookstate<Map<string, any>>(new Map());
 
@@ -108,10 +108,13 @@ export function useCrdsState() {
   return useHookstate(crdsState);
 }
 
-export const crsState = hookstate<Map<string, any>>(new Map());
+const stores = new Map<string, State<any>>();
 
-export function useCrsState() {
-  return useHookstate(crsState);
+export function getCRState(kind: string) {
+  if (!stores.has(kind)) {
+    stores.set(kind, hookstate<Map<string, any>>(new Map()));
+  }
+  return stores.get(kind)!;
 }
 
 export const limitRangesState = hookstate<Map<string, any>>(new Map());
@@ -180,7 +183,6 @@ export function flushAllStates() {
     validatingWebhooksState,
     resourceQuotasState,
     limitRangesState,
-    crsState,
     crdsState,
     mutatingwebhooksState,
     ingressClassesState,

@@ -7,6 +7,7 @@ const ConfigMaps = () => {
   return (
     <DynamicResourceTable
       kind="ConfigMap"
+      group=""
       columns={columns}
       state={() => cm.get() as Map<string, any>}
       setState={cm.set}

@@ -7,7 +7,7 @@ import cronstrue from 'cronstrue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {

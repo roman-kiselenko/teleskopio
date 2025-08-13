@@ -7,6 +7,7 @@ const NetworkPolicies = () => {
   return (
     <DynamicResourceTable
       kind="NetworkPolicy"
+      group="networking.k8s.io"
       columns={columns}
       state={() => np.get() as Map<string, any>}
       setState={np.set}

@@ -7,6 +7,7 @@ const Deployments = () => {
   return (
     <DynamicResourceTable
       kind="Deployment"
+      group="apps"
       columns={columns}
       state={() => deployments.get() as Map<string, any>}
       setState={deployments.set}

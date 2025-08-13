@@ -4,14 +4,19 @@ import { DataTable } from '@/components/ui/DataTable';
 import { toast } from 'sonner';
 import moment from 'moment';
 import { Header } from '@/components/Header';
-import { useSelectedNamespacesState } from '@/store/namespaces';
+import { useSelectedNamespacesState } from '@/store/selectedNamespace';
+import type { ApiResource } from '@/types';
+import { apiResourcesState } from '@/store/apiResources';
 
 interface PaginatedTableProps<T> {
+  kind: string;
+  group: string;
   getPage: (args: {
+    apiResource: ApiResource | undefined;
     limit: number;
     continueToken?: string;
   }) => Promise<[T[], string | null, string]>;
-  subscribeEvents: (rv: string) => Promise<void>;
+  subscribeEvents: (rv: string, apiResource: ApiResource | undefined) => Promise<void>;
   state: () => Map<string, T>;
   setState: (updater: (prev: Map<string, T>) => Map<string, T>) => void;
   extractKey: (item: T) => string;
@@ -22,12 +27,13 @@ interface PaginatedTableProps<T> {
 
 export function PaginatedTable<T>({
   getPage,
+  kind,
+  group,
   subscribeEvents,
   state,
   setState,
   extractKey,
   columns,
-  namespaced,
   withoutJump,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
@@ -36,11 +42,27 @@ export function PaginatedTable<T>({
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const selectedNamespace = useSelectedNamespacesState();
 
+  const getApiResource = ({
+    kind,
+    group,
+  }: {
+    kind: string;
+    group: string;
+  }): ApiResource | undefined => {
+    const resource = apiResourcesState
+      .get()
+      .find((r: ApiResource) => r.kind === kind && r.group === group);
+    if (!resource) throw new Error(`API resource for kind ${kind} and group ${group} not found`);
+    return resource;
+  };
+
   const loadPage = async () => {
     if (loading) return;
     setLoading(true);
     try {
+      const apiResource = getApiResource({ kind, group });
       const [items, next, rv] = await getPage({
+        apiResource: apiResource,
         limit: 50,
         continueToken: nextToken ?? undefined,
       });
@@ -51,7 +73,7 @@ export function PaginatedTable<T>({
         });
         return newMap;
       });
-      await subscribeEvents(rv);
+      await subscribeEvents(rv, apiResource);
       setNextToken(next);
     } catch (e: any) {
       console.error('Error loading page:', e);
@@ -89,17 +111,23 @@ export function PaginatedTable<T>({
     .sort((a: any, b: any) =>
       moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
     )
-    .filter((x: any) => !namespaced || !ns || ns === 'all' || x.metadata.namespace === ns);
+    .filter(
+      (x: any) =>
+        !getApiResource({ kind, group })?.namespaced ||
+        !ns ||
+        ns === 'all' ||
+        x.metadata.namespace === ns,
+    );
   const showInitialLoader = loading && data.length === 0;
   return (
-    <div className="h-full h-screen overflow-y-auto">
+    <div>
       {withoutJump ? <></> : <Header />}
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
         </div>
       )}
-      <DataTable columns={columns} data={data} />
+      <DataTable noResult={data.length === 0} columns={columns} data={data} />
       {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
       {loading && data.length > 0 && (
         <div className="flex justify-center py-4">

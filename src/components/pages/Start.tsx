@@ -21,7 +21,9 @@ export function StartPage() {
     fetchData();
 
     const interval = setInterval(() => {
-      fetchData();
+      if (!loading.get()) {
+        fetchData();
+      }
     }, 1000);
 
     return () => clearInterval(interval);

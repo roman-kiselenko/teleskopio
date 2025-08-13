@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import RsName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { HandHelping } from 'lucide-react';
 import { useNavigate } from 'react-router';

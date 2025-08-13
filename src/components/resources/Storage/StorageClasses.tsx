@@ -7,6 +7,7 @@ const StorageClasses = () => {
   return (
     <DynamicResourceTable
       kind="StorageClass"
+      group="storage.k8s.io"
       columns={columns}
       state={() => sc.get() as Map<string, any>}
       setState={sc.set}

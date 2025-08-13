@@ -7,6 +7,7 @@ const Secrets = () => {
   return (
     <DynamicResourceTable
       kind="Secret"
+      group=""
       columns={columns}
       state={() => ss.get() as Map<string, any>}
       setState={ss.set}

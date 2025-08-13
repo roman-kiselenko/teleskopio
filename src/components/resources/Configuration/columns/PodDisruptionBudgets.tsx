@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {

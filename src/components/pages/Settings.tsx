@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useTheme } from '@/components/ThemeProvider';
 import type { Theme } from '@/components/ThemeProvider';
-import { useApiResourcesState } from '@/store/api-resources';
+import { useApiResourcesState } from '@/store/apiResources';
 import {
   Table,
   TableBody,
@@ -143,8 +143,10 @@ export function SettingsPage() {
           </TabsContent>
           <TabsContent value="logs">
             <ScrollArea className="h-[800px] w-full rounded-md border p-1">
-              {logs.map((l: string) => (
-                <div className="whitespace-pre-line">{l}</div>
+              {logs.map((l: string, index: number) => (
+                <div key={index} className="whitespace-pre-line">
+                  {l}
+                </div>
               ))}
               <ScrollBar orientation="horizontal" />
             </ScrollArea>

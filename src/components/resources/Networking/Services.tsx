@@ -7,6 +7,7 @@ const Services = () => {
   return (
     <DynamicResourceTable
       kind="Service"
+      group=""
       columns={columns}
       state={() => sv.get() as Map<string, any>}
       setState={sv.set}

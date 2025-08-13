@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import JobName from '@/components/ui/Table/ResourceName';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 import { Badge } from '@/components/ui/badge';
 
 const columns: ColumnDef<any>[] = [

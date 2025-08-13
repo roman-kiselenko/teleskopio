@@ -10,12 +10,13 @@ import { call } from '@/lib/api';
 import { listenEvent } from '@/lib/events';
 import { setVersion } from '@/store/version';
 import { setCurrentCluster } from '@/store/cluster';
-import { apiResourcesState } from '@/store/api-resources';
-import { useNamespacesState } from '@/store/namespaces';
-import { useCrdsState } from '@/store/crd-resources';
+import { apiResourcesState } from '@/store/apiResources';
+import { namespacesState } from '@/store/resources';
+import { crdsState } from '@/store/crdResources';
 import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { addSubscription } from '@/lib/subscriptionManager';
+import { useSearchState } from '@/store/search';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -39,9 +40,7 @@ const columns: ColumnDef<Cluster>[] = [
     header: '',
     cell: ({ row }) => {
       const navigate = useNavigate();
-      const crdResources = useCrdsState();
       const loading = useloadingState();
-      const namespaces = useNamespacesState();
       const get_version = async (context: string, path: any) => {
         loading.set(true);
         const clusterVersion = await call('get_version', { context: context, path: path });
@@ -50,54 +49,8 @@ const columns: ColumnDef<Cluster>[] = [
         toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
         apiResourcesState.set(await call('list_apiresources', {}));
         toast.info(<div>API Resources loaded: {apiResourcesState.get().length}</div>);
-        const [resources, rv] = await call('list_crd_resources', {});
-        if (resources.length > 0) {
-          toast.info(<div>CRD Resources loaded: {resources.length}</div>);
-        }
-        const [ns] = await call('list_dynamic_resource', {
-          request: {
-            ...apiResourcesState.get().find((r: ApiResource) => r.kind === 'Namespace'),
-          },
-        });
-        namespaces.set([{ metadata: { name: 'all' } }, ...ns]);
-        const resource = apiResourcesState
-          .get()
-          .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
-        await call('watch_dynamic_resource', {
-          request: {
-            ...resource,
-            resource_version: rv,
-          },
-        });
-        await addSubscription(
-          listenEvent(`CustomResourceDefinition-${context}-deleted`, async (ev: any) => {
-            crdResources.set((prev) => {
-              const newMap = new Map(prev);
-              newMap.delete(ev.metadata?.uid as string);
-              return newMap;
-            });
-            apiResourcesState.set(await call('list_apiresources', {}));
-          }),
-        );
-        await addSubscription(
-          listenEvent(`CustomResourceDefinition-${context}-updated`, async (ev: any) => {
-            crdResources.set((prev) => {
-              const newMap = new Map(prev);
-              newMap.set(ev.metadata?.uid as string, ev);
-              return newMap;
-            });
-            apiResourcesState.set(await call('list_apiresources', {}));
-          }),
-        );
-        resources.forEach((x) => {
-          crdResources.set((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(x.metadata?.uid as string, x);
-            return newMap;
-          });
-        });
-        loading.set(false);
-        navigate('/cluster');
+        fetchAndWatchNamespaces(context);
+        fetchAndWatchCRDs(context);
       };
       return (
         <Button
@@ -108,7 +61,17 @@ const columns: ColumnDef<Cluster>[] = [
             if (row.original?.current_context === '') {
               toast.error('There is no current context in config');
             } else {
-              await get_version(row.original.current_context as string, row.original.path);
+              try {
+                await get_version(row.original.current_context as string, row.original.path);
+                loading.set(false);
+                navigate('/cluster');
+              } catch (error: any) {
+                if (error.message) {
+                  toast.error(error.message);
+                }
+              } finally {
+                loading.set(false);
+              }
             }
           }}
         >
@@ -121,3 +84,71 @@ const columns: ColumnDef<Cluster>[] = [
 ];
 
 export default columns;
+
+async function fetchAndWatchCRDs(context: string): Promise<Promise<Promise<void>>> {
+  const resource = apiResourcesState
+    .get()
+    .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
+  const [resources, rv] = await call('list_crd_resources', {});
+  if (resources.length > 0) {
+    toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+  }
+  await call('watch_dynamic_resource', { request: { ...resource, resource_version: rv } });
+  resources.forEach((x) => {
+    crdsState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(x.metadata?.uid as string, x);
+      return newMap;
+    });
+  });
+  await addSubscription(
+    listenEvent(`CustomResourceDefinition-${context}-deleted`, async (ev: any) => {
+      crdsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(ev.metadata?.uid as string);
+        return newMap;
+      });
+    }),
+  );
+  await addSubscription(
+    listenEvent(`CustomResourceDefinition-${context}-updated`, async (ev: any) => {
+      crdsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(ev.metadata?.uid as string, ev);
+        return newMap;
+      });
+    }),
+  );
+}
+
+async function fetchAndWatchNamespaces(context: string): Promise<void> {
+  const nsResource = apiResourcesState
+    .get()
+    .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
+  const [ns] = await call('list_dynamic_resource', { request: { ...nsResource } });
+  ns.forEach((x) => {
+    namespacesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(x.metadata?.uid as string, x);
+      return newMap;
+    });
+  });
+  await addSubscription(
+    listenEvent(`Namespace-${context}-deleted`, async (ev: any) => {
+      namespacesState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(ev.metadata?.uid as string);
+        return newMap;
+      });
+    }),
+  );
+  await addSubscription(
+    listenEvent(`Namespace-${context}-updated`, async (ev: any) => {
+      namespacesState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(ev.metadata?.uid as string, ev);
+        return newMap;
+      });
+    }),
+  );
+}

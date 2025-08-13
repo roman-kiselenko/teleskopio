@@ -12,7 +12,7 @@ import { memo } from 'react';
 import { Header } from '@/components/Header';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 import type { ApiResource } from '@/types';
 import { compareVersions } from 'compare-versions';
 import { currentClusterState } from '@/store/cluster';

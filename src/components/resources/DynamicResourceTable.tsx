@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
 import { listenEvent } from '@/lib/events';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -10,6 +10,7 @@ import { addSubscription } from '@/lib/subscriptionManager';
 
 interface DynamicResourceTableProps<T> {
   kind: string;
+  group: string;
   columns: ColumnDef<T, any>[];
   state: () => Map<string, T>;
   setState: (setter: (prev: Map<string, T>) => Map<string, T>) => void;
@@ -18,22 +19,16 @@ interface DynamicResourceTableProps<T> {
 
 export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   kind,
+  group,
   columns,
   state,
   setState,
   withoutJump,
 }: DynamicResourceTableProps<T>) => {
-  const getApiResource = (): ApiResource => {
-    const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === kind);
-    if (!resource) throw new Error(`API resource for kind ${kind} not found`);
-    return resource;
-  };
-
-  const subscribeEvents = async (rv: string) => {
-    const resource = getApiResource();
+  const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
     await call('watch_dynamic_resource', {
       request: {
-        ...resource,
+        ...apiResource,
         resource_version: rv,
       },
     });
@@ -62,13 +57,20 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     );
   };
 
-  const getPage = async ({ limit, continueToken }: { limit: number; continueToken?: string }) => {
-    const resource = getApiResource();
+  const getPage = async ({
+    limit,
+    continueToken,
+    apiResource,
+  }: {
+    limit: number;
+    continueToken?: string;
+    apiResource: ApiResource | undefined;
+  }) => {
     return await call('list_dynamic_resource', {
       limit: limit,
       continueToken,
       request: {
-        ...resource,
+        ...apiResource,
       },
     });
   };
@@ -79,13 +81,14 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
 
   return (
     <PaginatedTable<T>
+      kind={kind}
+      group={group}
       subscribeEvents={subscribeEvents}
       getPage={getPage}
       state={state}
       setState={setState}
       extractKey={(item) => item.metadata?.uid as string}
       columns={columns}
-      namespaced={getApiResource().namespaced}
       withoutJump={withoutJump}
     />
   );

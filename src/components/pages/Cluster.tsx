@@ -5,7 +5,7 @@ import eventsColumns from '@/components/pages/Cluster/Table/EventsColumnDef';
 import { call } from '@/lib/api';
 import { listenEvent } from '@/lib/events';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 import { ApiResource } from '@/types';
 import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
@@ -13,8 +13,7 @@ import { debounce } from 'lodash';
 import { currentClusterState } from '@/store/cluster';
 import { addSubscription } from '@/lib/subscriptionManager';
 
-const subscribeNodeEvents = async (rv: string) => {
-  const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
+const subscribeNodeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
   const request = {
     ...apiResource,
     resource_version: rv,
@@ -22,16 +21,9 @@ const subscribeNodeEvents = async (rv: string) => {
   await call('watch_dynamic_resource', { request });
 };
 
-const subscribeEventEvents = async (rv: string) => {
-  const resource = apiResourcesState.get().find((r: ApiResource) => {
-    if (compareVersions(getVersion(), '1.20') === 1) {
-      return r.kind === 'Event' && r.group === 'events.k8s.io';
-    } else {
-      return r.kind === 'Event' && r.group === '';
-    }
-  });
+const subscribeEventEvents = async (rv: string, apiResource: ApiResource | undefined) => {
   const request = {
-    ...resource,
+    ...apiResource,
     resource_version: rv,
   };
   await call('watch_dynamic_resource', { request });
@@ -94,11 +86,12 @@ const listenEventEvents = async () => {
 const getNodesPage = async ({
   limit,
   continueToken,
+  apiResource,
 }: {
   limit: number;
   continueToken?: string;
+  apiResource: ApiResource | undefined;
 }) => {
-  const apiResource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
   return await call('list_dynamic_resource', {
     limit: limit,
     continueToken: continueToken,
@@ -137,6 +130,15 @@ export function ClusterPage() {
   const eventsState = useEventsState();
   listenNodeEvents();
   listenEventEvents();
+  let kind: string;
+  let group: string;
+  if (compareVersions(getVersion(), '1.20') === 1) {
+    kind = 'Event';
+    group = 'events.k8s.io';
+  } else {
+    kind = 'Event';
+    group = '';
+  }
   return (
     <div className="flex flex-col flex-grow overflow-auto">
       <ResizablePanelGroup direction="horizontal" className="rounded-l">
@@ -144,7 +146,9 @@ export function ClusterPage() {
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel defaultSize={50}>
               <div className="flex h-full flex-col">
-                <PaginatedTable<Node>
+                <PaginatedTable
+                  kind={'Node'}
+                  group={''}
                   subscribeEvents={subscribeNodeEvents}
                   getPage={getNodesPage}
                   state={() => nodesState.get() as Map<string, any>}
@@ -158,7 +162,9 @@ export function ClusterPage() {
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={50}>
               <div className="flex h-full flex-col">
-                <PaginatedTable<Event>
+                <PaginatedTable
+                  kind={kind}
+                  group={group}
                   subscribeEvents={subscribeEventEvents}
                   getPage={getEventsPage}
                   state={() => eventsState.get() as Map<string, any>}

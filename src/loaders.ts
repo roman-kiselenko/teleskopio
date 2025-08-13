@@ -1,5 +1,5 @@
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
 
 export async function Load(kind: string, name: string, namespace: string) {

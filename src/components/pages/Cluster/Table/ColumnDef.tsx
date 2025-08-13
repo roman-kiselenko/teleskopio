@@ -11,7 +11,7 @@ import { memo } from 'react';
 import { call } from '@/lib/api';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {

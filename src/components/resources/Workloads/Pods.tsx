@@ -7,6 +7,7 @@ const Pods = () => {
   return (
     <DynamicResourceTable
       kind="Pod"
+      group=""
       columns={columns}
       state={() => pods.get() as Map<string, any>}
       setState={pods.set}

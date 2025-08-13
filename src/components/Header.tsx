@@ -9,8 +9,8 @@ import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { toast } from 'sonner';
 import { removeAllSubscriptions } from '@/lib/subscriptionManager';
 import { flushAllStates } from '@/store/resources';
-import { apiResourcesState } from '@/store/api-resources';
-import { crdsState } from '@/store/crd-resources';
+import { apiResourcesState } from '@/store/apiResources';
+import { crdsState } from '@/store/crdResources';
 
 export function Header() {
   const version = useVersionState();

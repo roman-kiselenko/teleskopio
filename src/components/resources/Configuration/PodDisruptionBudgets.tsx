@@ -7,6 +7,7 @@ const PodDisruptionBudgets = () => {
   return (
     <DynamicResourceTable
       kind="PodDisruptionBudget"
+      group="policy"
       columns={columns}
       state={() => ns.get() as Map<string, any>}
       setState={ns.set}

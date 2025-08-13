@@ -7,6 +7,7 @@ const Jobs = () => {
   return (
     <DynamicResourceTable
       kind="Job"
+      group="batch"
       columns={columns}
       state={() => jobs.get() as Map<string, any>}
       setState={jobs.set}

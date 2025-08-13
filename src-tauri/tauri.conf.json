@@ -12,6 +12,8 @@
   "app": {
     "windows": [
       {
+        "label": "main",
+        "url": "index.html",
         "title": "teleskopio",
         "width": 1400,
         "height": 900

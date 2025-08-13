@@ -7,6 +7,7 @@ const LimitRanges = () => {
   return (
     <DynamicResourceTable
       kind="LimitRange"
+      group=""
       columns={columns}
       state={() => lr.get() as Map<string, any>}
       setState={lr.set}

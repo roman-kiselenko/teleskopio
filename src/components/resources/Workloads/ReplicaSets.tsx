@@ -7,6 +7,7 @@ const ReplicaSets = () => {
   return (
     <DynamicResourceTable
       kind="ReplicaSet"
+      group="apps"
       columns={columns}
       state={() => replicasets.get() as Map<string, any>}
       setState={replicasets.set}

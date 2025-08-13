@@ -7,6 +7,7 @@ const DaemonSets = () => {
   return (
     <DynamicResourceTable
       kind="DaemonSet"
+      group="apps"
       columns={columns}
       state={() => dameonsets.get() as Map<string, any>}
       setState={dameonsets.set}

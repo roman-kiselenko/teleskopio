@@ -7,6 +7,7 @@ const StatefulSets = () => {
   return (
     <DynamicResourceTable
       kind="StatefulSet"
+      group="apps"
       columns={columns}
       state={() => ss.get() as Map<string, any>}
       setState={ss.set}

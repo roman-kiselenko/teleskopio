@@ -7,6 +7,7 @@ const MutatingWebhooks = () => {
   return (
     <DynamicResourceTable
       kind="MutatingWebhookConfiguration"
+      group="admissionregistration.k8s.io"
       columns={columns}
       state={() => cm.get() as Map<string, any>}
       setState={cm.set}

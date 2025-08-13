@@ -7,6 +7,7 @@ const CronJobs = () => {
   return (
     <DynamicResourceTable
       kind="CronJob"
+      group="batch"
       columns={columns}
       state={() => cronjobs.get() as Map<string, any>}
       setState={cronjobs.set}

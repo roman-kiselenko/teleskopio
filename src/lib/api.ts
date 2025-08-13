@@ -5,9 +5,7 @@ import { toast } from 'sonner';
 type InvokePayload = Record<string, unknown>;
 
 export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T> {
-  let request = {
-    ...payload,
-  };
+  let request = { ...payload };
   if (currentClusterState.kube_config.get() !== '' && currentClusterState.context.get() !== '') {
     request.path = currentClusterState.kube_config.get();
     request.context = currentClusterState.context.get();

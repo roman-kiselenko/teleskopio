@@ -7,6 +7,7 @@ const Roles = () => {
   return (
     <DynamicResourceTable
       kind="Role"
+      group="rbac.authorization.k8s.io"
       columns={columns}
       state={() => ro.get() as Map<string, any>}
       setState={ro.set}

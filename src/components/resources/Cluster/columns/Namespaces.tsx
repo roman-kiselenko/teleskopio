@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import Actions from '@/components/ui/Table/Actions';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/api-resources';
+import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -12,6 +12,12 @@ const columns: ColumnDef<any>[] = [
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
     cell: memo(({ row }) => <div>{row.original.metadata?.name}</div>),
+  },
+  {
+    accessorKey: 'status.phase',
+    id: 'phase',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Phase'} />),
+    cell: memo(({ row }) => <div>{row.original.status?.phase}</div>),
   },
   {
     id: 'age',
@@ -23,7 +29,9 @@ const columns: ColumnDef<any>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const ns = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Namespace');
+      const resource = apiResourcesState
+        .get()
+        .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
       return (
         <Actions
           url={`/yaml/Namespace/${ns.metadata?.name}/${ns.metadata?.namespace}`}
