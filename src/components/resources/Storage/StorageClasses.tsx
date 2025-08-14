@@ -11,6 +11,7 @@ const StorageClasses = () => {
       columns={columns}
       state={() => sc.get() as Map<string, any>}
       setState={sc.set}
+      withNsSelector={false}
     />
   );
 };

@@ -22,6 +22,7 @@ interface PaginatedTableProps<T> {
   extractKey: (item: T) => string;
   columns: any;
   namespaced?: Boolean;
+  withNsSelector?: Boolean;
   withoutJump?: Boolean;
 }
 
@@ -35,6 +36,7 @@ export function PaginatedTable<T>({
   extractKey,
   columns,
   withoutJump,
+  withNsSelector = true,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -121,7 +123,7 @@ export function PaginatedTable<T>({
   const showInitialLoader = loading && data.length === 0;
   return (
     <div>
-      {withoutJump ? <></> : <Header />}
+      {withoutJump ? <></> : <Header withNsSelector={withNsSelector} />}
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />

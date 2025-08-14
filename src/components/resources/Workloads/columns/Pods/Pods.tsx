@@ -134,9 +134,7 @@ const columns: ColumnDef<any>[] = [
               <DropdownMenuItem
                 className="text-xs"
                 onClick={() =>
-                  navigate(
-                    `/yaml/Pod/${pod?.metadata?.name}/${pod?.metadata?.namespace}?group=${pod.apiVersion.split('/')[0]}`,
-                  )
+                  navigate(`/yaml/Pod/${pod?.metadata?.name}/${pod?.metadata?.namespace}?group=`)
                 }
               >
                 <SquareMousePointer size={8} />

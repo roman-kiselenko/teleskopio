@@ -11,6 +11,7 @@ const Namespaces = () => {
       columns={columns}
       state={() => ns.get() as Map<string, any>}
       setState={ns.set}
+      withNsSelector={false}
     />
   );
 };

@@ -155,6 +155,7 @@ export function ClusterPage() {
                   setState={nodesState.set}
                   extractKey={(p: any) => p.metadata.uid}
                   namespaced={false}
+                  withNsSelector={false}
                   columns={columns}
                 />
               </div>

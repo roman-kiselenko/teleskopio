@@ -155,6 +155,7 @@ export function ResourceEvents() {
         extractKey={(item) => item.metadata?.uid as string}
         columns={columns}
         namespaced={false}
+        withNsSelector={false}
         withoutJump={true}
       />
     </div>

@@ -17,7 +17,13 @@ const columns: ColumnDef<any>[] = [
     accessorKey: 'status.phase',
     id: 'phase',
     header: memo(({ column }) => <HeaderAction column={column} name={'Phase'} />),
-    cell: memo(({ row }) => <div>{row.original.status?.phase}</div>),
+    cell: memo(({ row }) => {
+      let color = '';
+      if (row.original.status?.phase === 'Terminating') {
+        color = 'text-red-400';
+      }
+      return <div className={color}>{row.original.status?.phase}</div>;
+    }),
   },
   {
     id: 'age',

@@ -96,7 +96,6 @@ async function fetchAndWatchCRs(
   const customResource = apiResourcesState
     .get()
     .find((r: ApiResource) => r.kind === kind && r.group === group);
-  console.log(customResource);
   const [resources, rv] = await call('list_dynamic_resource', {
     request: { ...customResource },
   });

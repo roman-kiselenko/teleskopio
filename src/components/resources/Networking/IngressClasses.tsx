@@ -11,6 +11,7 @@ const IngressClasses = () => {
       columns={columns}
       state={() => ing.get() as Map<string, any>}
       setState={ing.set}
+      withNsSelector={false}
     />
   );
 };

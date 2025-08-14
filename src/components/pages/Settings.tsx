@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useTheme } from '@/components/ThemeProvider';
 import type { Theme } from '@/components/ThemeProvider';
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { call } from '@/lib/api';
+import { getLocalBoolean, setLocalBoolean } from '@/lib/localStorage';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -25,12 +27,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { Fonts, FONT_KEY } from '@/settings';
+import { Fonts, FONT_KEY, MANAGED_FIELDS } from '@/settings';
 
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [logs, setLogs] = useState([]);
   const apiResources = useApiResourcesState();
+
+  const [managedFields, setManagedFields] = useState<boolean>(() => {
+    return getLocalBoolean(MANAGED_FIELDS, false);
+  });
 
   const [selectedFont, setSelectedFont] = useState<string>(() => {
     return localStorage.getItem(FONT_KEY) || 'cascadia';
@@ -58,6 +64,9 @@ export function SettingsPage() {
             </TabsTrigger>
             <TabsTrigger key="font" value="font" className="text-xs">
               Font
+            </TabsTrigger>
+            <TabsTrigger key="editor" value="editor" className="text-xs">
+              Editor
             </TabsTrigger>
             <TabsTrigger key="api-resources" value="api-resources" className="text-xs">
               API Resources
@@ -108,6 +117,26 @@ export function SettingsPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
+          </TabsContent>
+          <TabsContent value="editor">
+            <div className="m-2 flex flex-col">
+              <div className="flex flex-row items-center">
+                <Checkbox
+                  checked={managedFields}
+                  onCheckedChange={() => {
+                    setManagedFields(!managedFields);
+                    setLocalBoolean(MANAGED_FIELDS, !managedFields);
+                  }}
+                  id="editor"
+                />
+                <Label className="pl-1 text-xs" htmlFor="editor">
+                  Strip Managed Fields
+                </Label>
+              </div>
+              <p className="py-1">
+                If checked the yaml resource with <b>metadata.managedFields</b> will be stripped.
+              </p>
+            </div>
           </TabsContent>
           <TabsContent value="api-resources">
             {apiResources.get().slice().length === 0 ? (

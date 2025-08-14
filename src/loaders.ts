@@ -3,7 +3,6 @@ import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
 
 export async function Load(kind: string, group: string, name: string, namespace: string) {
-  console.log(kind, group, apiResourcesState.get());
   const resource = apiResourcesState
     .get()
     .find((r: ApiResource) => r.kind === kind && r.group === group);

@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getLocalBoolean } from '@/lib/localStorage';
 import * as monaco from 'monaco-editor';
 import { loader } from '@monaco-editor/react';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ import { call } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 import yaml from 'js-yaml';
 import { useTheme } from '@/components/ThemeProvider';
-import { Fonts, FONT_KEY } from '@/settings';
+import { Fonts, FONT_KEY, MANAGED_FIELDS } from '@/settings';
 import { useLoaderData } from 'react-router';
 
 loader.config({ monaco });
@@ -35,7 +36,18 @@ export default function ResourceEditor() {
   const [hasErrors, setHasErrors] = useState(false);
   const [minimap, setMinimap] = useState(true);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [original, setOriginal] = useState(data);
+  const [original, setOriginal] = useState(() => {
+    if (getLocalBoolean(MANAGED_FIELDS)) {
+      let obj = yaml.load(data);
+      if (obj?.metadata?.managedFields) {
+        delete obj.metadata.managedFields;
+      }
+      const cleanedYaml = yaml.dump(obj);
+      return cleanedYaml;
+    } else {
+      return data;
+    }
+  });
   const [stripManagedFields, setStripManagedFields] = useState(false);
   const [selectedFont] = useState<string>(() => {
     return (
@@ -86,7 +98,7 @@ export default function ResourceEditor() {
 
     const value = editorRef.current?.getValue();
     let obj = yaml.load(value);
-    if (stripManagedFields && obj?.metadata?.managedFields) {
+    if (obj?.metadata?.managedFields) {
       delete obj.metadata.managedFields;
     }
     const cleanedYaml = yaml.dump(obj);
@@ -136,14 +148,18 @@ export default function ResourceEditor() {
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
           <Save />
         </Button>
-        <Button
-          title="strip managedFields"
-          className="text-xs bg-orange-500"
-          disabled={hasErrors}
-          onClick={handleToggle}
-        >
-          <Shredder />
-        </Button>
+        {getLocalBoolean(MANAGED_FIELDS) ? (
+          <></>
+        ) : (
+          <Button
+            title="strip managedFields"
+            className="text-xs bg-orange-500"
+            disabled={hasErrors}
+            onClick={handleToggle}
+          >
+            <Shredder />
+          </Button>
+        )}
         <Button
           title="toggle minimap"
           className="text-xs bg-gray-500"

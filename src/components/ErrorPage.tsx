@@ -7,7 +7,7 @@ export default function ErrorPage() {
   const error = useRouteError();
   let navigate = useNavigate();
 
-  let title = 'Something wrong';
+  let title = 'Something went wrong';
   let message = 'Cant render a page';
 
   if (isRouteErrorResponse(error)) {
@@ -21,15 +21,10 @@ export default function ErrorPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 text-gray-800 p-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-lg w-full text-center">
         <h1 className="text-sm font-bold mb-4">{title}</h1>
-        <div className="flex gap-4  pb-2 items-center justify-center ">
+        <div className="flex gap-2 pb-2 items-center justify-center ">
           <Ban size={12} />
           <p className="text-xs">{message}</p>
         </div>
-        {!isRouteErrorResponse(error) && (
-          <pre className="bg-gray-100 text-xs text-red-600 p-4 rounded-lg overflow-x-auto">
-            {JSON.stringify(error, null, 2)}
-          </pre>
-        )}
         <div className="flex gap-4 justify-center mt-6">
           <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
             <ArrowBigLeft />

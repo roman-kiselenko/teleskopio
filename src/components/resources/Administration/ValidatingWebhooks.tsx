@@ -11,6 +11,7 @@ const ValidatingWebhooks = () => {
       columns={columns}
       state={() => cm.get() as Map<string, any>}
       setState={cm.set}
+      withNsSelector={false}
     />
   );
 };

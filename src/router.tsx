@@ -64,6 +64,7 @@ export const router = createBrowserRouter([
           };
         },
         element: <ResourceEditor />,
+        errorElement: <ErrorPage />,
       },
     ],
   },
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
           };
         },
         element: <PodLogs />,
+        errorElement: <ErrorPage />,
       },
     ],
   },
@@ -345,6 +347,7 @@ export const router = createBrowserRouter([
       {
         path: '/createkubernetesresource',
         element: <ResourceSubmit />,
+        errorElement: <ErrorPage />,
       },
     ],
   },

@@ -31,10 +31,10 @@ export function StartPage() {
 
   return (
     <div className="flex-grow overflow-auto">
-      <div className="flex flex-row pt-3 px-2 items-center justify-between">
+      <div className="flex flex-row p-3 px-2 items-center justify-between">
         <Input
           placeholder="Filter by name..."
-          className="focus:ring-0 focus:outline-none bg-transparent"
+          className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           onChange={(e) => searchQuery.q.set(e.target.value)}
         />
       </div>

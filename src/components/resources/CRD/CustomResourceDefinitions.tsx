@@ -11,6 +11,7 @@ const CustomResourceDefinitions = () => {
       columns={columns}
       state={() => crd.get() as Map<string, any>}
       setState={crd.set}
+      withNsSelector={false}
     />
   );
 };

@@ -48,7 +48,6 @@ const columns: ColumnDef<any>[] = [
       const rs = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ReplicaSet');
       const owner = rs?.metadata?.ownerReferences[0];
-      console.log(owner);
       const additional = [
         <DropdownMenuItem
           disabled={owner === undefined}

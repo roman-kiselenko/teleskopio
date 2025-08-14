@@ -12,7 +12,7 @@ import { flushAllStates } from '@/store/resources';
 import { apiResourcesState } from '@/store/apiResources';
 import { crdsState } from '@/store/crdResources';
 
-export function Header() {
+export function Header({ withNsSelector }: { withNsSelector?: Boolean }) {
   const version = useVersionState();
   const clusterState = useCurrentClusterState();
   let navigate = useNavigate();
@@ -34,9 +34,13 @@ export function Header() {
           </div>
         </div>
       )}
-      <div className="flex flex-row pr-2">
-        <NamespaceSelector />
-      </div>
+      {withNsSelector ? (
+        <div className="flex flex-row pr-2">
+          <NamespaceSelector />
+        </div>
+      ) : (
+        <></>
+      )}
       <div className="flex flex-row">
         {clusterState.context.get() === '' ? (
           <></>
