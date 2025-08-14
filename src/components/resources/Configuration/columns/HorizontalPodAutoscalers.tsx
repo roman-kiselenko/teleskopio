@@ -28,7 +28,7 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'HorizontalPodAutoscaler');
       return (
         <Actions
-          url={`/yaml/HorizontalPodAutoscaler/${ns.metadata?.name}/${ns.metadata?.namespace}`}
+          url={`/yaml/HorizontalPodAutoscaler/${ns.metadata?.name}/${ns.metadata?.namespace}?group=${ns.apiVersion.split('/')[0]}`}
           resource={ns}
           name={'HorizontalPodAutoscaler'}
           action={'delete_dynamic_resource'}

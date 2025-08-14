@@ -40,7 +40,7 @@ const columns: ColumnDef<any>[] = [
       return (
         <Actions
           resource={np}
-          url={`/yaml/NetworkPolicy/${np.metadata?.name}/${np.metadata?.namespace}`}
+          url={`/yaml/NetworkPolicy/${np.metadata?.name}/${np.metadata?.namespace}?group=${np.apiVersion.split('/')[0]}`}
           name={'NetworkPolicy'}
           action={'delete_dynamic_resource'}
           request={{

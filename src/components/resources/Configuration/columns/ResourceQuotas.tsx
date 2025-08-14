@@ -27,7 +27,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ResourceQuota');
       return (
         <Actions
-          url={`/yaml/ResourceQuota/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          url={`/yaml/ResourceQuota/${cm.metadata?.name}/${cm.metadata?.namespace}?group=`}
           resource={cm}
           name={'ResourceQuota'}
           action={'delete_dynamic_resource'}

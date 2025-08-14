@@ -2,8 +2,11 @@ import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
 
-export async function Load(kind: string, name: string, namespace: string) {
-  const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === kind);
+export async function Load(kind: string, group: string, name: string, namespace: string) {
+  console.log(kind, group, apiResourcesState.get());
+  const resource = apiResourcesState
+    .get()
+    .find((r: ApiResource) => r.kind === kind && r.group === group);
   if (!resource) throw new Error(`API resource for kind ${kind} not found`);
   let request = {
     name: name,

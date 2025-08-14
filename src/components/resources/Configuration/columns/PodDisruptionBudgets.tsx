@@ -46,7 +46,7 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'PodDisruptionBudget');
       return (
         <Actions
-          url={`/yaml/PodDisruptionBudget/${ns.metadata?.name}/${ns.metadata?.namespace}`}
+          url={`/yaml/PodDisruptionBudget/${ns.metadata?.name}/${ns.metadata?.namespace}?group=${ns.apiVersion.split('/')[0]}`}
           resource={ns}
           name={'PodDisruptionBudget'}
           action={'delete_dynamic_resource'}

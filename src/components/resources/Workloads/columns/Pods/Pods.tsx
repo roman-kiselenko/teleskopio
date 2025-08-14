@@ -134,7 +134,9 @@ const columns: ColumnDef<any>[] = [
               <DropdownMenuItem
                 className="text-xs"
                 onClick={() =>
-                  navigate(`/yaml/Pod/${pod?.metadata?.name}/${pod?.metadata?.namespace}`)
+                  navigate(
+                    `/yaml/Pod/${pod?.metadata?.name}/${pod?.metadata?.namespace}?group=${pod.apiVersion.split('/')[0]}`,
+                  )
                 }
               >
                 <SquareMousePointer size={8} />
@@ -182,7 +184,9 @@ const columns: ColumnDef<any>[] = [
               <DropdownMenuItem
                 disabled={owner === undefined}
                 onClick={() => {
-                  navigate(`/yaml/${owner.kind}/${owner.name}/${pod?.metadata?.namespace}`);
+                  navigate(
+                    `/yaml/${owner.kind}/${owner.name}/${pod?.metadata?.namespace}?group=${owner.apiVersion.split('/')[0]}`,
+                  );
                 }}
                 className="text-xs"
               >

@@ -47,7 +47,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'StatefulSet');
       return (
         <Actions
-          url={`/yaml/StatefulSet/${ss.metadata?.name}/${ss?.metadata?.namespace}`}
+          url={`/yaml/StatefulSet/${ss.metadata?.name}/${ss?.metadata?.namespace}?group=${ss.apiVersion.split('/')[0]}`}
           resource={ss}
           name={'StatefulSet'}
           action={'delete_dynamic_resource'}

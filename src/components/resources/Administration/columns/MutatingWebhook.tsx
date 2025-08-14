@@ -32,7 +32,7 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'MutatingWebhookConfiguration');
       return (
         <Actions
-          url={`/yaml/MutatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          url={`/yaml/MutatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}?group=${cm.apiVersion.split('/')[0]}`}
           resource={cm}
           name={'MutatingWebhookConfiguration'}
           action={'delete_dynamic_resource'}

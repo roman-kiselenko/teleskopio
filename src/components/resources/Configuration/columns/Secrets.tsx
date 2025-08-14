@@ -39,8 +39,9 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Secret');
       return (
         <Actions
-          url={`/yaml/Secret/${secret.metadata?.name}/${secret.metadata?.namespace}`}
+          url={`/yaml/Secret/${secret.metadata?.name}/${secret.metadata?.namespace}?group=`}
           resource={secret}
+          noEvents={true}
           name={'Secret'}
           action={'delete_dynamic_resource'}
           request={{

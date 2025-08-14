@@ -39,7 +39,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Ingress');
       return (
         <Actions
-          url={`/yaml/Ingress/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
+          url={`/yaml/Ingress/${ingress.metadata?.name}/${ingress.metadata?.namespace}?group=${ingress.apiVersion.split('/')[0]}`}
           resource={ingress}
           name={'Ingress'}
           action={'delete_dynamic_resource'}

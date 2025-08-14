@@ -20,6 +20,7 @@ function Actions({
   action,
   request,
   children,
+  noEvents = false,
 }: {
   resource: any;
   url: string;
@@ -27,6 +28,7 @@ function Actions({
   action: string;
   request: any;
   children?: any;
+  noEvents?: Boolean;
 }) {
   let navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
@@ -62,19 +64,23 @@ function Actions({
               <Trash size={8} color="red" /> <span className="ml-2 text-red-500">Delete</span>
             </div>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            key="dm4"
-            className="text-xs"
-            onClick={() =>
-              navigate(
-                `/events/${resource.kind}/${resource?.metadata?.uid}/${resource?.metadata?.namespace}/${resource?.metadata.name}`,
-              )
-            }
-          >
-            <div className="flex flex-row">
-              <Rss size={8} /> <span className="ml-2">Events</span>
-            </div>
-          </DropdownMenuItem>
+          {noEvents ? (
+            <></>
+          ) : (
+            <DropdownMenuItem
+              key="dm4"
+              className="text-xs"
+              onClick={() =>
+                navigate(
+                  `/events/${resource.kind}/${resource?.metadata?.uid}/${resource?.metadata?.namespace}/${resource?.metadata.name}`,
+                )
+              }
+            >
+              <div className="flex flex-row">
+                <Rss size={8} /> <span className="ml-2">Events</span>
+              </div>
+            </DropdownMenuItem>
+          )}
           {children ? (
             <div>
               <DropdownMenuSeparator />

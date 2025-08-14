@@ -33,8 +33,9 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ConfigMap');
       return (
         <Actions
-          url={`/yaml/ConfigMap/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          url={`/yaml/ConfigMap/${cm.metadata?.name}/${cm.metadata?.namespace}?group=`}
           resource={cm}
+          noEvents={true}
           name={'ConfigMap'}
           action={'delete_dynamic_resource'}
           request={{

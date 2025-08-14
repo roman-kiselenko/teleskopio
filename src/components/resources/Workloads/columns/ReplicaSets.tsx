@@ -48,11 +48,14 @@ const columns: ColumnDef<any>[] = [
       const rs = row.original;
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'ReplicaSet');
       const owner = rs?.metadata?.ownerReferences[0];
+      console.log(owner);
       const additional = [
         <DropdownMenuItem
           disabled={owner === undefined}
           onClick={() => {
-            navigate(`/yaml/${owner.kind}/${owner.name}/${rs?.metadata?.namespace}`);
+            navigate(
+              `/yaml/${owner.kind}/${owner.name}/${rs?.metadata?.namespace}?group=${owner.apiVersion.split('/')[0]}`,
+            );
           }}
           className="text-xs"
         >
@@ -62,7 +65,7 @@ const columns: ColumnDef<any>[] = [
       ];
       return (
         <Actions
-          url={`/yaml/ReplicaSet/${rs.metadata?.name}/${rs?.metadata?.namespace}`}
+          url={`/yaml/ReplicaSet/${rs.metadata?.name}/${rs?.metadata?.namespace}?group=${rs.apiVersion.split('/')[0]}`}
           resource={rs}
           children={additional}
           name={'ReplicaSet'}

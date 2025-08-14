@@ -29,7 +29,7 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'ValidatingWebhookConfiguration');
       return (
         <Actions
-          url={`/yaml/ValidatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          url={`/yaml/ValidatingWebhookConfiguration/${cm.metadata?.name}/${cm.metadata?.namespace}?group=${cm.apiVersion.split('/')[0]}`}
           resource={cm}
           name={'ValidatingWebhookConfiguration'}
           action={'delete_dynamic_resource'}

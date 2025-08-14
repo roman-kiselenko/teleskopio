@@ -16,6 +16,7 @@ import { apiResourcesState } from '@/store/apiResources';
 import type { ApiResource } from '@/types';
 import { compareVersions } from 'compare-versions';
 import { currentClusterState } from '@/store/cluster';
+import { getVersion } from '@/store/version';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -123,7 +124,15 @@ export function ResourceEvents() {
       },
     });
   };
-
+  let kind: string;
+  let group: string;
+  if (compareVersions(getVersion(), '1.20') === 1) {
+    kind = 'Event';
+    group = 'events.k8s.io';
+  } else {
+    kind = 'Event';
+    group = '';
+  }
   return (
     <div className="h-screen flex flex-col">
       <Header />
@@ -137,6 +146,8 @@ export function ResourceEvents() {
         </div>
       </div>
       <PaginatedTable
+        kind={kind}
+        group={group}
         subscribeEvents={subscribeEvents}
         getPage={getPage}
         state={() => events as Map<string, any>}

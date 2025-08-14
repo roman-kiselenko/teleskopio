@@ -690,16 +690,22 @@ pub mod client {
             lp = lp.continue_token(token);
         }
 
-        let mut result = api.list(&lp).await.map_err(GenericError::from)?;
-        let next_token = result.metadata.continue_;
-        let resource_version = result.metadata.resource_version;
-        for obj in result.items.iter_mut() {
-            obj.types = Some(TypeMeta {
-                api_version: ar.api_version.clone(),
-                kind: ar.kind.clone(),
-            });
+        match api.list(&lp).await {
+            Ok(mut result) => {
+                let next_token = result.metadata.continue_;
+                let resource_version = result.metadata.resource_version;
+                for obj in result.items.iter_mut() {
+                    obj.types = Some(TypeMeta {
+                        api_version: ar.api_version.clone(),
+                        kind: ar.kind.clone(),
+                    });
+                }
+                Ok((result.items, next_token, resource_version))
+            }
+            Err(Error::Api(ae)) if ae.code == 404 => Ok((Vec::new(), None, None)),
+            Err(Error::Api(ae)) if ae.code == 429 => Ok((Vec::new(), None, None)),
+            Err(err) => Err(GenericError::from(err)),
         }
-        Ok((result.items, next_token, resource_version))
     }
 
     #[tauri::command]

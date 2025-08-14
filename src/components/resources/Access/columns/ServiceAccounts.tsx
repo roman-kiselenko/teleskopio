@@ -39,7 +39,7 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'ServiceAccount');
       return (
         <Actions
-          url={`/yaml/ServiceAccount/${sa.metadata?.name}/${sa.metadata?.namespace}`}
+          url={`/yaml/ServiceAccount/${sa.metadata?.name}/${sa.metadata?.namespace}?group=`}
           resource={sa}
           name={'ServiceAccount'}
           action={'delete_dynamic_resource'}

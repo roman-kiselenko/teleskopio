@@ -25,21 +25,19 @@ const columns: ColumnDef<any>[] = [
     accessorKey: 'spec.type',
     id: 'type',
     header: memo(({ column }) => <HeaderAction column={column} name={'Type'} />),
-    cell: memo(({ row }) => <div>{row.original.spec?.type}</div>),
+    cell: memo(({ row }) => {
+      let color = '';
+      if (row.original.spec?.type === 'LoadBalancer') {
+        color = 'bg-green-400';
+      }
+      return <div className={color}>{row.original.spec?.type}</div>;
+    }),
   },
   {
     accessorKey: 'spec.clusterIP',
     id: 'clusterIP',
     header: memo(({ column }) => <HeaderAction column={column} name={'ClusterIP'} />),
     cell: memo(({ row }) => <div>{row.original.spec?.clusterIP}</div>),
-  },
-  {
-    accessorKey: 'spec.selector',
-    id: 'Selector',
-    header: 'Selector',
-    cell: memo(({ row }) => {
-      return <div>{JSON.stringify(row.original.spec?.selector)}</div>;
-    }),
   },
   {
     accessorKey: 'spec.ports',
@@ -69,7 +67,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Service');
       return (
         <Actions
-          url={`/yaml/Service/${service.metadata?.name}/${service.metadata?.namespace}`}
+          url={`/yaml/Service/${service.metadata?.name}/${service.metadata?.namespace}?group=`}
           resource={service}
           name={'Service'}
           action={'delete_dynamic_resource'}

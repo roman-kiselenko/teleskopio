@@ -27,7 +27,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'LimitRange');
       return (
         <Actions
-          url={`/yaml/LimitRange/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          url={`/yaml/LimitRange/${cm.metadata?.name}/${cm.metadata?.namespace}?group=`}
           resource={cm}
           name={'LimitRange'}
           action={'delete_dynamic_resource'}

@@ -61,7 +61,7 @@ const columns: ColumnDef<any>[] = [
       return (
         <Actions
           resource={sc}
-          url={`/yaml/StorageClass/${sc.metadata?.name}/${sc?.metadata?.namespace}`}
+          url={`/yaml/StorageClass/${sc.metadata?.name}/${sc?.metadata?.namespace}?group=${sc.apiVersion.split('/')[0]}`}
           name={'StorageClass'}
           action={'delete_dynamic_resource'}
           request={{

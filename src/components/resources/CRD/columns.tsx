@@ -41,7 +41,8 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
       return (
         <Actions
-          url={`/yaml/CustomResourceDefinition/${cm.metadata?.name}/${cm.metadata?.namespace}`}
+          url={`/yaml/CustomResourceDefinition/${cm.metadata?.name}/${cm.metadata?.namespace}?group=${cm.apiVersion.split('/')[0]}`}
+          noEvents={true}
           resource={cm}
           name={'CustomResourceDefinition'}
           action={'delete_dynamic_resource'}

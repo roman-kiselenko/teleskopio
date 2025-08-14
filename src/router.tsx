@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, useParams } from 'react-router-dom';
 import { ClusterPage } from './components/pages/Cluster';
 import Pods from '@/components/resources/Workloads/Pods';
 import { ResourceEvents } from '@/components/resources/ResourceEvents';
@@ -33,8 +33,8 @@ import ResourceSubmit from '@/components/resources/ResourceSubmit';
 import { Load } from '@/loaders';
 import { StartPage } from './components/pages/Start';
 import { SettingsPage } from '@/components/pages/Settings';
-
-import Layout from './components/Layout';
+import Layout from '@/components/Layout';
+import ErrorPage from '@/components/ErrorPage';
 
 export const router = createBrowserRouter([
   {
@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
         loader: async ({ params }: { params: any }) => {
           return {
             name: params.name,
-            data: await Load('Node', params.name, ''),
+            data: await Load('Node', '', params.name, ''),
           };
         },
         element: <ResourceEditor />,
@@ -81,7 +81,7 @@ export const router = createBrowserRouter([
           return {
             name: params.name,
             ns: params.namespace,
-            data: await Load('Pod', params.name, params.namespace),
+            data: await Load('Pod', '', params.name, params.namespace),
           };
         },
         element: <PodLogs />,
@@ -361,7 +361,8 @@ export const router = createBrowserRouter([
             version: params.version,
           };
         },
-        element: <CustomResources />,
+        element: <KindWrapper />,
+        errorElement: <ErrorPage />,
       },
     ],
   },
@@ -371,14 +372,18 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/yaml/:kind/:name/:namespace',
-        loader: async ({ params }: { params: any }) => {
+        loader: async ({ params, request }: { params: any; request: Request }) => {
+          const url = new URL(request.url);
+          const query = Object.fromEntries(url.searchParams.entries());
           return {
             name: params.name,
+            group: params.group,
             namespace: params.namespace,
-            data: await Load(params.kind, params.name, params.namespace),
+            data: await Load(params.kind, query.group, params.name, params.namespace),
           };
         },
         element: <ResourceEditor />,
+        errorElement: <ErrorPage />,
       },
     ],
   },
@@ -400,3 +405,8 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+function KindWrapper() {
+  const { kind } = useParams();
+  return <CustomResources key={`${kind}-${Math.random()}`} />;
+}

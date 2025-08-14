@@ -34,7 +34,7 @@ const columns: ColumnDef<any>[] = [
         .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
       return (
         <Actions
-          url={`/yaml/Namespace/${ns.metadata?.name}/${ns.metadata?.namespace}`}
+          url={`/yaml/Namespace/${ns.metadata?.name}/${ns.metadata?.namespace}?group=`}
           resource={ns}
           name={'Namespace'}
           action={'delete_dynamic_resource'}

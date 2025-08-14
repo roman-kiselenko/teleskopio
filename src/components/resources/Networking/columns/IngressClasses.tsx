@@ -27,7 +27,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'IngressClass');
       return (
         <Actions
-          url={`/yaml/IngressClass/${ingress.metadata?.name}/${ingress.metadata?.namespace}`}
+          url={`/yaml/IngressClass/${ingress.metadata?.name}/${ingress.metadata?.namespace}?group=${ingress.apiVersion.split('/')[0]}`}
           resource={ingress}
           name={'IngressClass'}
           action={'delete_dynamic_resource'}

@@ -42,7 +42,7 @@ const columns: ColumnDef<any>[] = [
       };
       return (
         <Actions
-          url={`/yaml/Role/${role.metadata?.name}/${role.metadata?.namespace}`}
+          url={`/yaml/Role/${role.metadata?.name}/${role.metadata?.namespace}?group=${role.apiVersion.split('/')[0]}`}
           resource={role}
           name={'Role'}
           action={'delete_dynamic_resource'}

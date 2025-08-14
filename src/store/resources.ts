@@ -108,13 +108,10 @@ export function useCrdsState() {
   return useHookstate(crdsState);
 }
 
-const stores = new Map<string, State<any>>();
+export const crsState = hookstate<Map<string, any>>(new Map());
 
-export function getCRState(kind: string) {
-  if (!stores.has(kind)) {
-    stores.set(kind, hookstate<Map<string, any>>(new Map()));
-  }
-  return stores.get(kind)!;
+export function useCrsState() {
+  return useHookstate(crsState);
 }
 
 export const limitRangesState = hookstate<Map<string, any>>(new Map());

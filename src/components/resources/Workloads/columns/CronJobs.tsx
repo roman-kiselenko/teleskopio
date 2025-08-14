@@ -54,7 +54,7 @@ const columns: ColumnDef<any>[] = [
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'CronJob');
       return (
         <Actions
-          url={`/yaml/CronJob/${cronjob.metadata?.name}/${cronjob.metadata?.namespace}`}
+          url={`/yaml/CronJob/${cronjob.metadata?.name}/${cronjob.metadata?.namespace}?group=${cronjob.apiVersion.split('/')[0]}`}
           resource={cronjob}
           name={'CronJob'}
           action={'delete_dynamic_resource'}
