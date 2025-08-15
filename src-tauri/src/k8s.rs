@@ -583,7 +583,6 @@ pub mod client {
         })?;
         let req = Request::builder().uri("/livez").body(Vec::new()).unwrap();
 
-        // вместо request::<T> → request_text
         match client.request_text(req).await {
             Ok(body_str) => {
                 if body_str.trim() == "ok" {

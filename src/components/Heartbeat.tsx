@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dot } from 'lucide-react'; // https://lucide.dev/icons/circle
+import { Dot } from 'lucide-react';
 import { call } from '@/lib/api';
 
 export default function Heartbeat() {
@@ -27,7 +27,6 @@ export default function Heartbeat() {
     };
   }, []);
 
-  // Мигалка
   useEffect(() => {
     const blinkTimer = setInterval(() => {
       setBlink((prev) => !prev);

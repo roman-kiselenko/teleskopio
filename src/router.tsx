@@ -18,15 +18,21 @@ import ResourceQuotas from '@/components/resources/Configuration/ResourceQuotas'
 import LimitRanges from '@/components/resources/Configuration/LimitRanges';
 import Secrets from '@/components/resources/Configuration/Secrets';
 import Namespaces from '@/components/resources/Cluster/Namespaces';
+import PriorityClasses from '@/components/resources/Configuration/PriorityClasses';
 import HorizontalPodAutoscalers from '@/components/resources/Configuration/HorizontalPodAutoscalers';
 import PodDisruptionBudgets from '@/components/resources/Configuration/PodDisruptionBudgets';
 import StorageClasses from '@/components/resources/Storage/StorageClasses';
+import PersistentVolumes from '@/components/resources/Storage/PersistentVolumes';
+import PersistentVolumeClaims from '@/components/resources/Storage/PersistentVolumeClaims';
+import VolumeAttachments from '@/components/resources/Storage/VolumeAttachments';
 import Services from '@/components/resources/Networking/Services';
 import IngressClasses from '@/components/resources/Networking/IngressClasses';
 import Ingresses from '@/components/resources/Networking/Ingresses';
 import Endpoints from '@/components/resources/Networking/Endpoints';
 import NetworkPolicies from '@/components/resources/Networking/NetworkPolicies';
 import Roles from '@/components/resources/Access/Roles';
+import ClusterRoles from '@/components/resources/Access/ClusterRoles';
+import RoleBindings from '@/components/resources/Access/RoleBindings';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
 import ResourceEditor from '@/components/resources/ResourceEditor';
 import ResourceSubmit from '@/components/resources/ResourceSubmit';
@@ -271,6 +277,36 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    path: '/clusterroles',
+    element: <Layout />,
+    children: [
+      {
+        path: '/clusterroles',
+        element: <ClusterRoles />,
+      },
+    ],
+  },
+  {
+    path: '/priorityclasses',
+    element: <Layout />,
+    children: [
+      {
+        path: '/priorityclasses',
+        element: <PriorityClasses />,
+      },
+    ],
+  },
+  {
+    path: '/rolebindings',
+    element: <Layout />,
+    children: [
+      {
+        path: '/rolebindings',
+        element: <RoleBindings />,
+      },
+    ],
+  },
+  {
     path: '/roles',
     element: <Layout />,
     children: [
@@ -297,6 +333,36 @@ export const router = createBrowserRouter([
       {
         path: '/storageclasses',
         element: <StorageClasses />,
+      },
+    ],
+  },
+  {
+    path: '/persistentvolumes',
+    element: <Layout />,
+    children: [
+      {
+        path: '/persistentvolumes',
+        element: <PersistentVolumes />,
+      },
+    ],
+  },
+  {
+    path: '/persistentvolumeclaims',
+    element: <Layout />,
+    children: [
+      {
+        path: '/persistentvolumeclaims',
+        element: <PersistentVolumeClaims />,
+      },
+    ],
+  },
+  {
+    path: '/volumeattachments',
+    element: <Layout />,
+    children: [
+      {
+        path: '/volumeattachments',
+        element: <VolumeAttachments />,
       },
     ],
   },

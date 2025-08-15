@@ -168,6 +168,42 @@ export function useEventsState() {
   return useHookstate(eventsState);
 }
 
+export const persistentVolumesState = hookstate<Map<string, any>>(new Map());
+
+export function usePersistentVolumesState() {
+  return useHookstate(persistentVolumesState);
+}
+
+export const persistentVolumeClaimsState = hookstate<Map<string, any>>(new Map());
+
+export function usePersistentVolumeClaimsState() {
+  return useHookstate(persistentVolumeClaimsState);
+}
+
+export const volumeAttachmentsState = hookstate<Map<string, any>>(new Map());
+
+export function useVolumeAttachmentsState() {
+  return useHookstate(volumeAttachmentsState);
+}
+
+export const clusterRoleState = hookstate<Map<string, any>>(new Map());
+
+export function useClusterRolesState() {
+  return useHookstate(clusterRoleState);
+}
+
+export const roleBindingState = hookstate<Map<string, any>>(new Map());
+
+export function useRoleBindingsState() {
+  return useHookstate(roleBindingState);
+}
+
+export const priorityClassesState = hookstate<Map<string, any>>(new Map());
+
+export function usePriorityClassesState() {
+  return useHookstate(priorityClassesState);
+}
+
 export function flushAllStates() {
   [
     daemonSetsState,
@@ -198,5 +234,11 @@ export function flushAllStates() {
     podsState,
     deploymentsState,
     daemonSetsState,
+    persistentVolumesState,
+    persistentVolumeClaimsState,
+    volumeAttachmentsState,
+    clusterRoleState,
+    roleBindingState,
+    priorityClassesState,
   ].forEach((x) => x.set(new Map()));
 }

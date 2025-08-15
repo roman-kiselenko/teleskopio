@@ -1,9 +1,12 @@
 import {
   Blocks,
+  ChartNoAxesGantt,
   Cable,
   Box,
   ShieldAlert,
+  User,
   PcCase,
+  Merge,
   LayoutDashboard,
   ChevronRight,
   Wallet,
@@ -95,6 +98,7 @@ export const items = [
       { title: 'PodDisruptionBudget', icon: Percent, url: '/poddisruptionbudgets' },
       { title: 'ResourceQuotas', icon: Wallet, url: '/resourcequotas' },
       { title: 'LimitRanges', icon: SlidersHorizontal, url: '/limitranges' },
+      { title: 'PriorityClasses', icon: ChartNoAxesGantt, url: '/priorityclasses' },
     ],
   },
   {
@@ -111,7 +115,12 @@ export const items = [
   {
     title: 'Storage',
     icon: HardDrive,
-    submenu: [{ title: 'StorageClasses', icon: HardDriveDownload, url: '/storageclasses' }],
+    submenu: [
+      { title: 'StorageClasses', icon: HardDriveDownload, url: '/storageclasses' },
+      { title: 'VolumeAttachments', icon: HardDrive, url: '/volumeattachments' },
+      { title: 'PersistentVolumes', icon: HardDrive, url: '/persistentvolumes' },
+      { title: 'PersistentVolumeClaims', icon: HardDrive, url: '/persistentvolumeclaims' },
+    ],
   },
   {
     title: 'Administration',
@@ -125,8 +134,10 @@ export const items = [
     title: 'Access Control',
     icon: GlobeLock,
     submenu: [
-      { title: 'Roles', icon: PersonStanding, url: '/roles' },
       { title: 'ServiceAccounts', icon: GlobeLock, url: '/serviceaccounts' },
+      { title: 'Roles', icon: PersonStanding, url: '/roles' },
+      { title: 'ClusterRoles', icon: User, url: '/clusterroles' },
+      { title: 'RoleBindings', icon: Merge, url: '/rolebindings' },
     ],
   },
 
@@ -249,8 +260,12 @@ export function AppSidebar() {
             <SidebarMenuButton>
               <div className="flex flex-row items-center ms:invisible">
                 <Telescope size={18} className="mr-1" />
-                <a href="#" className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}>
-                  telekopio v0.0.1
+                <a
+                  target="_blank"
+                  href="https://github.com/roman-kiselenko/teleskopio"
+                  className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}
+                >
+                  <span>telekopio v0.0.1</span>
                 </a>
               </div>
             </SidebarMenuButton>
