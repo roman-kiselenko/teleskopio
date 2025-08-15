@@ -28,7 +28,7 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => {
       let color = '';
       if (row.original.spec?.type === 'LoadBalancer') {
-        color = 'bg-green-400';
+        color = 'text-green-400';
       }
       return <div className={color}>{row.original.spec?.type}</div>;
     }),
@@ -36,8 +36,14 @@ const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'spec.clusterIP',
     id: 'clusterIP',
-    header: memo(({ column }) => <HeaderAction column={column} name={'ClusterIP'} />),
-    cell: memo(({ row }) => <div>{row.original.spec?.clusterIP}</div>),
+    header: memo(({ column }) => <HeaderAction column={column} name={'IP'} />),
+    cell: memo(({ row }) => {
+      let ip = row.original.spec?.clusterIP;
+      if (row.original.spec?.type === 'LoadBalancer') {
+        ip = row.original.status?.loadBalancer?.ingress?.[0]?.ip;
+      }
+      return <div>{ip}</div>;
+    }),
   },
   {
     accessorKey: 'spec.ports',

@@ -69,6 +69,7 @@ pub fn run() {
             k8s::client::list_events_dynamic_resource,
             k8s::client::watch_events_dynamic_resource,
             k8s::client::stop_watch_events,
+            k8s::client::heartbeat,
             // Pod
             k8s::client::get_pod_logs,
             k8s::client::stream_pod_logs,

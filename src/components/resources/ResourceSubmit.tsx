@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -137,14 +137,31 @@ export default function ResourceEditor() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        navigate(-1);
+      }
+      if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        onSave();
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col">
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
-          <ArrowBigLeft />
+          <ArrowBigLeft /> Esc
         </Button>
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
-          <Save />
+          <Save /> Save
         </Button>
         <Button
           title="strip managedFields"

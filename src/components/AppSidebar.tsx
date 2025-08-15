@@ -53,6 +53,8 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
 import { useCrdsState } from '@/store/crdResources';
+import { useVersionState } from '@/store/version';
+import { compareVersions } from 'compare-versions';
 
 export const items = [
   {
@@ -142,6 +144,7 @@ export function AppSidebar() {
   const crds = useCrdsState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
   const loading = useloadingState();
+  const version = useVersionState();
 
   useEffect(() => {
     let newSidebar = items;
@@ -221,9 +224,17 @@ export function AppSidebar() {
                   )}
                   <CollapsibleContent>
                     <SidebarMenuSub className="gap-0 mx-0 px-0 border-none">
-                      {item.submenu.map((i, index) => (
-                        <SubmenuItem key={index} item={i} />
-                      ))}
+                      {item.submenu
+                        .filter((x) => {
+                          return !(
+                            version.version.get() !== '' &&
+                            x.title === 'CronJobs' &&
+                            compareVersions(version.version.get(), '1.21') === -1
+                          );
+                        })
+                        .map((i, index) => (
+                          <SubmenuItem key={index} item={i} />
+                        ))}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

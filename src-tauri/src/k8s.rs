@@ -570,6 +570,37 @@ pub mod client {
     }
 
     #[tauri::command]
+    pub async fn heartbeat(path: &str, context: &str) -> Result<(), GenericError> {
+        let client = get_client(path, context).await.map_err(|err| {
+            if err.to_string().contains("failed to load current context") {
+                GenericError::new(format!(
+                    "Context {:?} not found in kubeconfig {:?}",
+                    context, path
+                ))
+            } else {
+                err
+            }
+        })?;
+        let req = Request::builder().uri("/livez").body(Vec::new()).unwrap();
+
+        // вместо request::<T> → request_text
+        match client.request_text(req).await {
+            Ok(body_str) => {
+                if body_str.trim() == "ok" {
+                    Ok(())
+                } else {
+                    log::warn!("Cluster livez returned unexpected: {}", body_str);
+                    Err(GenericError::new("Unexpected /livez response".to_string()))
+                }
+            }
+            Err(err) => {
+                log::error!("Cluster check failed: {}", err);
+                Err(GenericError::from(err))
+            }
+        }
+    }
+
+    #[tauri::command]
     pub async fn get_version(path: &str, context: &str) -> Result<Value, GenericError> {
         log::info!("get_version {:?} {:?}", path, context);
         let client = get_client(&path, context).await?;

@@ -78,6 +78,7 @@ export default function ResourceEditor() {
       setFontsize(fontSize + 1);
     }
   };
+
   const onSave = async () => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -139,14 +140,31 @@ export default function ResourceEditor() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        navigate(-1);
+      }
+      if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        onSave();
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col">
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
-          <ArrowBigLeft />
+          <ArrowBigLeft /> Esc
         </Button>
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
-          <Save />
+          <Save /> Save
         </Button>
         {getLocalBoolean(MANAGED_FIELDS) ? (
           <></>

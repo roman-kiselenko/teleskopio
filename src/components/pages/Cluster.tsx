@@ -140,7 +140,7 @@ export function ClusterPage() {
     group = '';
   }
   return (
-    <div className="flex flex-col flex-grow overflow-auto">
+    <div className="flex flex-col flex-grow">
       <ResizablePanelGroup direction="horizontal" className="rounded-l">
         <ResizablePanel defaultSize={100}>
           <ResizablePanelGroup direction="vertical">
