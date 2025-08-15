@@ -28,6 +28,12 @@
 
 ---
 
+## Screenshots
+
+<p align="center">
+    <img width="900" src="./assets/Screenshot.png"/>
+</p>
+
 ## Stack
 
 - **[Tauri v2](https://tauri.app/)** - lightweight and fast desktop framework.
