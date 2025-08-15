@@ -12,7 +12,7 @@
 - Live updates - real-time resource changes with Kubernetes watchers.
 - Pod logs and events - inspect logs and event history directly in the UI.
 - Owner links - navigate from a resource to its owner.
-- Resource editor/creator - integrated Monaco Editor with syntax highlighting.
+- Resource editor/creator - integrated [Monaco Editor](https://microsoft.github.io/monaco-editor/) with syntax highlighting.
 - Multiple font options - customize the UI appearance.
 - Light and dark themes.
 
@@ -42,11 +42,18 @@
 
 ## Installation
 
-1. Download the latest `.dmg` release from [Releases](https://github.com/teleskopio/teleskopio/releases).
+1. Download the latest `.dmg` release from [Releases](https://github.com/roman-kiselenko/teleskopio/releases).
 2. Open the `.dmg` file and drag **teleskopio.app** to the Applications folder.
 3. Launch **teleskopio.app** from Applications.
 
 ---
+
+## Development
+
+1. Install tauri and rust
+1. Use `pnpm` package manager
+1. `pnpm install`
+1. `pnpm tauri dev`
 
 ## Contributing
 
