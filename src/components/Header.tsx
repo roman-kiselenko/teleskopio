@@ -1,5 +1,5 @@
-import { JumpCommand } from '@/components/ui/JumpCommand';
-import { SearchCommand } from '@/components/ui/SearchCommand';
+import { JumpCommand } from '@/components/ui/jump-command';
+import { SearchCommand } from '@/components/ui/search-command';
 import { useVersionState, setVersion } from '@/store/version';
 import { useCurrentClusterState, setCurrentCluster } from '@/store/cluster';
 import { Plus, Unplug } from 'lucide-react';
@@ -12,7 +12,6 @@ import { removeAllSubscriptions } from '@/lib/subscriptionManager';
 import { flushAllStates } from '@/store/resources';
 import { apiResourcesState } from '@/store/apiResources';
 import { crdsState } from '@/store/crdResources';
-import Heartbeat from '@/components/Heartbeat';
 
 export function Header({ withNsSelector }: { withNsSelector?: Boolean }) {
   const version = useVersionState();
@@ -46,9 +45,6 @@ export function Header({ withNsSelector }: { withNsSelector?: Boolean }) {
       ) : (
         <></>
       )}
-      <div title="heartbeat" className="pr-2">
-        <Heartbeat />
-      </div>
       <div className="flex flex-row">
         {clusterState.context.get() === '' ? (
           <></>

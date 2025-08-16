@@ -1,6 +1,6 @@
 pub mod client {
     use dirs::home_dir;
-    use std::{thread, time::Duration};
+    // use std::{thread, time::Duration};
 
     use futures::future::AbortHandle;
     use futures_util::io::{AsyncBufReadExt, BufReader};
@@ -680,6 +680,55 @@ pub mod client {
             });
         }
         Ok((result.items, next_token, resource_version))
+    }
+
+    #[tauri::command]
+    pub async fn search_dynamic_resource(
+        path: &str,
+        context: &str,
+        substring: &str,
+        request: ListRequest,
+    ) -> Result<Vec<DynamicObject>, GenericError> {
+        let group = request.group.unwrap_or_default();
+        let version = request.version;
+        let kind = request.kind;
+        log::info!("search {:?} {:?} {:?}", kind, path, context,);
+
+        let client = get_client(path, context).await?;
+        let gvk = GroupVersionKind {
+            group,
+            version,
+            kind,
+        };
+        let ar = ApiResource::from_gvk(&gvk);
+
+        let api: Api<DynamicObject> = Api::all_with(client, &ar);
+
+        let lp = ListParams::default();
+
+        match api.list(&lp).await {
+            Ok(mut result) => {
+                for obj in result.items.iter_mut() {
+                    obj.types = Some(TypeMeta {
+                        api_version: ar.api_version.clone(),
+                        kind: ar.kind.clone(),
+                    });
+                }
+                Ok(result
+                    .items
+                    .into_iter()
+                    .filter(|obj| {
+                        obj.metadata
+                            .name
+                            .as_deref()
+                            .map_or(false, |n| n.contains(substring))
+                    })
+                    .collect())
+            }
+            Err(Error::Api(ae)) if ae.code == 404 => Ok(Vec::new()),
+            Err(Error::Api(ae)) if ae.code == 429 => Ok(Vec::new()),
+            Err(err) => Err(GenericError::from(err)),
+        }
     }
 
     #[tauri::command]
