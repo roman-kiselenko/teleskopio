@@ -15,6 +15,7 @@
     "@fontsource/iosevka": "^5.2.5",
     "@fontsource/jetbrains-mono": "^5.2.6",
     "@fontsource/roboto-mono": "^5.2.6",
+    "@fontsource/source-code-pro": "^5.2.6",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@hookstate/core": "^4.0.2",

@@ -27,7 +27,7 @@ export default function ErrorPage() {
         </div>
         <div className="flex gap-4 justify-center mt-6">
           <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
-            <ArrowBigLeft />
+            <ArrowBigLeft /> Esc
           </Button>
         </div>
       </div>

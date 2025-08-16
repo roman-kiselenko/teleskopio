@@ -72,9 +72,9 @@ export default function ResourceEditor() {
   };
 
   const changeFont = async (size: number) => {
-    if (size < 0 && fontSize >= 10) {
+    if (size < 0 && fontSize >= 5) {
       setFontsize(fontSize - 1);
-    } else if (size > 0 && fontSize <= 20) {
+    } else if (size > 0 && fontSize <= 40) {
       setFontsize(fontSize + 1);
     }
   };
@@ -150,6 +150,14 @@ export default function ResourceEditor() {
       if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         onSave();
+      }
+      if (e.key === '-' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setFontsize(fontSize - 1);
+      }
+      if (e.key === '=' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setFontsize(fontSize + 1);
       }
     };
 

@@ -6,15 +6,17 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useTheme } from '@/components/ThemeProvider';
 import { useEffect } from 'react';
-
-const FONT_KEY = 'app-font';
-const DEFAULT_FONT = 'cascadia';
+import { FONT_KEY, FONT_SIZE_KEY, DEFAULT_FONT, DEFAULT_FONT_SIZE } from '@/settings';
 
 export default function Layout() {
   const { theme } = useTheme();
   useEffect(() => {
     const savedFont = localStorage.getItem(FONT_KEY) || DEFAULT_FONT;
     document.body.classList.add(savedFont);
+    const savedFontSize =
+      parseInt(localStorage.getItem(FONT_SIZE_KEY) || DEFAULT_FONT_SIZE.toString()) ||
+      DEFAULT_FONT_SIZE;
+    document.documentElement.style.setProperty('--text-xs', `${savedFontSize}px`);
   }, []);
 
   return (

@@ -1,5 +1,6 @@
 import { createBrowserRouter, useParams } from 'react-router-dom';
-import { ClusterPage } from './components/pages/Cluster';
+import Nodes from './components/resources/Cluster/Nodes';
+import Events from './components/resources/Cluster/Events';
 import Pods from '@/components/resources/Workloads/Pods';
 import { ResourceEvents } from '@/components/resources/ResourceEvents';
 import Deployments from '@/components/resources/Workloads/Deployments';
@@ -54,15 +55,15 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/cluster',
+    path: '/nodes',
     element: <Layout />,
     children: [
       {
-        path: '/cluster',
-        element: <ClusterPage />,
+        path: '/nodes',
+        element: <Nodes />,
       },
       {
-        path: '/cluster/nodes/:name',
+        path: '/nodes/:name',
         loader: async ({ params }: { params: any }) => {
           return {
             name: params.name,
@@ -461,6 +462,10 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
+        path: '/events',
+        element: <Events />,
+      },
+      {
         path: '/events/:kind/:uid/:namespace/:name',
         loader: async ({ params }: { params: any }) => {
           return {
@@ -470,6 +475,7 @@ export const router = createBrowserRouter([
           };
         },
         element: <ResourceEvents />,
+        errorElement: <ErrorPage />,
       },
     ],
   },

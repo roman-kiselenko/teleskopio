@@ -26,8 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-import { Fonts, FONT_KEY, MANAGED_FIELDS } from '@/settings';
+import { Input } from '@/components/ui/input';
+import {
+  Fonts,
+  FONT_KEY,
+  FONT_SIZE_KEY,
+  DEFAULT_FONT,
+  DEFAULT_FONT_SIZE,
+  MANAGED_FIELDS,
+} from '@/settings';
 
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -39,7 +46,14 @@ export function SettingsPage() {
   });
 
   const [selectedFont, setSelectedFont] = useState<string>(() => {
-    return localStorage.getItem(FONT_KEY) || 'cascadia';
+    return localStorage.getItem(FONT_KEY) || DEFAULT_FONT;
+  });
+
+  const [fontSize, setFontSize] = useState(() => {
+    return (
+      parseInt(localStorage.getItem(FONT_SIZE_KEY) || DEFAULT_FONT_SIZE.toString()) ||
+      DEFAULT_FONT_SIZE
+    );
   });
 
   useEffect(() => {
@@ -47,7 +61,9 @@ export function SettingsPage() {
     document.body.classList.remove(...Fonts.map((f) => f.className));
     document.body.classList.add(selectedFont);
     localStorage.setItem(FONT_KEY, selectedFont);
-  }, [selectedFont]);
+    document.documentElement.style.setProperty('--text-xs', `${fontSize}px`);
+    localStorage.setItem(FONT_SIZE_KEY, fontSize.toString());
+  }, [selectedFont, fontSize]);
 
   const fetchLogs = async () => {
     const logsResponse = await call('get_logs');
@@ -101,8 +117,12 @@ export function SettingsPage() {
               </div>
             </RadioGroup>
           </TabsContent>
-          <TabsContent value="font">
-            <Select onValueChange={(v) => setSelectedFont(v)} defaultValue={selectedFont}>
+          <TabsContent value="font" className="flex flex-row items-center">
+            <Select
+              value={selectedFont}
+              onValueChange={(v) => setSelectedFont(v)}
+              defaultValue={selectedFont}
+            >
               <SelectTrigger className="p-2 text-xs w-[180px]">
                 <SelectValue placeholder="Select a font" />
               </SelectTrigger>
@@ -117,6 +137,16 @@ export function SettingsPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <Input
+              type="number"
+              onChange={(e) => {
+                if (parseInt(e.target.value) >= 10 && parseInt(e.target.value) <= 16) {
+                  setFontSize(parseInt(e.target.value));
+                }
+              }}
+              value={fontSize}
+              className="ml-2 placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 w-[80px]"
+            />
           </TabsContent>
           <TabsContent value="editor">
             <div className="m-2 flex flex-col">

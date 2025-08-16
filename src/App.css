@@ -6,13 +6,19 @@
 @import '@fontsource/iosevka';
 @import '@fontsource/jetbrains-mono';
 @import '@fontsource/roboto-mono';
+@import '@fontsource/source-code-pro';
 
 body {
   font-family: var(--app-font, 'Cascadia Code');
+  font-size: var(--app-font-size);
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
   overflow: hidden;
+}
+
+.source-code {
+  --app-font: 'Source Code Pro';
 }
 
 .roboto {
@@ -36,6 +42,7 @@ body {
 }
 
 :root {
+  --app-font-size: 16px;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -102,6 +109,10 @@ body {
   --sidebar-accent-foreground: #f2c063;
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+@theme {
+  --text-xs: 12px;
 }
 
 @theme inline {

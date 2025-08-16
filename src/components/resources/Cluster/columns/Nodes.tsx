@@ -203,7 +203,7 @@ const columns: ColumnDef<any>[] = [
       );
       return (
         <Actions
-          url={`/cluster/nodes/${node.metadata?.name}`}
+          url={`/nodes/${node.metadata?.name}`}
           children={additional}
           resource={node}
           name={'Node'}

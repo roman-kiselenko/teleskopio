@@ -23,6 +23,9 @@ importers:
       '@fontsource/roboto-mono':
         specifier: ^5.2.6
         version: 5.2.6
+      '@fontsource/source-code-pro':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@fortawesome/free-solid-svg-icons':
         specifier: ^6.7.2
         version: 6.7.2
@@ -626,6 +629,9 @@ packages:
 
   '@fontsource/roboto-mono@5.2.6':
     resolution: {integrity: sha512-fLCa3zs9XruKE8Fdbq0UWB0wqTi5dzi09QsnW7HgTwwnSVDZ3nH+X7Qg7l0yeIZs+E472cKE3RUD21ZnaXk4Zg==}
+
+  '@fontsource/source-code-pro@5.2.6':
+    resolution: {integrity: sha512-eIlEPWRXqnYwpQO7nONj2IsUpzwME+UwP2oVAgNuwXX5oyLNJqw1Jh0D2FyZWS5Zd0ddsxbz+nhgyVT4K/OgGQ==}
 
   '@fortawesome/fontawesome-common-types@6.7.2':
     resolution: {integrity: sha512-Zs+YeHUC5fkt7Mg1l6XTniei3k4bwG/yo3iFUtZWd/pMx9g3fdvkSK9E0FOC+++phXOka78uJcYb8JaFkW52Xg==}
@@ -3619,6 +3625,8 @@ snapshots:
   '@fontsource/jetbrains-mono@5.2.6': {}
 
   '@fontsource/roboto-mono@5.2.6': {}
+
+  '@fontsource/source-code-pro@5.2.6': {}
 
   '@fortawesome/fontawesome-common-types@6.7.2': {}
 

@@ -1,4 +1,5 @@
 import { JumpCommand } from '@/components/ui/JumpCommand';
+import { SearchCommand } from '@/components/ui/SearchCommand';
 import { useVersionState, setVersion } from '@/store/version';
 import { useCurrentClusterState, setCurrentCluster } from '@/store/cluster';
 import { Plus, Unplug } from 'lucide-react';
@@ -18,11 +19,13 @@ export function Header({ withNsSelector }: { withNsSelector?: Boolean }) {
   const clusterState = useCurrentClusterState();
   let navigate = useNavigate();
   let location = useLocation();
-
   return (
-    <div className="flex flex-row pt-3 pb-1 px-2 items-center justify-between">
-      <div className="">
+    <div className="flex flex-row pt-3 pb-1 px-2 items-center justify-between text-dynamic">
+      <div>
         <JumpCommand />
+      </div>
+      <div className="ml-2">
+        <SearchCommand />
       </div>
       {location.pathname === '/createkubernetesresource' ? (
         <></>
@@ -35,6 +38,7 @@ export function Header({ withNsSelector }: { withNsSelector?: Boolean }) {
           </div>
         </div>
       )}
+      <div className="text-muted-foreground items-center flex  justify-between"></div>
       {withNsSelector ? (
         <div className="flex flex-row pr-2">
           <NamespaceSelector />

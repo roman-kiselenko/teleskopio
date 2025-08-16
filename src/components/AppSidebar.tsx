@@ -1,5 +1,6 @@
 import {
-  Blocks,
+  Map as MapIcon,
+  PackageCheck,
   ChartNoAxesGantt,
   Cable,
   Box,
@@ -33,6 +34,7 @@ import {
   Waypoints,
   Search,
   Package,
+  CalendarSync,
   Settings,
   ChevronDown,
 } from 'lucide-react';
@@ -71,13 +73,14 @@ export const items = [
     icon: Waypoints,
     url: '',
     submenu: [
-      { title: 'Nodes', icon: PcCase, url: '/cluster' },
+      { title: 'Nodes', icon: PcCase, url: '/nodes' },
+      { title: 'Events', icon: CalendarSync, url: '/events' },
       { title: 'Namespaces', icon: SquareAsterisk, url: '/namespaces' },
     ],
   },
   {
     title: 'Workloads',
-    icon: Blocks,
+    icon: PackageCheck,
     submenu: [
       { title: 'Pods', icon: Package, url: '/pods' },
       { title: 'Deployments', icon: Package, url: '/deployments' },
@@ -90,9 +93,9 @@ export const items = [
   },
   {
     title: 'Configuration',
-    icon: Search,
+    icon: FileSliders,
     submenu: [
-      { title: 'ConfigMaps', icon: FileSliders, url: '/configmaps' },
+      { title: 'ConfigMaps', icon: MapIcon, url: '/configmaps' },
       { title: 'Secrets', icon: VenetianMask, url: '/secrets' },
       { title: 'HPA', icon: ArrowUpDown, url: '/horizontalpodautoscalers' },
       { title: 'PodDisruptionBudget', icon: Percent, url: '/poddisruptionbudgets' },
