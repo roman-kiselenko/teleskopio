@@ -63,20 +63,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Fetch release notes
-        uses: actions/github-script@v7
-        id: release_notes
-        with:
-          result-encoding: string
-          script: |
-            const packageVersion = require('./package.json').version;
-            const { data: release } = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: `v${packageVersion}`
-            });
-            return release.body;
-
       - name: Create release
         uses: tauri-apps/tauri-action@v0
         env:
