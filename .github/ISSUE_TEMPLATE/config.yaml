@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Issue with teleskopio
+    url: https://github.com/dotnet/razor/issues/new/choose
+    about: Please open issues relating to teleskopio.

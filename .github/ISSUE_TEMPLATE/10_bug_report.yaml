@@ -1,0 +1,42 @@
+name: 🐞 Bug Report
+description: Create a report about something that is not working
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write something
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered.
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: |
+        Do this ...
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: teleskopio version
+      description: |
+        Check version in app
+    validations:
+      required: false
+    validations:
+      required: false
