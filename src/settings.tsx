@@ -14,20 +14,3 @@ export const Fonts = [
   { label: 'Roboto Mono', className: 'roboto' },
   { label: 'Source Code Pro', className: 'source-code' },
 ];
-
-export function pathToKind(path: string): string | undefined {
-  const mapping: Record<string, string> = {
-    '/pods': 'Pod',
-    '/deployments': 'Deployment',
-    '/daemonsets': 'DaemonSet',
-    '/services': 'Service',
-    '/statefulsets': 'StatefulSet',
-    '/nodes': 'Node',
-    '/jobs': 'Job',
-    '/cronjobs': 'CronJob',
-    '/secrets': 'Secret',
-    '/configmaps': 'ConfigMap',
-  };
-
-  return mapping[path];
-}

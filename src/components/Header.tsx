@@ -13,28 +13,36 @@ import { flushAllStates } from '@/store/resources';
 import { apiResourcesState } from '@/store/apiResources';
 import { crdsState } from '@/store/crdResources';
 
-export function Header({ withNsSelector }: { withNsSelector?: Boolean }) {
+export function Header({
+  withNsSelector,
+  withSearch,
+}: {
+  withNsSelector?: Boolean;
+  withSearch?: Boolean;
+}) {
   const version = useVersionState();
   const clusterState = useCurrentClusterState();
   let navigate = useNavigate();
   let location = useLocation();
   return (
     <div className="flex flex-row pt-3 pb-1 px-2 items-center justify-between text-dynamic">
-      <div>
-        <JumpCommand />
-      </div>
-      <div className="ml-2">
-        <SearchCommand />
-      </div>
       {location.pathname === '/createkubernetesresource' ? (
         <></>
       ) : (
         <div className="text-muted-foreground items-center flex flex-grow w-1/3">
-          <div className="pl-2 flex items-center">
+          <div className="flex items-center">
             <Button onClick={() => navigate('/createkubernetesresource')}>
               <Plus size={16} />
             </Button>
           </div>
+        </div>
+      )}
+      <div>
+        <JumpCommand />
+      </div>
+      {withSearch && (
+        <div className="ml-2">
+          <SearchCommand />
         </div>
       )}
       <div className="text-muted-foreground items-center flex  justify-between"></div>

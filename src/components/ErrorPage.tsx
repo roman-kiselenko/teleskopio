@@ -1,5 +1,6 @@
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 import { Ban, ArrowBigLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,17 @@ export default function ErrorPage() {
   } else if (error instanceof Error) {
     message = error.message;
   }
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        navigate(-1);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 text-gray-800 p-6">

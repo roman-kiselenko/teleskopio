@@ -160,7 +160,7 @@ const columns: ColumnDef<any>[] = [
                 className="text-xs"
                 onClick={() =>
                   navigate(
-                    `/events/${pod.kind}/${pod?.metadata?.uid}/${pod?.metadata?.namespace}/${pod?.metadata.name}`,
+                    `/resource/ResourceEvents/${pod.kind}/${pod?.metadata?.uid}/${pod?.metadata?.namespace}/${pod?.metadata.name}`,
                   )
                 }
               >
@@ -171,7 +171,7 @@ const columns: ColumnDef<any>[] = [
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() =>
-                  navigate(`/pods/logs/${pod?.metadata?.namespace}/${pod?.metadata?.name}`)
+                  navigate(`/resource/Logs/${pod?.metadata?.namespace}/${pod?.metadata?.name}`)
                 }
                 disabled={actionDisabled}
                 className="text-xs"

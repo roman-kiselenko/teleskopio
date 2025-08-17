@@ -28,7 +28,7 @@ export function NamespaceSelector() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-5 text-muted-foreground text-sm px-2 py-1 pl-0 border-none shadow-none focus:ring-0 focus:outline-none bg-transparent text-xs w-[300px] justify-between"
+          className="h-5 text-muted-foreground text-sm px-2 py-1 pl-0 border-none shadow-none focus:ring-0 focus:outline-none bg-transparent text-xs w-[300px] justify-between hover:bg-transparent hover:text-inherit dark:hover:bg-transparent"
         >
           {selectedNamespace.get()
             ? namespaceArray.find((ns: any) => ns.metadata.name === selectedNamespace.get())

@@ -67,7 +67,7 @@ const columns: ColumnDef<Cluster>[] = [
                 loading.set(true);
                 await get_version(row.original.current_context as string, row.original.path);
                 loading.set(false);
-                navigate('/nodes');
+                navigate('/resource/Node');
               } catch (error: any) {
                 if (error.message) {
                   toast.error(`Cant connect to cluster: ${error.message}`);

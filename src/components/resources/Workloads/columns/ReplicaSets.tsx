@@ -51,6 +51,7 @@ const columns: ColumnDef<any>[] = [
       const additional = [
         <DropdownMenuItem
           disabled={owner === undefined}
+          key={rs.metadata.uid}
           onClick={() => {
             navigate(
               `/yaml/${owner.kind}/${owner.name}/${rs?.metadata?.namespace}?group=${owner.apiVersion.split('/')[0]}`,

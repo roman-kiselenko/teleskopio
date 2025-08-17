@@ -55,36 +55,31 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/nodes',
+    path: '/resource',
     element: <Layout />,
     children: [
       {
-        path: '/nodes',
+        path: '/resource/Node',
         element: <Nodes />,
       },
       {
-        path: '/nodes/:name',
-        loader: async ({ params }: { params: any }) => {
-          return {
-            name: params.name,
-            data: await Load('Node', '', params.name, ''),
-          };
-        },
-        element: <ResourceEditor />,
-        errorElement: <ErrorPage />,
+        path: '/resource/Deployment',
+        element: <Deployments />,
       },
-    ],
-  },
-  {
-    path: '/pods',
-    element: <Layout />,
-    children: [
       {
-        path: '/pods',
+        path: '/resource/DaemonSet',
+        element: <DaemonSets />,
+      },
+      {
+        path: '/resource/StatefulSet',
+        element: <StatefulSets />,
+      },
+      {
+        path: '/resource/Pod',
         element: <Pods />,
       },
       {
-        path: '/pods/logs/:namespace/:name',
+        path: '/resource/Logs/:namespace/:name',
         loader: async ({ params }: { params: any }) => {
           return {
             name: params.name,
@@ -95,317 +90,132 @@ export const router = createBrowserRouter([
         element: <PodLogs />,
         errorElement: <ErrorPage />,
       },
-    ],
-  },
-  {
-    path: '/deployments',
-    element: <Layout />,
-    children: [
       {
-        path: '/deployments',
-        element: <Deployments />,
-      },
-    ],
-  },
-  {
-    path: '/daemonsets',
-    element: <Layout />,
-    children: [
-      {
-        path: '/daemonsets',
-        element: <DaemonSets />,
-      },
-    ],
-  },
-  {
-    path: '/statefulsets',
-    element: <Layout />,
-    children: [
-      {
-        path: '/statefulsets',
-        element: <StatefulSets />,
-      },
-    ],
-  },
-  {
-    path: '/replicasets',
-    element: <Layout />,
-    children: [
-      {
-        path: '/replicasets',
+        path: '/resource/ReplicaSet',
         element: <ReplicaSets />,
       },
-    ],
-  },
-  {
-    path: '/jobs',
-    element: <Layout />,
-    children: [
       {
-        path: '/jobs',
+        path: '/resource/Job',
         element: <Jobs />,
       },
-    ],
-  },
-  {
-    path: '/cronjobs',
-    element: <Layout />,
-    children: [
       {
-        path: '/cronjobs',
+        path: '/resource/CronJob',
         element: <CronJobs />,
       },
-    ],
-  },
-  {
-    path: '/mutatingwebhooks',
-    element: <Layout />,
-    children: [
       {
-        path: '/mutatingwebhooks',
+        path: '/resource/Event',
+        element: <Events />,
+      },
+      {
+        path: '/resource/MutatingWebhook',
         element: <MutatingWebhooks />,
       },
-    ],
-  },
-  {
-    path: '/validatingwebhooks',
-    element: <Layout />,
-    children: [
       {
-        path: '/validatingwebhooks',
-        element: <ValidatingWebhooks />,
-      },
-    ],
-  },
-  {
-    path: '/configmaps',
-    element: <Layout />,
-    children: [
-      {
-        path: '/configmaps',
-        element: <ConfigMaps />,
-      },
-    ],
-  },
-  {
-    path: '/secrets',
-    element: <Layout />,
-    children: [
-      {
-        path: '/secrets',
-        element: <Secrets />,
-      },
-    ],
-  },
-  {
-    path: '/poddisruptionbudgets',
-    element: <Layout />,
-    children: [
-      {
-        path: '/poddisruptionbudgets',
-        element: <PodDisruptionBudgets />,
-      },
-    ],
-  },
-  {
-    path: '/horizontalpodautoscalers',
-    element: <Layout />,
-    children: [
-      {
-        path: '/horizontalpodautoscalers',
-        element: <HorizontalPodAutoscalers />,
-      },
-    ],
-  },
-  {
-    path: '/namespaces',
-    element: <Layout />,
-    children: [
-      {
-        path: '/namespaces',
-        element: <Namespaces />,
-      },
-    ],
-  },
-  {
-    path: '/services',
-    element: <Layout />,
-    children: [
-      {
-        path: '/services',
-        element: <Services />,
-      },
-    ],
-  },
-  {
-    path: '/endpoints',
-    element: <Layout />,
-    children: [
-      {
-        path: '/endpoints',
-        element: <Endpoints />,
-      },
-    ],
-  },
-  {
-    path: '/ingresses',
-    element: <Layout />,
-    children: [
-      {
-        path: '/ingresses',
-        element: <Ingresses />,
-      },
-    ],
-  },
-  {
-    path: '/ingressclasses',
-    element: <Layout />,
-    children: [
-      {
-        path: '/ingressclasses',
-        element: <IngressClasses />,
-      },
-    ],
-  },
-  {
-    path: '/networkpolicies',
-    element: <Layout />,
-    children: [
-      {
-        path: '/networkpolicies',
-        element: <NetworkPolicies />,
-      },
-    ],
-  },
-  {
-    path: '/clusterroles',
-    element: <Layout />,
-    children: [
-      {
-        path: '/clusterroles',
-        element: <ClusterRoles />,
-      },
-    ],
-  },
-  {
-    path: '/priorityclasses',
-    element: <Layout />,
-    children: [
-      {
-        path: '/priorityclasses',
-        element: <PriorityClasses />,
-      },
-    ],
-  },
-  {
-    path: '/rolebindings',
-    element: <Layout />,
-    children: [
-      {
-        path: '/rolebindings',
-        element: <RoleBindings />,
-      },
-    ],
-  },
-  {
-    path: '/roles',
-    element: <Layout />,
-    children: [
-      {
-        path: '/roles',
-        element: <Roles />,
-      },
-    ],
-  },
-  {
-    path: '/serviceaccounts',
-    element: <Layout />,
-    children: [
-      {
-        path: '/serviceaccounts',
-        element: <ServiceAccounts />,
-      },
-    ],
-  },
-  {
-    path: '/storageclasses',
-    element: <Layout />,
-    children: [
-      {
-        path: '/storageclasses',
-        element: <StorageClasses />,
-      },
-    ],
-  },
-  {
-    path: '/persistentvolumes',
-    element: <Layout />,
-    children: [
-      {
-        path: '/persistentvolumes',
-        element: <PersistentVolumes />,
-      },
-    ],
-  },
-  {
-    path: '/persistentvolumeclaims',
-    element: <Layout />,
-    children: [
-      {
-        path: '/persistentvolumeclaims',
-        element: <PersistentVolumeClaims />,
-      },
-    ],
-  },
-  {
-    path: '/volumeattachments',
-    element: <Layout />,
-    children: [
-      {
-        path: '/volumeattachments',
-        element: <VolumeAttachments />,
-      },
-    ],
-  },
-  {
-    path: '/settings',
-    element: <Layout />,
-    children: [
-      {
-        path: '/settings',
-        element: <SettingsPage />,
-      },
-    ],
-  },
-  {
-    path: '/limitranges',
-    element: <Layout />,
-    children: [
-      {
-        path: '/limitranges',
-        element: <LimitRanges />,
-      },
-    ],
-  },
-  {
-    path: '/crds',
-    element: <Layout />,
-    children: [
-      {
-        path: '/crds',
-        element: <CustomResourceDefinitions />,
-      },
-    ],
-  },
-  {
-    path: '/resourcequotas',
-    element: <Layout />,
-    children: [
-      {
-        path: '/resourcequotas',
+        path: '/resource/ResourceQuota',
         element: <ResourceQuotas />,
       },
+      {
+        path: '/resource/ValidatingWebhook',
+        element: <ValidatingWebhooks />,
+      },
+      {
+        path: '/resource/ConfigMap',
+        element: <ConfigMaps />,
+      },
+      {
+        path: '/resource/Secret',
+        element: <Secrets />,
+      },
+      {
+        path: '/resource/PodDisruptionBudget',
+        element: <PodDisruptionBudgets />,
+      },
+      {
+        path: '/resource/HorizontalPodAutoscaler',
+        element: <HorizontalPodAutoscalers />,
+      },
+      {
+        path: '/resource/Namespace',
+        element: <Namespaces />,
+      },
+      {
+        path: '/resource/Service',
+        element: <Services />,
+      },
+      {
+        path: '/resource/Endpoints',
+        element: <Endpoints />,
+      },
+      {
+        path: '/resource/Ingress',
+        element: <Ingresses />,
+      },
+      {
+        path: '/resource/IngressClass',
+        element: <IngressClasses />,
+      },
+      {
+        path: '/resource/NetworkPolicy',
+        element: <NetworkPolicies />,
+      },
+      {
+        path: '/resource/ClusterRole',
+        element: <ClusterRoles />,
+      },
+      {
+        path: '/resource/PriorityClass',
+        element: <PriorityClasses />,
+      },
+      {
+        path: '/resource/RoleBinding',
+        element: <RoleBindings />,
+      },
+      {
+        path: '/resource/Role',
+        element: <Roles />,
+      },
+      {
+        path: '/resource/ServiceAccount',
+        element: <ServiceAccounts />,
+      },
+      {
+        path: '/resource/StorageClass',
+        element: <StorageClasses />,
+      },
+      {
+        path: '/resource/PersistentVolume',
+        element: <PersistentVolumes />,
+      },
+      {
+        path: '/resource/PersistentVolumeClaim',
+        element: <PersistentVolumeClaims />,
+      },
+      {
+        path: '/resource/VolumeAttachment',
+        element: <VolumeAttachments />,
+      },
+      {
+        path: '/resource/LimitRange',
+        element: <LimitRanges />,
+      },
+      {
+        path: '/resource/CustomResourceDefinition',
+        element: <CustomResourceDefinitions />,
+      },
+      {
+        path: '/resource/ResourceEvents/:kind/:uid/:namespace/:name',
+        loader: async ({ params }: { params: any }) => {
+          return {
+            uid: params.uid,
+            name: params.name,
+            namespace: params.namespace,
+          };
+        },
+        element: <ResourceEvents />,
+        errorElement: <ErrorPage />,
+      },
     ],
+    errorElement: <ErrorPage />,
   },
   {
     path: '/createkubernetesresource',
@@ -458,24 +268,12 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/events',
+    path: '/settings',
     element: <Layout />,
     children: [
       {
-        path: '/events',
-        element: <Events />,
-      },
-      {
-        path: '/events/:kind/:uid/:namespace/:name',
-        loader: async ({ params }: { params: any }) => {
-          return {
-            uid: params.uid,
-            name: params.name,
-            namespace: params.namespace,
-          };
-        },
-        element: <ResourceEvents />,
-        errorElement: <ErrorPage />,
+        path: '/settings',
+        element: <SettingsPage />,
       },
     ],
   },

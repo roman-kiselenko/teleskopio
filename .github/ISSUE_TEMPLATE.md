@@ -12,3 +12,4 @@
 
 - [ ] Version
 - [ ] OS type and version
+- [ ] Backend Logs (Find in `Settings > Backend Logs`)

@@ -9,11 +9,13 @@
 
 - Multiple configs from `~/.kube` folder support - switch between clusters effortlessly.
 - Cluster overview - get a high-level view of cluster health and activity.
+- Resource editor/creator - integrated [Monaco Editor](https://microsoft.github.io/monaco-editor/) with syntax highlighting.
 - Live updates - real-time resource changes with Kubernetes watchers.
 - Pod logs and events - inspect logs and event history directly in the UI.
 - Owner links - navigate from a resource to its owner.
-- Resource editor/creator - integrated [Monaco Editor](https://microsoft.github.io/monaco-editor/) with syntax highlighting.
 - Multiple font options - customize the UI appearance.
+- Search `CTRL + F` search and open in redactor any resource in the Kubernetes API (Pods, Deployments, Secrets ...)
+- Jump to section `CTRL + J` any menu in the Kubernetes API (Pods, Deployments, Secrets ...)
 - Light and dark themes.
 
 ---
@@ -31,7 +33,7 @@
 ## Screenshots
 
 <p align="center">
-    <img width="900" src="./assets/Screenshot.png"/>
+    <img width="900" src="./assets/diagonal_split.png"/>
 </p>
 
 ## Stack

@@ -16,6 +16,7 @@ interface DynamicResourceTableProps<T> {
   setState: (setter: (prev: Map<string, T>) => Map<string, T>) => void;
   withoutJump?: Boolean;
   withNsSelector?: Boolean;
+  withSearch?: Boolean;
 }
 
 export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
@@ -26,6 +27,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   setState,
   withoutJump,
   withNsSelector = true,
+  withSearch = true,
 }: DynamicResourceTableProps<T>) => {
   const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
     await call('watch_dynamic_resource', {
@@ -93,6 +95,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       columns={columns}
       withoutJump={withoutJump}
       withNsSelector={withNsSelector}
+      withSearch={withSearch}
     />
   );
 };
