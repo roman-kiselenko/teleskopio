@@ -38,5 +38,10 @@ body:
         Check version in app
     validations:
       required: false
+  - type: input
+    attributes:
+      label: OS platform and version
+      description: |
+        Describe you OS version here
     validations:
       required: false
