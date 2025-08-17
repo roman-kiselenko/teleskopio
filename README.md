@@ -50,9 +50,15 @@
 
 ## Installation
 
+### MacOS
+
 1. Download the latest `.dmg` release from [Releases](https://github.com/roman-kiselenko/teleskopio/releases).
 2. Open the `.dmg` file and drag **teleskopio.app** to the Applications folder.
-3. Launch **teleskopio.app** from Applications.
+3. Go to `cd /Applications/teleskopio.app/Contents/MacOS` and Launch `./teleskopio`
+
+### Linux
+
+1. You're on you own to install :smile:
 
 ---
 
