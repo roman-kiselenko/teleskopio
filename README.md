@@ -52,13 +52,12 @@
 
 ### MacOS
 
-1. Download the latest `.dmg` release from [Releases](https://github.com/roman-kiselenko/teleskopio/releases).
-2. Open the `.dmg` file and drag **teleskopio.app** to the Applications folder.
-3. Go to `cd /Applications/teleskopio.app/Contents/MacOS` and Launch `./teleskopio`
+1. `brew tap roman-kiselenko/homebrew-teleskopio`
+1. `brew install --cask teleskopio`
 
 ### Linux
 
-1. You're on you own to install :smile:
+1. Download the latest release from [Releases](https://github.com/roman-kiselenko/teleskopio/releases).
 
 ---
 

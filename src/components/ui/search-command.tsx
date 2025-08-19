@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { call } from '@/lib/api';
-import { Package } from 'lucide-react';
+import { Package, Loader2 } from 'lucide-react';
 import { debounce } from 'lodash';
 import {
   CommandDialog,
@@ -24,18 +24,18 @@ export function SearchCommand() {
   const [items, setItems] = useState([]);
   const [apiResource, setApiResource] = useState<ApiResource | undefined>();
 
-  const handleSearch = debounce(async (e: string) => {
-    if (e === '') {
-      setItems([]);
-      setSearch('');
-      return;
-    }
-    setLoading(true);
-
+  const handleSearch = async (e: string) => {
+    setLoading(false);
+    setSearch('');
     const res = location.pathname.replace(/resource/, '').replaceAll('/', '');
     const resource = apiResourcesState.get().find((r: ApiResource) => {
       return r.kind === res;
     });
+
+    if (e === '') {
+      setLoading(false);
+    }
+
     if (!resource) {
       toast.warning(`Cant find resource ${res}`);
       setItems([]);
@@ -44,17 +44,22 @@ export function SearchCommand() {
       return;
     }
 
+    setSearch(e);
     setApiResource(resource);
 
+    if (e.length <= 2) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     const result = await call('search_dynamic_resource', {
       substring: e,
       request: { ...resource },
     });
-
-    setItems(result);
     setLoading(false);
-    setSearch(e);
-  }, 50);
+    setItems(result);
+  };
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -78,8 +83,16 @@ export function SearchCommand() {
           placeholder="Search..."
         />
         <CommandList>
-          {loading && <CommandLoading className="text-xs p-2">Hang on...</CommandLoading>}
-          <CommandEmpty className="text-xs p-2">No results found.</CommandEmpty>
+          {loading && (
+            <CommandLoading className="text-xs p-2">
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+              </div>
+            </CommandLoading>
+          )}
+          {!loading && items.length === 0 && (
+            <CommandEmpty className="text-xs p-2">No results found.</CommandEmpty>
+          )}
           {items.map((i: any, index: number) => (
             <CommandItem
               key={index}

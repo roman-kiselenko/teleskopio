@@ -1,6 +1,6 @@
 pub mod client {
     use dirs::home_dir;
-    // use std::{thread, time::Duration};
+    use std::{thread, time::Duration};
 
     use futures::future::AbortHandle;
     use futures_util::io::{AsyncBufReadExt, BufReader};
@@ -692,7 +692,10 @@ pub mod client {
         let group = request.group.unwrap_or_default();
         let version = request.version;
         let kind = request.kind;
-        log::info!("search {:?} {:?} {:?}", kind, path, context,);
+        log::info!("search {:?} {:?} {:?} {:?}", kind, path, context, substring);
+        if substring.len() == 2 {
+            return Ok(Vec::new());
+        }
 
         let client = get_client(path, context).await?;
         let gvk = GroupVersionKind {
