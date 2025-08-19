@@ -203,7 +203,7 @@ const columns: ColumnDef<any>[] = [
       );
       return (
         <Actions
-          url={`/nodes/${node.metadata?.name}`}
+          url={`/yaml/Node/${node.metadata?.name}/${node.metadata?.namespace}?group=`}
           children={additional}
           resource={node}
           name={'Node'}

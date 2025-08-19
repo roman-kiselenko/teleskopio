@@ -133,12 +133,24 @@ export function ResourceEvents() {
     kind = 'Event';
     group = '';
   }
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        navigate(-1);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
   return (
     <div className="h-screen flex flex-col">
       <Header />
-      <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
+      <div className="flex gap-2 px-2 pb-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
-          <ArrowBigLeft />
+          <ArrowBigLeft /> Esc
         </Button>
         <div className="flex flex-row items-center text-xs">
           <Rss className="mr-1" size={14} />
