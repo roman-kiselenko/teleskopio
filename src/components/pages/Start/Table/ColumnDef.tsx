@@ -49,10 +49,6 @@ const columns: ColumnDef<Cluster>[] = [
         apiResourcesState.set(await call('list_apiresources', {}));
         toast.info(<div>API Resources loaded: {apiResourcesState.get().length}</div>);
         fetchAndWatchNamespaces(context);
-        await fetchAndWatchCRDs(context);
-        Array.from(crdsState.get().values()).forEach((x) => {
-          fetchAndWatchCRs(context, x.spec.names.kind, x.spec.group);
-        });
       };
       return (
         <Button
@@ -87,91 +83,6 @@ const columns: ColumnDef<Cluster>[] = [
 ];
 
 export default columns;
-
-async function fetchAndWatchCRs(
-  context: string,
-  kind: string,
-  group: string,
-): Promise<Promise<Promise<void>>> {
-  const customResource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === kind && r.group === group);
-  const [resources, rv] = await call('list_dynamic_resource', {
-    request: { ...customResource },
-  });
-  crsState.set((prev) => {
-    const newMap = new Map(prev);
-    resources.forEach((item) => {
-      newMap.set(item.metadata.uid, item);
-    });
-    return newMap;
-  });
-  const request = {
-    ...customResource,
-    resource_version: rv,
-  };
-  await call('watch_dynamic_resource', { request });
-  addSubscription(
-    listenEvent(`${kind}-${context}-deleted`, (ev: any) => {
-      crsState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(ev.metadata.uid);
-        return newMap;
-      });
-    }),
-  );
-  addSubscription(
-    listenEvent(`${kind}-${context}-updated`, (ev: any) => {
-      crsState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(ev.metadata.uid, ev);
-        return newMap;
-      });
-    }),
-  );
-}
-
-async function fetchAndWatchCRDs(context: string): Promise<Promise<Promise<void>>> {
-  const resource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
-  const [resources, rv] = await call('list_crd_resources', {});
-  if (resources.length > 0) {
-    toast.info(<div>CRD Resources loaded: {resources.length}</div>);
-  }
-  await call('watch_dynamic_resource', { request: { ...resource, resource_version: rv } });
-  resources
-    .filter((x) => x.kind !== 'SelfSubjectReview')
-    .forEach((x) => {
-      crdsState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(x.metadata?.uid as string, x);
-        return newMap;
-      });
-    });
-  await addSubscription(
-    listenEvent(`CustomResourceDefinition-${context}-deleted`, async (ev: any) => {
-      apiResourcesState.set(await call('list_apiresources', {}));
-      fetchAndWatchCRs(context, ev.spec.names.kind, ev.spec.group);
-      crdsState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(ev.metadata?.uid as string);
-        return newMap;
-      });
-    }),
-  );
-  await addSubscription(
-    listenEvent(`CustomResourceDefinition-${context}-updated`, async (ev: any) => {
-      apiResourcesState.set(await call('list_apiresources', {}));
-      fetchAndWatchCRs(context, ev.spec.names.kind, ev.spec.group);
-      crdsState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(ev.metadata?.uid as string, ev);
-        return newMap;
-      });
-    }),
-  );
-}
 
 async function fetchAndWatchNamespaces(context: string): Promise<void> {
   const nsResource = apiResourcesState
