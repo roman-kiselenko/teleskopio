@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/apiResources';
+import { useSearchState } from '@/store/search';
 
 interface PaginatedTableProps<T> {
   kind: string;
@@ -45,6 +46,7 @@ export function PaginatedTable<T>({
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const selectedNamespace = useSelectedNamespacesState();
+  const searchQuery = useSearchState();
 
   const getApiResource = ({
     kind,
@@ -115,6 +117,11 @@ export function PaginatedTable<T>({
     .sort((a: any, b: any) =>
       moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
     )
+    .filter((x: any) => {
+      return String(x.metadata.name || '')
+        .toLowerCase()
+        .includes(searchQuery.q.get().toLowerCase());
+    })
     .filter(
       (x: any) =>
         !getApiResource({ kind, group })?.namespaced ||

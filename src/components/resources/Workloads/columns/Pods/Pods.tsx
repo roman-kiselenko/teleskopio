@@ -4,9 +4,7 @@ import {
   ClipboardCopy,
   HandHelping,
   ScrollText,
-  SquareTerminal,
   SquareMousePointer,
-  Ruler,
   Rss,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -190,14 +188,6 @@ const columns: ColumnDef<any>[] = [
               >
                 <HandHelping />
                 Owner
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="text-xs">
-                <SquareTerminal />
-                Attach
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="text-xs">
-                <Ruler />
-                Metrics
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

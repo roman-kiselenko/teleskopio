@@ -16,6 +16,18 @@ const columns: ColumnDef<any>[] = [
     }),
   },
   {
+    accessorKey: 'status.phase',
+    id: 'phase',
+    header: memo(({ column }) => <HeaderAction column={column} name={'Phase'} />),
+    cell: memo(({ row }) => {
+      let color = 'text-green-400';
+      if (row.original.status?.phase !== 'Bound') {
+        color = 'text-red-400';
+      }
+      return <div className={color}>{row.original.status?.phase}</div>;
+    }),
+  },
+  {
     id: 'age',
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),

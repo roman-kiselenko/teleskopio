@@ -1,17 +1,19 @@
 import { JumpCommand } from '@/components/ui/jump-command';
-import { SearchCommand } from '@/components/ui/search-command';
 import { useVersionState, setVersion } from '@/store/version';
 import { useCurrentClusterState, setCurrentCluster } from '@/store/cluster';
 import { Plus, Unplug } from 'lucide-react';
+import { useSearchState } from '@/store/search';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
+import { useEffect, useRef } from 'react';
 import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { toast } from 'sonner';
 import { removeAllSubscriptions } from '@/lib/subscriptionManager';
 import { flushAllStates } from '@/store/resources';
 import { apiResourcesState } from '@/store/apiResources';
 import { crdsState } from '@/store/crdResources';
+import { Input } from '@/components/ui/input';
 
 export function Header({
   withNsSelector,
@@ -22,8 +24,25 @@ export function Header({
 }) {
   const version = useVersionState();
   const clusterState = useCurrentClusterState();
+  const searchQuery = useSearchState();
   let navigate = useNavigate();
   let location = useLocation();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <div className="flex flex-row pt-3 pb-1 px-2 items-center justify-between text-dynamic">
       {location.pathname === '/createkubernetesresource' ? (
@@ -40,11 +59,14 @@ export function Header({
       <div>
         <JumpCommand />
       </div>
-      {withSearch && (
-        <div className="ml-2">
-          <SearchCommand />
-        </div>
-      )}
+      <div className="flex flex-row px-2 items-center">
+        <Input
+          ref={inputRef}
+          placeholder="Filter by name..."
+          className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+          onChange={(e) => searchQuery.q.set(e.target.value)}
+        />
+      </div>
       <div className="text-muted-foreground items-center flex  justify-between"></div>
       {withNsSelector ? (
         <div className="flex flex-row pr-2">

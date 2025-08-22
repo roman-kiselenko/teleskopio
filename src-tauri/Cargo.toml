@@ -1,6 +1,6 @@
 [package]
 name = "teleskopio"
-version = "0.0.5"
+version = "0.0.6"
 description = "Teleskopio is an open-source small and beautiful Kubernetes client."
 authors = ["you"]
 edition = "2021"

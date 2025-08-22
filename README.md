@@ -14,8 +14,8 @@
 - Pod logs and events - inspect logs and event history directly in the UI.
 - Owner links - navigate from a resource to its owner.
 - Multiple font options - customize the UI appearance.
-- Search `CTRL + F` search and open in redactor any resource in the Kubernetes API (Pods, Deployments, Secrets ...)
-- Jump to section `CTRL + J` any menu in the Kubernetes API (Pods, Deployments, Secrets ...)
+- Filter `CTRL + F` any resource.
+- Jump to section `CTRL + J` any menu.
 - Light and dark themes.
 
 ---
