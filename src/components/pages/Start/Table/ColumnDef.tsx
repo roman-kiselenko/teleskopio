@@ -46,14 +46,7 @@ const columns: ColumnDef<Cluster>[] = [
         setVersion(clusterVersion.gitVersion);
         setCurrentCluster(context, path);
         toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
-        call('list_apiresources', {})
-          .then((data) => {
-            apiResourcesState.set(data);
-            toast.info(<div>API Resources loaded: {apiResourcesState.get().length}</div>);
-          })
-          .catch((error: any) => {
-            toast.error(<div>Cant load API Resource: {error.message}</div>);
-          });
+        apiResourcesState.set(await call('list_apiresources', {}));
         fetchAndWatchNamespaces(context);
       };
       return (
