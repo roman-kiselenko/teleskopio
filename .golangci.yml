@@ -93,7 +93,7 @@ formatters:
     - gofumpt
   settings:
     gofumpt:
-      module-path: smolgit
+      module-path: teleskopio
   exclusions:
     generated: lax
     paths:
