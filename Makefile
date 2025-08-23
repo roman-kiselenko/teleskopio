@@ -37,6 +37,10 @@ lint: ./bin/$(LINTER_BIN) ## Lint sources with golangci-lint
 run-frontend: ## Run
 	cd frontend && pnpm dev
 
+## Run backend:
+run-backend: build ## Run
+	./bin/$(PROJECT_NAME)
+
 config: ## Generate default config
 	./bin/$(PROJECT_NAME) config > ./config.yaml
 

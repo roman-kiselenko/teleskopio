@@ -20,11 +20,11 @@ import { addSubscription } from '@/lib/subscriptionManager';
 
 const columns: ColumnDef<Cluster>[] = [
   {
-    accessorKey: 'name',
-    id: 'name',
+    accessorKey: 'context',
+    id: 'context',
     meta: { className: 'max-w-[35ch] truncate' },
-    header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <div>{row.original.name}</div>),
+    header: memo(({ column }) => <HeaderAction column={column} name={'Context'} />),
+    cell: memo(({ row }) => <div>{row.original.current_context}</div>),
   },
   {
     accessorKey: 'server',
@@ -41,12 +41,14 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const loading = useloadingState();
-      const get_version = async (context: string, path: any) => {
-        const clusterVersion = await call('get_version', { context: context, path: path });
+      const get_version = async (context: string, server: any) => {
+        const clusterVersion = await call('get_version', { context: context, server: server });
         setVersion(clusterVersion.gitVersion);
-        setCurrentCluster(context, path);
+        setCurrentCluster(context, server);
         toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
-        apiResourcesState.set(await call('list_apiresources', {}));
+        apiResourcesState.set(
+          await call('list_apiresources', { context: context, server: server }),
+        );
         fetchAndWatchNamespaces(context);
       };
       return (
@@ -55,21 +57,17 @@ const columns: ColumnDef<Cluster>[] = [
           variant="outline"
           size="sm"
           onClick={async () => {
-            if (row.original?.current_context === '') {
-              toast.error('There is no current context in config');
-            } else {
-              try {
-                loading.set(true);
-                await get_version(row.original.current_context as string, row.original.path);
-                loading.set(false);
-                navigate('/resource/Node');
-              } catch (error: any) {
-                if (error.message) {
-                  toast.error(`Cant connect to cluster: ${error.message}`);
-                }
-              } finally {
-                loading.set(false);
+            try {
+              loading.set(true);
+              await get_version(row.original.current_context as string, row.original.server);
+              loading.set(false);
+              navigate('/resource/Node');
+            } catch (error: any) {
+              if (error.message) {
+                toast.error(`Cant connect to cluster: ${error.message}`);
               }
+            } finally {
+              loading.set(false);
             }
           }}
         >

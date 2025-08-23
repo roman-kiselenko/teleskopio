@@ -4,13 +4,22 @@ import { toast } from 'sonner';
 
 type InvokePayload = Record<string, unknown>;
 export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T> {
-  console.log(`[${action}] hit payload [${payload}]`);
+  if (payload) {
+    console.log(`[${action}] hit payload [${JSON.stringify(payload)}]`);
+    const res = await fetch(`/api/${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  }
+  console.log(`[${action}] hit`);
   const res = await fetch(`/api/${action}`, {
-    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload),
   });
   return res.json();
 }

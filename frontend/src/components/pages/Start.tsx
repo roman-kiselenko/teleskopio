@@ -6,6 +6,8 @@ import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Start/Table/ColumnDef';
 import { useConfigsState, getConfigs } from '@/store/kubeconfigs';
 import { Input } from '@/components/ui/input';
+import { call } from '@/lib/api';
+import { toast } from 'sonner';
 
 export function StartPage() {
   const configs = useConfigsState();
@@ -14,7 +16,12 @@ export function StartPage() {
   const loading = useloadingState();
 
   const fetchData = useCallback(async () => {
-    await getConfigs(query);
+    try {
+      await call<any[]>('ping');
+      await getConfigs(query);
+    } catch (error: any) {
+      toast.error('Error! Cant ping server\n' + error.message);
+    }
   }, [query]);
 
   useEffect(() => {
@@ -24,7 +31,7 @@ export function StartPage() {
       if (!loading.get()) {
         fetchData();
       }
-    }, 1000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [fetchData]);
