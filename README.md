@@ -1,5 +1,5 @@
 <h2 align="center">
-    teleskopio is an open-source small and beautiful Kubernetes client.
+    teleskopio is an open-source small and beautiful Kubernetes web client.
 </h2>
 <p align="center">
     <img width="300" src="./assets/icon.png"/>
@@ -38,8 +38,6 @@
 
 ## Stack
 
-- **[Tauri v2](https://tauri.app/)** - lightweight and fast desktop framework.
-- **[kube.rs](https://kube.rs)** - backend logic and Kubernetes API integration.
 - **React** - responsive and modern frontend.
 - **[shadcn/ui](https://ui.shadcn.com/)** + **Tailwind CSS** - clean and flexible UI components.
 - **[Monaco Editor](https://microsoft.github.io/monaco-editor/)** - powerful code editor with syntax highlighting.
@@ -63,11 +61,8 @@
 
 ## Development
 
-1. Install tauri and rust
-1. Use `pnpm` package manager
 1. `pnpm install`
-1. `pnpm tauri dev`
 
 ## Contributing
 
-**teleskopio.app** is an open-source project, and contributions are welcome.
+**teleskopio** is an open-source project, and contributions are welcome.

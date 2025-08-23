@@ -1,0 +1,102 @@
+version: "2"
+run:
+  allow-parallel-runners: true
+  relative-path-mode: wd
+linters:
+  enable:
+    - asciicheck
+    - bodyclose
+    - dogsled
+    - dupl
+    - funlen
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gosec
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - prealloc
+    - revive
+    - rowserrcheck
+    - staticcheck
+    - unconvert
+    - unparam
+    - whitespace
+  settings:
+    funlen:
+      lines: 168
+      statements: 50
+    gocritic:
+      disabled-checks:
+        - singleCaseSwitch
+    lll:
+      line-length: 193
+      tab-width: 1
+    staticcheck:
+      checks:
+        - -S1023
+        - all
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - bodyclose
+          - dupl
+          - funlen
+          - gochecknoinits
+          - gocognit
+          - goconst
+          - gocyclo
+          - gosec
+          - lll
+          - maligned
+          - noctx
+          - revive
+          - scopelint
+          - staticcheck
+        path: _test.go
+      - linters:
+          - bodyclose
+          - dupl
+          - funlen
+          - gochecknoinits
+          - gocognit
+          - goconst
+          - gocyclo
+          - lll
+          - maligned
+          - noctx
+          - revive
+          - scopelint
+          - staticcheck
+        path: _mock.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+output:
+  formats:
+    tab:
+      path: stdout
+      colors: true
+formatters:
+  enable:
+    - gofumpt
+  settings:
+    gofumpt:
+      module-path: smolgit
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
