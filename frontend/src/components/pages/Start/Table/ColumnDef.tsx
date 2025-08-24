@@ -63,8 +63,8 @@ const columns: ColumnDef<Cluster>[] = [
               loading.set(false);
               navigate('/resource/Node');
             } catch (error: any) {
-              if (error.message) {
-                toast.error(`Cant connect to cluster: ${error.message}`);
+              if (error.error) {
+                toast.error(`Cant connect to cluster: ${error.error}`);
               }
             } finally {
               loading.set(false);
@@ -85,7 +85,9 @@ async function fetchAndWatchNamespaces(context: string): Promise<void> {
   const nsResource = apiResourcesState
     .get()
     .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
-  const [ns] = await call('list_dynamic_resource', { request: { ...nsResource } });
+  const [ns] = await call('list_dynamic_resource', {
+    request: { ...nsResource },
+  });
   ns.forEach((x) => {
     namespacesState.set((prev) => {
       const newMap = new Map(prev);

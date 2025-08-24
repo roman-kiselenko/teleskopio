@@ -2,23 +2,23 @@ import { hookstate, useHookstate } from '@hookstate/core';
 
 export const currentClusterState = hookstate<{
   context: string;
-  kube_config: string;
+  server: string;
 }>({
   context: '',
-  kube_config: '',
+  server: '',
 });
 
 export function useCurrentClusterState() {
   return useHookstate(currentClusterState);
 }
 
-export function setCurrentCluster(cluster: string, path: string) {
+export function setCurrentCluster(cluster: string, server: string) {
   currentClusterState.context.set(cluster);
-  currentClusterState.kube_config.set(path);
+  currentClusterState.server.set(server);
 }
 
 export function getKubeconfig(): any {
-  return currentClusterState.kube_config.get();
+  return currentClusterState.server.get();
 }
 
 export function getCluster(): any {
@@ -27,6 +27,6 @@ export function getCluster(): any {
 
 export function getCurrentCluster(): any {
   const cluster = currentClusterState.context.get();
-  const kube_config = currentClusterState.kube_config.get();
-  return cluster === '' || kube_config === '';
+  const server = currentClusterState.server.get();
+  return cluster === '' || server === '';
 }

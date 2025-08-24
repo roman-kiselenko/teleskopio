@@ -97,6 +97,9 @@ func (a *App) initServer() error {
 	router.GET("/api/lookup_configs", r.LookupConfigs)
 	router.POST("/api/get_version", r.GetVersion)
 	router.POST("/api/list_apiresources", r.ListResources)
+	router.POST("/api/list_dynamic_resource", r.ListDynamicResource)
+	router.POST("/api/watch_dynamic_resource", r.WatchDynamicResource)
+	router.POST("/api/get_dynamic_resource", r.GetDynamicResource)
 
 	webSocket.SetupWebsocket(router)
 	go func() {

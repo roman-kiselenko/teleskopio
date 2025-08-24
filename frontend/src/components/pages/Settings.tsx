@@ -38,7 +38,6 @@ import {
 
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const [logs, setLogs] = useState([]);
   const apiResources = useApiResourcesState();
 
   const [managedFields, setManagedFields] = useState<boolean>(() => {
@@ -57,18 +56,12 @@ export function SettingsPage() {
   });
 
   useEffect(() => {
-    fetchLogs();
     document.body.classList.remove(...Fonts.map((f) => f.className));
     document.body.classList.add(selectedFont);
     localStorage.setItem(FONT_KEY, selectedFont);
     document.documentElement.style.setProperty('--text-xs', `${fontSize}px`);
     localStorage.setItem(FONT_SIZE_KEY, fontSize.toString());
   }, [selectedFont, fontSize]);
-
-  const fetchLogs = async () => {
-    const logsResponse = await call('get_logs');
-    setLogs(logsResponse);
-  };
 
   return (
     <div className="flex flex-row flex-grow p-2">
@@ -86,9 +79,6 @@ export function SettingsPage() {
             </TabsTrigger>
             <TabsTrigger key="api-resources" value="api-resources" className="text-xs">
               API Resources
-            </TabsTrigger>
-            <TabsTrigger key="logs" value="logs" className="text-xs">
-              Backend Logs
             </TabsTrigger>
           </TabsList>
           <TabsContent value="theme">
@@ -199,16 +189,6 @@ export function SettingsPage() {
                 </Table>
               </ScrollArea>
             )}
-          </TabsContent>
-          <TabsContent value="logs">
-            <ScrollArea className="h-[800px] w-full rounded-md border p-1">
-              {logs.map((l: string, index: number) => (
-                <div key={index} className="whitespace-pre-line">
-                  {l}
-                </div>
-              ))}
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
           </TabsContent>
         </Tabs>
       </div>

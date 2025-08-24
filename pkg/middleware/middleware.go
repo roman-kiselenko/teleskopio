@@ -11,10 +11,11 @@ func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 		c.Next()
-		if c.Request.RequestURI != "/api/ping" {
-			latency := time.Since(t)
-			status := c.Writer.Status()
-			slog.Debug("incoming request", "route", c.Request.RequestURI, "status", status, "latency", latency)
+		if c.Request.RequestURI == "/api/ping" || c.Request.RequestURI == "/api/lookup_configs" {
+			return
 		}
+		latency := time.Since(t)
+		status := c.Writer.Status()
+		slog.Debug("incoming request", "route", c.Request.RequestURI, "status", status, "latency", latency)
 	}
 }

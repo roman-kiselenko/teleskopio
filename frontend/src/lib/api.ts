@@ -1,19 +1,35 @@
 // import { invoke } from '@tauri-apps/api/core';
 import { currentClusterState } from '@/store/cluster';
 import { toast } from 'sonner';
+import yaml from 'js-yaml';
 
 type InvokePayload = Record<string, unknown>;
-export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T> {
+
+export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T | any> {
+  let request = { ...payload };
+  console.log(currentClusterState);
+  if (currentClusterState.server.get() !== '' && currentClusterState.context.get() !== '') {
+    request.server = currentClusterState.server.get();
+    request.context = currentClusterState.context.get();
+  }
   if (payload) {
-    console.log(`[${action}] hit payload [${JSON.stringify(payload)}]`);
+    console.log(`[${action}] hit payload [${JSON.stringify(request)}]`);
     const res = await fetch(`/api/${action}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(request),
     });
-    return res.json();
+    const contentType = res.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      return res.json();
+    }
+    if (contentType.includes('application/yaml') || contentType.includes('text/yaml')) {
+      return res.text();
+    }
+    return res.text();
   }
   console.log(`[${action}] hit`);
   const res = await fetch(`/api/${action}`, {
