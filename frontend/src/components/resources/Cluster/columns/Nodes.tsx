@@ -125,6 +125,7 @@ const columns: ColumnDef<any>[] = [
       );
       const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
       let request = {
+        cordon: cordoned ? false : true,
         name: node.metadata?.name,
         ...resource,
       };

@@ -25,7 +25,7 @@ export function getCluster(): any {
   return currentClusterState.context.get();
 }
 
-export function getCurrentCluster(): any {
+export function getCurrentCluster(): boolean {
   const cluster = currentClusterState.context.get();
   const server = currentClusterState.server.get();
   return cluster === '' || server === '';

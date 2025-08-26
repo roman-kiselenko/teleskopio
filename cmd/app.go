@@ -16,10 +16,7 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-var (
-	logOutput = os.Stdout
-	cfg       config.Config
-)
+var logOutput = os.Stdout
 
 type App struct {
 	Config   *config.Config
@@ -36,24 +33,24 @@ func New(version string, configPath *string, exitchnl, signchnl chan (os.Signal)
 	}
 	app.Clients = &clients
 	app.Config = &cfg
-	initLogger()
+	initLogger(&cfg)
 	return app, nil
 }
 
 func (a *App) Run() error {
-	slog.Default().Info("version", "version", a.Config.Version)
+	slog.Info("version", "version", a.Config.Version)
 	if err := a.initServer(); err != nil {
-		slog.Default().Error("cant init server", "error", err)
+		slog.Error("cant init server", "error", err)
 	}
 	go func() {
 		code := <-a.signchnl
-		slog.Default().Info("os signal received", "signal", code)
+		slog.Info("os signal received", "signal", code)
 		a.exitSig <- code
 	}()
 	return nil
 }
 
-func initLogger() {
+func initLogger(cfg *config.Config) {
 	level := new(slog.LevelVar)
 	handler := &slog.HandlerOptions{
 		Level: level,
@@ -62,33 +59,33 @@ func initLogger() {
 	logger = slog.New(slog.NewTextHandler(logOutput, handler))
 	if cfg.LogJSON {
 		logger = slog.New(slog.NewJSONHandler(logOutput, handler))
-	} else {
-		if cfg.LogColor {
-			logger = slog.New(tint.NewHandler(logOutput, &tint.Options{
-				Level:      level,
-				TimeFormat: time.Kitchen,
-			}))
-		}
+	}
+	if cfg.LogColor {
+		logger = slog.New(tint.NewHandler(logOutput, &tint.Options{
+			Level:      level,
+			TimeFormat: time.Kitchen,
+		}))
 	}
 
-	slog.SetDefault(logger)
 	if err := level.UnmarshalText([]byte(cfg.LogLevel)); err != nil {
 		level.Set(slog.LevelDebug)
 	}
-	slog.Default().Info("set loglevel", "level", level)
+	slog.SetDefault(logger)
+	slog.Info("set loglevel", "level", level)
 }
 
 func (a *App) initServer() error {
-	slog.Default().Info("initialize web server", "addr", a.Config.ServerHttp)
+	slog.Info("initialize web server", "addr", a.Config.ServerHttp)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(middleware.Logger())
 	router.Use(gin.Recovery())
-	r, err := httpRouter.New(router, a.Config, a.Clients)
+	hub := webSocket.NewHub()
+	go hub.Run()
+	r, err := httpRouter.New(hub, router, a.Config, a.Clients)
 	if err != nil {
 		return err
 	}
-
 	router.GET("/api/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -100,12 +97,16 @@ func (a *App) initServer() error {
 	router.POST("/api/list_dynamic_resource", r.ListDynamicResource)
 	router.POST("/api/watch_dynamic_resource", r.WatchDynamicResource)
 	router.POST("/api/get_dynamic_resource", r.GetDynamicResource)
+	router.POST("/api/delete_dynamic_resource", r.DeleteDynamicResource)
+	router.POST("/api/create_kube_resource", r.CreateKubeResource)
+	router.POST("/api/cordon_node", r.NodeOperation)
+	router.POST("/api/uncordon_node", r.NodeOperation)
 
-	webSocket.SetupWebsocket(router)
+	webSocket.SetupWebsocket(hub, router)
 	go func() {
 		addr := a.Config.ServerHttp
 		if err := router.Run(addr); err != nil {
-			slog.Default().Error("cant run server", "error", err)
+			slog.Error("cant run server", "error", err)
 		}
 	}()
 	return nil

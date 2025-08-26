@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
-import { listenEvent } from '@/lib/events';
+// import { listenEvent } from '@/lib/events';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
 import { currentClusterState } from '@/store/cluster';
 import { addSubscription } from '@/lib/subscriptionManager';
+import { useWS } from '@/wsContext';
 
 interface DynamicResourceTableProps<T> {
   kind: string;
@@ -37,28 +38,26 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       },
     });
   };
+  const { listen } = useWS();
 
   const listenEvents = async () => {
     const context = currentClusterState.context.get();
-    await addSubscription(
-      listenEvent(`${kind}-${context}-deleted`, (ev: any) => {
-        setState((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(ev.metadata?.uid as string);
-          return newMap;
-        });
-      }),
-    );
+    const server = currentClusterState.server.get();
+    listen(`${kind}-${context}-${server}-deleted`, (payload: any) => {
+      setState((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(payload.metadata?.uid as string);
+        return newMap;
+      });
+    });
 
-    await addSubscription(
-      listenEvent(`${kind}-${context}-updated`, (ev: any) => {
-        setState((prev) => {
-          const newMap = new Map(prev);
-          newMap.set(ev.metadata?.uid as string, ev);
-          return newMap;
-        });
-      }),
-    );
+    listen(`${kind}-${context}-${server}-updated`, (payload: any) => {
+      setState((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(payload.metadata?.uid as string, payload);
+        return newMap;
+      });
+    });
   };
 
   const getPage = async ({

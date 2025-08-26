@@ -167,7 +167,7 @@ export default function ResourceEditor() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
+      <div className="flex gap-2 px-2 py-2 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft /> Esc
         </Button>

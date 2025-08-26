@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { call } from '@/lib/api';
 import { listenEvent } from '@/lib/events';
 import { setVersion } from '@/store/version';
-import { setCurrentCluster } from '@/store/cluster';
+import { setCurrentCluster, getCurrentCluster } from '@/store/cluster';
 import { apiResourcesState } from '@/store/apiResources';
 import { namespacesState } from '@/store/resources';
 import { crdsState } from '@/store/crdResources';
@@ -42,33 +42,48 @@ const columns: ColumnDef<Cluster>[] = [
       const navigate = useNavigate();
       const loading = useloadingState();
       const get_version = async (context: string, server: any) => {
-        const clusterVersion = await call('get_version', { context: context, server: server });
-        setVersion(clusterVersion.gitVersion);
-        setCurrentCluster(context, server);
-        toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
-        apiResourcesState.set(
-          await call('list_apiresources', { context: context, server: server }),
-        );
-        fetchAndWatchNamespaces(context);
+        return await call('get_version', { context: context, server: server });
       };
       return (
         <Button
           className="text-xs"
           variant="outline"
           size="sm"
-          onClick={async () => {
-            try {
-              loading.set(true);
-              await get_version(row.original.current_context as string, row.original.server);
+          onClick={async (e) => {
+            loading.set(true);
+            const clusterVersion = await get_version(
+              row.original.current_context as string,
+              row.original.server,
+            );
+            if (!clusterVersion.gitVersion) {
               loading.set(false);
-              navigate('/resource/Node');
-            } catch (error: any) {
-              if (error.error) {
-                toast.error(`Cant connect to cluster: ${error.error}`);
-              }
-            } finally {
-              loading.set(false);
+              toast.error(
+                <div>
+                  Cant connect to cluster
+                  <br />
+                  Server: {row.original.server}
+                  <br />
+                  Context: {row.original.current_context}
+                </div>,
+              );
+              return;
             }
+            setVersion(clusterVersion.gitVersion);
+            setCurrentCluster(
+              row.original.current_context as string,
+              row.original.server as string,
+            );
+            toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
+            apiResourcesState.set(
+              await call('list_apiresources', {
+                context: row.original.current_context,
+                server: row.original.server,
+              }),
+            );
+            fetchAndWatchNamespaces(row.original.current_context as string);
+            navigate('/resource/Node');
+            loading.set(false);
+            return;
           }}
         >
           <Unplug className="h-2 w-2" />

@@ -97,23 +97,26 @@ export default function ResourceEditor() {
       delete obj.metadata.managedFields;
     }
     const cleanedYaml = yaml.dump(obj);
-    toast.promise(call('create_kube_object', { yaml: cleanedYaml }), {
-      loading: 'Creating...',
-      success: (data) => {
-        return (
-          <span>
-            {data.kind} {data.metadata.namespace} {data.metadata.name} created
-          </span>
-        );
-      },
-      error: (err) => (
-        <span>
-          Cant create resource
-          <br />
-          {err.message}
-        </span>
-      ),
+    if (!obj.metadata.namespace) {
+      toast.warning(<span>Namespace is missing</span>);
+    }
+    const response = await call('create_kube_resource', {
+      namespace: obj.metadata.namespace,
+      yaml: cleanedYaml,
     });
+    if (response.message) {
+      toast.error(<span>Cant create resource: {response.message}</span>);
+      return;
+    }
+    toast.info(
+      <span>
+        Resource created:
+        <br />
+        <span className="font-bold text-muted-foreground">
+          {obj.kind} {obj.metadata.name}
+        </span>
+      </span>,
+    );
     setOriginal(value!);
   };
 
@@ -156,7 +159,7 @@ export default function ResourceEditor() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
+      <div className="flex gap-2 px-2 py-2 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft /> Esc
         </Button>

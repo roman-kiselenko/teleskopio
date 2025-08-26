@@ -44,14 +44,14 @@ export function Header({
   }, []);
 
   return (
-    <div className="flex flex-row pt-3 pb-1 px-2 items-center justify-between text-dynamic">
+    <div className="flex flex-row py-2 px-2 items-center justify-between text-dynamic">
       {location.pathname === '/createkubernetesresource' ? (
         <></>
       ) : (
         <div className="text-muted-foreground items-center flex flex-grow w-1/3">
           <div className="flex items-center">
-            <Button onClick={() => navigate('/createkubernetesresource')}>
-              <Plus size={16} />
+            <Button className="text-xs" onClick={() => navigate('/createkubernetesresource')}>
+              <Plus size={16} /> Create
             </Button>
           </div>
         </div>

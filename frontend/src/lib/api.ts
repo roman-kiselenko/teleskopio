@@ -7,13 +7,14 @@ type InvokePayload = Record<string, unknown>;
 
 export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T | any> {
   let request = { ...payload };
-  console.log(currentClusterState);
   if (currentClusterState.server.get() !== '' && currentClusterState.context.get() !== '') {
     request.server = currentClusterState.server.get();
     request.context = currentClusterState.context.get();
   }
   if (payload) {
-    console.log(`[${action}] hit payload [${JSON.stringify(request)}]`);
+    if (action !== 'lookup_configs' && action !== 'ping') {
+      console.log(`[${action}] hit payload [${JSON.stringify(request)}]`);
+    }
     const res = await fetch(`/api/${action}`, {
       method: 'POST',
       headers: {
@@ -31,7 +32,9 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
     }
     return res.text();
   }
-  console.log(`[${action}] hit`);
+  if (action !== 'lookup_configs' && action !== 'ping') {
+    console.log(`[${action}] hit`);
+  }
   const res = await fetch(`/api/${action}`, {
     headers: {
       'Content-Type': 'application/json',

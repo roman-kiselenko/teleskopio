@@ -16,6 +16,6 @@ func Logger() gin.HandlerFunc {
 		}
 		latency := time.Since(t)
 		status := c.Writer.Status()
-		slog.Debug("incoming request", "route", c.Request.RequestURI, "status", status, "latency", latency)
+		slog.Default().Debug("incoming request", "route", c.Request.RequestURI, "status", status, "latency", latency)
 	}
 }

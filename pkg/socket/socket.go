@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -17,35 +16,94 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func SetupWebsocket(router *gin.Engine) {
+type Hub struct {
+	clients    map[*Client]bool
+	broadcast  chan []byte
+	register   chan *Client
+	unregister chan *Client
+}
+
+type Client struct {
+	hub  *Hub
+	conn *websocket.Conn
+	send chan []byte
+}
+
+func NewHub() *Hub {
+	return &Hub{
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
+	}
+}
+
+func (h *Hub) Run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.clients[client] = true
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+			}
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				select {
+				case client.send <- message:
+				default:
+					delete(h.clients, client)
+					close(client.send)
+				}
+			}
+		}
+	}
+}
+
+func SetupWebsocket(hub *Hub, router *gin.Engine) {
 	router.GET("/ws", func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
-			log.Printf("%s, error while Upgrading websocket connection\n", err.Error())
+			slog.Default().Error("error while Upgrading websocket connection", "err", err.Error())
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
-		for {
-			// Read message from client
-			messageType, p, err := conn.ReadMessage()
-			if err != nil {
-				// panic(err)
-				log.Printf("%s, error while reading message\n", err.Error())
-				c.AbortWithError(http.StatusInternalServerError, err)
-				break
-			}
+		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+		client.hub.register <- client
 
-			slog.Debug("socket message", "msg", string(p), "type", messageType)
-
-			// Echo message back to client
-			err = conn.WriteMessage(messageType, p)
-			if err != nil {
-				// panic(err)
-				log.Printf("%s, error while writing message\n", err.Error())
-				c.AbortWithError(http.StatusInternalServerError, err)
-				break
-			}
-		}
+		go client.writePump()
+		go client.readPump()
 	})
+}
+
+func (c *Client) readPump() {
+	defer func() {
+		c.hub.unregister <- c
+		c.conn.Close()
+	}()
+	for {
+		_, message, err := c.conn.ReadMessage()
+		if err != nil {
+			slog.Default().Error("read:", "err", err.Error())
+			break
+		}
+		c.hub.broadcast <- message
+	}
+}
+
+func (c *Client) writePump() {
+	defer c.conn.Close()
+	for msg := range c.send {
+		err := c.conn.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			slog.Default().Error("write:", "err", err.Error())
+			break
+		}
+	}
+}
+
+func (h *Hub) Broadcast(msg []byte) {
+	h.broadcast <- msg
 }
