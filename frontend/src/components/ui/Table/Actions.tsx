@@ -1,4 +1,4 @@
-import { SquareMousePointer, MoreHorizontal, ClipboardCopy, Trash, Rss } from 'lucide-react';
+import { SquareMousePointer, Ruler, MoreHorizontal, ClipboardCopy, Trash, Rss } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,15 @@ import { Button } from '@/components/ui/button';
 import { call } from '@/lib/api';
 import { useNavigate } from 'react-router';
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 
 function Actions({
   resource,
@@ -21,6 +29,7 @@ function Actions({
   request,
   children,
   noEvents = false,
+  scale = false,
 }: {
   resource: any;
   url: string;
@@ -29,9 +38,12 @@ function Actions({
   request: any;
   children?: any;
   noEvents?: Boolean;
+  scale?: Boolean;
 }) {
   let navigate = useNavigate();
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openScaleDialog, setOpenScaleDialog] = useState(false);
+  const [scaleValue, setScaleValue] = useState(resource.spec?.replicas || 0);
   return (
     <div className="flex flex-row justify-center w-full">
       <DropdownMenu>
@@ -56,7 +68,7 @@ function Actions({
           </DropdownMenuItem>
           <DropdownMenuItem
             key="dm3"
-            onClick={() => setOpenDialog(true)}
+            onClick={() => setOpenDeleteDialog(true)}
             disabled={resource.metadata?.deletionTimestamp !== undefined}
             className="text-xs"
           >
@@ -64,6 +76,18 @@ function Actions({
               <Trash size={8} color="red" /> <span className="ml-2 text-red-500">Delete</span>
             </div>
           </DropdownMenuItem>
+          {scale ? (
+            <DropdownMenuItem onClick={() => setOpenScaleDialog(true)} className="text-xs">
+              <div className="flex flex-row items-center">
+                <div>
+                  <Ruler size={8} className="mr-2" />
+                </div>
+                <div>Scale</div>
+              </div>
+            </DropdownMenuItem>
+          ) : (
+            <></>
+          )}
           {noEvents ? (
             <></>
           ) : (
@@ -91,10 +115,11 @@ function Actions({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xs">Are you sure?</DialogTitle>
+            <DialogDescription></DialogDescription>
           </DialogHeader>
           <p className="text-xs">
             This operation cant be undone!
@@ -103,7 +128,11 @@ function Actions({
             deleted.
           </p>
           <div className="flex justify-end gap-2">
-            <Button className="text-xs" variant="outline" onClick={() => setOpenDialog(false)}>
+            <Button
+              className="text-xs"
+              variant="outline"
+              onClick={() => setOpenDeleteDialog(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -127,7 +156,7 @@ function Actions({
                     </span>
                   ),
                 });
-                setOpenDialog(false);
+                setOpenDeleteDialog(false);
               }}
             >
               Delete
@@ -135,6 +164,76 @@ function Actions({
           </div>
         </DialogContent>
       </Dialog>
+      {scale ? (
+        <Dialog open={openScaleDialog} onOpenChange={setOpenScaleDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-xs">Scale {resource.kind}</DialogTitle>
+              <DialogDescription></DialogDescription>
+            </DialogHeader>
+            <div className="text-xs">
+              {resource.metadata.namespace}/{resource.metadata.name}
+            </div>
+            <div className="flex flex-col items-center">
+              <Input
+                type="number"
+                min="0"
+                onChange={(e) => setScaleValue(e.target.value)}
+                value={scaleValue}
+                className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <Slider
+                onValueChange={(e) => setScaleValue(e)}
+                value={[scaleValue]}
+                className="pt-4"
+                min={0}
+                step={1}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setOpenScaleDialog(false)}
+                className="text-xs"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  call('scale_resource', {
+                    ...request,
+                    replicas: parseInt(scaleValue),
+                  })
+                    .then((data) => {
+                      toast.info(
+                        <span>
+                          Scaling {resource.kind} <b>{resource.metadata.name}</b> from{' '}
+                          {resource.spec?.replicas} to {scaleValue}
+                        </span>,
+                      );
+                    })
+                    .catch((reason) => {
+                      toast.error(
+                        <span>
+                          Cant scale <b>{resource.metadata.name}</b>
+                          <br />
+                          {reason.message}
+                        </span>,
+                      );
+                    });
+                  setOpenScaleDialog(false);
+                }}
+                className="text-xs"
+                variant="plain"
+              >
+                Scale
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <></>
+      )}
     </div>
   );
 }

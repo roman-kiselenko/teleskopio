@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"log"
@@ -11,6 +12,9 @@ import (
 	"teleskopio/cmd"
 	"teleskopio/pkg/config"
 )
+
+//go:embed all:dist
+var staticFiles embed.FS
 
 var (
 	version    = "dev"
@@ -36,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to init app: %s", err)
 	}
-	if err := app.Run(); err != nil {
+	if err := app.Run(staticFiles); err != nil {
 		log.Fatalf("failed to start app: %s", err)
 	}
 	<-exitchnl

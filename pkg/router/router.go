@@ -132,6 +132,22 @@ type NodeOperation struct {
 	Cordon       bool   `json:"cordon"`
 }
 
+type ResourceOperation struct {
+	Request struct {
+		Name            string `json:"name"`
+		Namespace       string `json:"namespace"`
+		Group           string `json:"group"`
+		Version         string `json:"version"`
+		Kind            string `json:"kind"`
+		Namespaced      bool   `json:"namespaced"`
+		ResourceVersion string `json:"resource_version"`
+	} `json:"request"`
+	Server   string `json:"server"`
+	Context  string `json:"context"`
+	Resource string `json:"resource"`
+	Replicas int64  `json:"replicas"`
+}
+
 type Route struct {
 	cfg     *config.Config
 	clients *config.Clients
@@ -464,12 +480,6 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 		ri = r.clients.Dynamic[req.Context].Resource(gvr)
 	}
 	watcherKey := fmt.Sprintf("%s-%s-%s", req.Request.Kind, req.Context, req.Server)
-	_, ok := r.watchers[watcherKey]
-	if ok {
-		slog.Info("watcher exist", "gvr", gvr.String(), "key", watcherKey)
-		c.JSON(http.StatusOK, gin.H{"success": ""})
-		return
-	}
 	watch, err := ri.Watch(context.TODO(), metav1.ListOptions{ResourceVersion: req.Request.ResourceVersion})
 	if err != nil {
 		slog.Error("watcher", "err", err.Error())
@@ -833,6 +843,58 @@ func (r *Route) StopStreamPodLogs(c *gin.Context) {
 	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s_%s", req.Name, req.Namespace, req.Context)
 
 	r.podLogsWatchers[podLogsKey] <- true
+
+	c.JSON(http.StatusOK, gin.H{"success": ""})
+}
+
+func (r *Route) ScaleResource(c *gin.Context) {
+	var req ResourceOperation
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+		Group:   req.Request.Group,
+		Version: req.Request.Version,
+	}.String())
+	if err != nil {
+		slog.Error("api list", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	for _, r := range apiResourceList.APIResources {
+		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
+			req.Resource = r.Name
+		}
+	}
+	gvr := schema.GroupVersionResource{
+		Group:    req.Request.Group,
+		Version:  req.Request.Version,
+		Resource: req.Resource,
+	}
+	resource, err := r.clients.Dynamic[req.Context].Resource(gvr).
+		Namespace(req.Request.Namespace).
+		Get(context.Background(), req.Request.Name, metav1.GetOptions{})
+	if err != nil {
+		slog.Error("get", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	unstr := &unstructured.Unstructured{Object: resource.Object}
+	if err := unstructured.SetNestedField(unstr.Object, req.Replicas, "spec", "replicas"); err != nil {
+		slog.Error("set replicas", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if _, err := r.clients.Dynamic[req.Context].Resource(gvr).
+		Namespace(req.Request.Namespace).
+		Update(context.Background(), unstr, metav1.UpdateOptions{}); err != nil {
+		slog.Error("update", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"success": ""})
 }

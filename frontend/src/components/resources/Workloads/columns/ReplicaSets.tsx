@@ -68,6 +68,7 @@ const columns: ColumnDef<any>[] = [
           url={`/yaml/ReplicaSet/${rs.metadata?.name}/${rs?.metadata?.namespace}?group=${rs.apiVersion.split('/')[0]}`}
           resource={rs}
           children={additional}
+          scale={true}
           name={'ReplicaSet'}
           action={'delete_dynamic_resource'}
           request={{

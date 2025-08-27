@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"embed"
 	"log/slog"
 	"net/http"
 	"os"
@@ -37,9 +38,9 @@ func New(version string, configPath *string, exitchnl, signchnl chan (os.Signal)
 	return app, nil
 }
 
-func (a *App) Run() error {
+func (a *App) Run(staticFiles embed.FS) error {
 	slog.Info("version", "version", a.Config.Version)
-	if err := a.initServer(); err != nil {
+	if err := a.initServer(staticFiles); err != nil {
 		slog.Error("cant init server", "error", err)
 	}
 	go func() {
@@ -74,7 +75,7 @@ func initLogger(cfg *config.Config) {
 	slog.Info("set loglevel", "level", level)
 }
 
-func (a *App) initServer() error {
+func (a *App) initServer(staticFiles embed.FS) error {
 	slog.Info("initialize web server", "addr", a.Config.ServerHttp)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -86,6 +87,17 @@ func (a *App) initServer() error {
 	if err != nil {
 		return err
 	}
+	router.NoRoute(func(c *gin.Context) {
+		if len(c.Request.URL.Path) >= 4 && c.Request.URL.Path[:4] == "/api" {
+			c.JSON(404, gin.H{"error": "not found"})
+			return
+		}
+
+		fileServer := http.FileServer(http.FS(staticFiles))
+		c.Request.URL.Path = "/dist" + c.Request.URL.Path
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+
 	router.GET("/api/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -106,6 +118,7 @@ func (a *App) initServer() error {
 	router.POST("/api/create_kube_resource", r.CreateKubeResource)
 	router.POST("/api/cordon_node", r.NodeOperation)
 	router.POST("/api/uncordon_node", r.NodeOperation)
+	router.POST("/api/scale_resource", r.ScaleResource)
 
 	webSocket.SetupWebsocket(hub, router)
 	go func() {

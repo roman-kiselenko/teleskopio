@@ -21,14 +21,24 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
+    accessorKey: 'spec.updateStrategy.type',
+    id: 'updateStrategy',
+    header: 'UpdateStrategy',
+    cell: memo(({ row }) => <div>{row.original.spec?.updateStrategy.type}</div>),
+  },
+  {
     accessorKey: 'replicas',
     id: 'replicas',
     header: memo(({ column }) => <HeaderAction column={column} name={'Replicas'} />),
     cell: ({ row }) => {
-      const currentReplicas = row.original.status?.currentReplicas;
+      const currentReplicas = row.original.spec?.replicas;
       const availableReplicas = row.original.status?.availableReplicas;
+      let color = '';
+      if (availableReplicas < currentReplicas) {
+        color = 'text-red-500';
+      }
       return (
-        <div>
+        <div className={color}>
           {currentReplicas}/{availableReplicas}
         </div>
       );
@@ -50,6 +60,7 @@ const columns: ColumnDef<any>[] = [
           url={`/yaml/StatefulSet/${ss.metadata?.name}/${ss?.metadata?.namespace}?group=${ss.apiVersion.split('/')[0]}`}
           resource={ss}
           name={'StatefulSet'}
+          scale={true}
           action={'delete_dynamic_resource'}
           request={{
             request: {

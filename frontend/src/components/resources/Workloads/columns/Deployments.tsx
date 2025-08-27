@@ -21,14 +21,24 @@ const columns: ColumnDef<any>[] = [
     cell: memo(({ row }) => <div>{row.original.metadata?.namespace}</div>),
   },
   {
+    accessorKey: 'spec.strategy.type',
+    id: 'strategy',
+    header: 'Strategy',
+    cell: memo(({ row }) => <div>{row.original.spec?.strategy.type}</div>),
+  },
+  {
     accessorKey: 'spec.replicas',
     id: 'replicase',
     header: memo(({ column }) => <HeaderAction column={column} name={'Replicas'} />),
     cell: ({ row }) => {
       const replicas = row.original.spec?.replicas;
       const availableReplicas = row.original.status?.availableReplicas || 0;
+      let color = '';
+      if (availableReplicas < replicas) {
+        color = 'text-red-500';
+      }
       return (
-        <div>
+        <div className={color}>
           {replicas}/{availableReplicas}
         </div>
       );
@@ -51,6 +61,7 @@ const columns: ColumnDef<any>[] = [
           resource={dp}
           name={'Deployment'}
           action={'delete_dynamic_resource'}
+          scale={true}
           request={{
             request: {
               name: dp.metadata?.name,

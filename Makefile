@@ -19,6 +19,10 @@ all: help
 build: ## Build all the binaries and put the output in bin/
 	$(GOCMD) build -ldflags "-X main.version=$(BRANCH)-$(HASH)" -o bin/$(PROJECT_NAME) .
 
+## Build frontend:
+build-frontend: ## Build frontend
+	cd frontend && pnpm build && cp -R dist ../
+
 build-docker: ## Build an image
 	docker build -t $(PROJECT_NAME) .
 

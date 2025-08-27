@@ -45,6 +45,7 @@ export function NamespaceSelector() {
             <CommandGroup>
               {namespaceArray.map((ns: any, index: number) => (
                 <CommandItem
+                  disabled={ns?.metadata?.deletionTimestamp}
                   className="text-xs"
                   key={index}
                   value={ns.metadata.name}
