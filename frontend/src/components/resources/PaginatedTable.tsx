@@ -8,6 +8,8 @@ import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/apiResources';
 import { useSearchState } from '@/store/search';
+import { getVersion } from '@/store/version';
+import { compareVersions } from 'compare-versions';
 
 interface PaginatedTableProps<T> {
   kind: string;
@@ -111,14 +113,23 @@ export function PaginatedTable<T>({
     observer.current.observe(loaderRef.current);
     return () => observer.current?.disconnect();
   }, [nextToken, loading, selectedNamespace]);
-
   const ns = selectedNamespace.get();
   const data = Array.from(state().values())
     .sort((a: any, b: any) =>
       moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
     )
     .filter((x: any) => {
-      return String(x.metadata.name || '')
+      let attribute: String;
+      if (kind === 'Event') {
+        if (compareVersions(getVersion(), '1.20') === 1) {
+          attribute = x.note;
+        } else {
+          attribute = x.message;
+        }
+      } else {
+        attribute = x.metadata.name;
+      }
+      return String(attribute || '')
         .toLowerCase()
         .includes(searchQuery.q.get().toLowerCase());
     })

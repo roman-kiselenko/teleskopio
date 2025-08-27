@@ -27,5 +27,11 @@ export async function stopLogsWatcher(name: string, namespace: string, container
   if (server === '' || context === '') {
     return;
   }
-  // invoke('stop_pod_log_stream', { path, context, name, namespace, container }).catch(console.error);
+  await fetch(`/api/stop_pod_log_stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ server, context, name, namespace, container }),
+  });
 }

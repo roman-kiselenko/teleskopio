@@ -100,7 +100,7 @@ async function fetchAndWatchNamespaces(context: string): Promise<void> {
   const nsResource = apiResourcesState
     .get()
     .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
-  const [ns] = await call('list_dynamic_resource', {
+  const [ns, _token, rv] = await call('list_dynamic_resource', {
     request: { ...nsResource },
   });
   ns.forEach((x) => {
@@ -109,6 +109,12 @@ async function fetchAndWatchNamespaces(context: string): Promise<void> {
       newMap.set(x.metadata?.uid as string, x);
       return newMap;
     });
+  });
+  await call('watch_dynamic_resource', {
+    request: {
+      ...nsResource,
+      resource_version: rv,
+    },
   });
   await addSubscription(
     listenEvent(`Namespace-${context}-deleted`, async (ev: any) => {

@@ -9,10 +9,12 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"teleskopio/pkg/config"
 
 	"github.com/gin-gonic/gin"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -42,6 +44,7 @@ type ApiResourceInfo struct {
 }
 
 type ListRequest struct {
+	UID      string `json:"uid"`
 	Continue string `json:"continue"`
 	Limit    int64  `json:"limit"`
 	Server   string `json:"server"`
@@ -57,6 +60,7 @@ type ListRequest struct {
 }
 
 type WatchRequest struct {
+	UID      string `json:"uid"`
 	Server   string `json:"server"`
 	Context  string `json:"context"`
 	Resource string `json:"resource"`
@@ -82,6 +86,15 @@ type GetRequest struct {
 		Kind       string `json:"kind"`
 		Namespaced bool   `json:"namespaced"`
 	} `json:"request"`
+}
+
+type PodLogRequest struct {
+	Server    string `json:"server"`
+	Context   string `json:"context"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Container string `json:"container"`
+	TailLines *int64 `json:"tail_lines"`
 }
 
 type DeleteRequest struct {
@@ -123,13 +136,19 @@ type Route struct {
 	cfg     *config.Config
 	clients *config.Clients
 	hub     *webSocket.Hub
+	// TODO
+	// Add mutex
+	watchers        map[string]w.Interface
+	podLogsWatchers map[string]chan (bool)
 }
 
 func New(hub *webSocket.Hub, ginEngine *gin.Engine, cfg *config.Config, clients *config.Clients) (Route, error) {
 	r := Route{
-		cfg:     cfg,
-		clients: clients,
-		hub:     hub,
+		cfg:             cfg,
+		clients:         clients,
+		hub:             hub,
+		watchers:        make(map[string]w.Interface),
+		podLogsWatchers: make(map[string]chan bool),
 	}
 	return r, nil
 }
@@ -264,6 +283,153 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	c.JSON(http.StatusOK, []interface{}{list.Items, continueToken, resourceVersion})
 }
 
+func (r *Route) ListEventsDynamicResource(c *gin.Context) {
+	var req ListRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+		Group:   req.Request.Group,
+		Version: req.Request.Version,
+	}.String())
+	if err != nil {
+		slog.Error("api list", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	for _, r := range apiResourceList.APIResources {
+		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
+			req.Resource = r.Name
+		}
+	}
+	gvr := schema.GroupVersionResource{
+		Group:    req.Request.Group,
+		Version:  req.Request.Version,
+		Resource: req.Resource,
+	}
+	var ri dynamic.ResourceInterface
+	if req.Request.Namespace != "" {
+		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+	} else {
+		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+	}
+	fieldSelector := ""
+	if req.Request.Group == "" {
+		fieldSelector = fmt.Sprintf("involvedObject.uid=%s", req.UID)
+	} else {
+		fieldSelector = fmt.Sprintf("regarding.uid=%s", req.UID)
+	}
+	listParams := metav1.ListOptions{
+		Limit:         req.Limit,
+		Continue:      req.Continue,
+		FieldSelector: fieldSelector,
+	}
+
+	list, err := ri.List(context.TODO(), listParams)
+	if err != nil {
+		slog.Error("list", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	for i := range list.Items {
+		list.Items[i].SetAPIVersion(fmt.Sprintf("%s", req.Request.Version))
+		if req.Request.Group != "" {
+			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.Request.Group, req.Request.Version))
+		}
+		list.Items[i].SetKind(req.Request.Kind)
+	}
+	continueToken, resourceVersion := "", ""
+	metadata := list.Object["metadata"].(map[string]interface{})
+	if v, ok := metadata["resourceVersion"].(string); ok {
+		resourceVersion = v
+	}
+	if v, ok := metadata["continue_"].(string); ok {
+		continueToken = v
+	}
+	c.JSON(http.StatusOK, []interface{}{list.Items, continueToken, resourceVersion})
+}
+
+func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
+	var req WatchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+		Group:   req.Request.Group,
+		Version: req.Request.Version,
+	}.String())
+	if err != nil {
+		slog.Error("api list", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	for _, r := range apiResourceList.APIResources {
+		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
+			req.Resource = r.Name
+		}
+	}
+	gvr := schema.GroupVersionResource{
+		Group:    req.Request.Group,
+		Version:  req.Request.Version,
+		Resource: req.Resource,
+	}
+	var ri dynamic.ResourceInterface
+	if req.Request.Namespace != "" {
+		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+	} else {
+		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+	}
+	watcherKey := fmt.Sprintf("%s-%s-%s-updated", req.UID, req.Context, req.Server)
+	_, ok := r.watchers[watcherKey]
+	if ok {
+		slog.Info("watcher exist", "gvr", gvr.String(), "key", watcherKey)
+		c.JSON(http.StatusOK, gin.H{"success": ""})
+		return
+	}
+	watchOptions := metav1.ListOptions{ResourceVersion: req.Request.ResourceVersion}
+	fieldSelector := ""
+	if req.Request.Group == "" {
+		fieldSelector = fmt.Sprintf("involvedObject.uid=%s", req.UID)
+	} else {
+		fieldSelector = fmt.Sprintf("regarding.uid=%s", req.UID)
+	}
+	watchOptions.FieldSelector = fieldSelector
+	watch, err := ri.Watch(context.TODO(), watchOptions)
+	if err != nil {
+		slog.Error("watcher", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ch := watch.ResultChan()
+	r.watchers[watcherKey] = watch
+	slog.Info("Watching ...", "gvr", gvr.String())
+	go func() {
+		for event := range ch {
+			switch event.Type {
+			case w.Added, w.Modified:
+				slog.Debug("message received", "gvr", gvr.String(), "type", event.Type)
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   watcherKey,
+					"payload": event.Object,
+				})
+				r.hub.Broadcast(payload)
+			case w.Error:
+				slog.Error("watching error", "gvr", gvr.String(), "error", event.Object.DeepCopyObject().GetObjectKind())
+				delete(r.watchers, watcherKey)
+			}
+		}
+	}()
+
+	c.JSON(http.StatusOK, gin.H{"success": ""})
+}
+
 func (r *Route) WatchDynamicResource(c *gin.Context) {
 	var req WatchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -297,9 +463,21 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 	} else {
 		ri = r.clients.Dynamic[req.Context].Resource(gvr)
 	}
+	watcherKey := fmt.Sprintf("%s-%s-%s", req.Request.Kind, req.Context, req.Server)
+	_, ok := r.watchers[watcherKey]
+	if ok {
+		slog.Info("watcher exist", "gvr", gvr.String(), "key", watcherKey)
+		c.JSON(http.StatusOK, gin.H{"success": ""})
+		return
+	}
 	watch, err := ri.Watch(context.TODO(), metav1.ListOptions{ResourceVersion: req.Request.ResourceVersion})
+	if err != nil {
+		slog.Error("watcher", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 	ch := watch.ResultChan()
-
+	r.watchers[watcherKey] = watch
 	slog.Info("Watching ...", "gvr", gvr.String())
 	go func() {
 		for event := range ch {
@@ -320,6 +498,7 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 				r.hub.Broadcast(payload)
 			case w.Error:
 				slog.Error("watching error", "gvr", gvr.String(), "error", event.Object.DeepCopyObject().GetObjectKind())
+				delete(r.watchers, watcherKey)
 			}
 		}
 	}()
@@ -523,5 +702,137 @@ func (r *Route) NodeOperation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+	c.JSON(http.StatusOK, gin.H{"success": ""})
+}
+
+func (r *Route) StreamPodLogs(c *gin.Context) {
+	var req PodLogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	podLogOptions := &v1.PodLogOptions{
+		Follow:    true,
+		Container: req.Container,
+	}
+	timeNow := metav1.NewTime(time.Now())
+	podLogOptions.SinceTime = &timeNow
+	logsReq := r.clients.Typed[req.Context].CoreV1().Pods(req.Namespace).GetLogs(req.Name, podLogOptions)
+	podLogs, err := logsReq.Stream(context.Background())
+	if err != nil {
+		slog.Error("get stream", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s_%s", req.Name, req.Namespace, req.Context)
+	if _, ok := r.podLogsWatchers[podLogsKey]; ok {
+		slog.Info("pod logs exist", "key", podLogsKey)
+		c.JSON(http.StatusOK, gin.H{"success": ""})
+		return
+	}
+	r.podLogsWatchers[podLogsKey] = make(chan bool)
+	stopAndClean := func() {
+		slog.Debug("stop pod logs stream", "pod", podLogsKey)
+		delete(r.podLogsWatchers, podLogsKey)
+		podLogs.Close()
+	}
+	cancel := func() bool {
+		select {
+		case <-r.podLogsWatchers[podLogsKey]:
+			return true
+		default:
+			return false
+		}
+	}
+	go func() {
+		defer stopAndClean()
+		for {
+			if cancel() {
+				break
+			}
+			buf := make([]byte, 2000)
+			numBytes, err := podLogs.Read(buf)
+			if err == io.EOF {
+				break
+			}
+			if numBytes == 0 {
+				time.Sleep(time.Second)
+				continue
+			}
+			if err != nil {
+				break
+			}
+			message := string(buf[:numBytes])
+			slog.Debug("log line", "line", message, "pod", podLogsKey)
+			payload, _ := json.Marshal(map[string]interface{}{
+				"event": podLogsKey,
+				"payload": map[string]interface{}{
+					"container": req.Container,
+					"pod":       req.Name,
+					"namespace": req.Namespace,
+					"line":      message,
+				},
+			})
+			r.hub.Broadcast(payload)
+		}
+	}()
+
+	c.JSON(http.StatusOK, gin.H{"success": ""})
+}
+
+func (r *Route) GetPodLogs(c *gin.Context) {
+	var req PodLogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	podLogOptions := &v1.PodLogOptions{
+		TailLines: req.TailLines,
+		Container: req.Container,
+	}
+	logsReq := r.clients.Typed[req.Context].CoreV1().Pods(req.Namespace).GetLogs(req.Name, podLogOptions)
+	podLogs, err := logsReq.Stream(context.Background())
+	if err != nil {
+		slog.Error("get stream", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		slog.Error("copy stream", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	lines := []string{}
+	for {
+		line, err := buf.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		lines = append(lines, line)
+	}
+
+	c.JSON(http.StatusOK, lines)
+}
+
+func (r *Route) StopStreamPodLogs(c *gin.Context) {
+	var req PodLogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s_%s", req.Name, req.Namespace, req.Context)
+
+	r.podLogsWatchers[podLogsKey] <- true
+
 	c.JSON(http.StatusOK, gin.H{"success": ""})
 }

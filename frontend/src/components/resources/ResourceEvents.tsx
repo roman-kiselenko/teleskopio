@@ -2,7 +2,7 @@ import { ArrowBigLeft, Rss } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { call } from '@/lib/api';
-import { listenEvent, stopEventsWatcher } from '@/lib/events';
+import { stopEventsWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
 import { useVersionState } from '@/store/version';
 import { useLoaderData } from 'react-router';
@@ -17,6 +17,7 @@ import type { ApiResource } from '@/types';
 import { compareVersions } from 'compare-versions';
 import { currentClusterState } from '@/store/cluster';
 import { getVersion } from '@/store/version';
+import { useWS } from '@/wsContext';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -65,18 +66,30 @@ export function ResourceEvents() {
   const version = useVersionState();
   const [events, setEvents] = useState<Map<string, any>>(new Map());
   let navigate = useNavigate();
+  const { listen } = useWS();
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     const listenEvents = async () => {
       const context = currentClusterState.context.get();
-      unlisten = await listenEvent(`${uid}-${context}-updated`, (ev: any) => {
-        if (ev?.involvedObject?.uid === uid) {
-          setEvents((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(ev.metadata?.uid as string, ev);
-            return newMap;
-          });
+      const server = currentClusterState.server.get();
+      unlisten = await listen(`${uid}-${context}-${server}-updated`, (payload: any) => {
+        if (compareVersions(version.version.get(), '1.20') === 1) {
+          if (payload?.regarding?.uid === uid) {
+            setEvents((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(payload.metadata?.uid as string, payload);
+              return newMap;
+            });
+          }
+        } else {
+          if (payload?.involvedObject?.uid === uid) {
+            setEvents((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(payload.metadata?.uid as string, payload);
+              return newMap;
+            });
+          }
         }
       });
     };

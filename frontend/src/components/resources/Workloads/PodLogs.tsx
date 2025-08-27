@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useEffect, useRef, useState } from 'react';
 import { call } from '@/lib/api';
+import { toast } from 'sonner';
 import { listenEvent, stopLogsWatcher } from '@/lib/events';
 import { logsState, useLogsState } from '@/store/logs';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useWS } from '@/wsContext';
 
 export function PodLogs() {
   const { name, ns, data } = useLoaderData();
@@ -26,6 +28,7 @@ export function PodLogs() {
   const containerRef = useRef<HTMLDivElement>(null);
   let logLines = useLogsState();
   const [filterText, setFilterText] = useState('');
+  const { listen } = useWS();
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -47,25 +50,25 @@ export function PodLogs() {
         container: currentContainer,
         tailLines: 100,
       });
+      if (logs.message) {
+        toast.error('Error! Cant ping server\n' + logs.message);
+        navigate(-1);
+      }
       logLines.set(
         logs.map((l) => {
           return { c: currentContainer, l: l };
         }),
       );
       const context = currentClusterState.context.get();
-      unlisten = await listenEvent(`pod_log_line_${name}_${ns}_${context}`, (ev: any) => {
-        const payload = ev as {
+      unlisten = await listen(`pod_log_line_${name}_${ns}_${context}`, (payload: any) => {
+        const p = payload as {
           pod: string;
           container: string;
           namespace: string;
           line: string;
         };
-        if (
-          name === payload.pod &&
-          ns === payload.namespace &&
-          payload.container === currentContainer
-        ) {
-          logLines.set((prev) => [...prev, { c: payload.container, l: payload.line }]);
+        if (name === p.pod && ns === p.namespace && p.container === currentContainer) {
+          logLines.set((prev) => [...prev, { c: p.container, l: p.line }]);
         }
       });
 
@@ -94,6 +97,18 @@ export function PodLogs() {
     }
   }, [logLines, autoScroll]);
 
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        navigate(-1);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
+
   const handleScroll = () => {
     const el = containerRef.current;
     if (!el) return;
@@ -105,7 +120,7 @@ export function PodLogs() {
     <div className="h-screen flex flex-col">
       <div className="flex gap-2 p-1 border-b justify-items-stretch items-center">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
-          <ArrowBigLeft />
+          <ArrowBigLeft /> Esc
         </Button>
 
         <Button
