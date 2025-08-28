@@ -175,31 +175,6 @@ const columns: ColumnDef<any>[] = [
               </div>
             )}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={async () => {
-              toast.promise(call('drain_node', { resourceName: node.metadata?.name }), {
-                loading: 'Draining...',
-                success: () => {
-                  return (
-                    <span>
-                      Node <b>{node.metadata?.name}</b> drained
-                    </span>
-                  );
-                },
-                error: (err) => (
-                  <span>
-                    Cant drain <b>{node.metadata?.name}</b>
-                    <br />
-                    {err.message}
-                  </span>
-                ),
-              });
-            }}
-          >
-            <BrushCleaning />
-            Drain
-          </DropdownMenuItem>
         </div>
       );
       return (
@@ -208,6 +183,7 @@ const columns: ColumnDef<any>[] = [
           children={additional}
           resource={node}
           name={'Node'}
+          drain={true}
           action={'delete_dynamic_resource'}
           request={{ request: request }}
         />

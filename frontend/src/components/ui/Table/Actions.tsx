@@ -1,4 +1,13 @@
-import { SquareMousePointer, Ruler, MoreHorizontal, ClipboardCopy, Trash, Rss } from 'lucide-react';
+import {
+  SquareMousePointer,
+  Package,
+  Ruler,
+  FireExtinguisher,
+  MoreHorizontal,
+  ClipboardCopy,
+  Trash,
+  Rss,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +19,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { call } from '@/lib/api';
 import { useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +28,19 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useWS } from '@/wsContext';
 
 function Actions({
   resource,
@@ -30,6 +51,7 @@ function Actions({
   children,
   noEvents = false,
   scale = false,
+  drain = false,
 }: {
   resource: any;
   url: string;
@@ -39,11 +61,32 @@ function Actions({
   children?: any;
   noEvents?: Boolean;
   scale?: Boolean;
+  drain?: Boolean;
 }) {
   let navigate = useNavigate();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openScaleDialog, setOpenScaleDialog] = useState(false);
+  const [openDrainSheet, setOpenDrainSheet] = useState(false);
+  const [drainLog, setDrainLog] = useState<{ pod: any; ns: any }[]>([]);
+  const [drainForce, setDrainForce] = useState(true);
+  const [IgnoreAllDaemonSets, setIgnoreAllDaemonSets] = useState(true);
+  const [DeleteEmptyDirData, setDeleteEmptyDirData] = useState(true);
+  const [drainTimeout, setDrainTimeout] = useState(60);
   const [scaleValue, setScaleValue] = useState(resource.spec?.replicas || 0);
+  const { listen } = useWS();
+
+  useEffect(() => {
+    const subscribe = async () => {
+      await listen(`drain_${resource.metadata.name}_${resource.metadata.uid}`, (payload: any) => {
+        setDrainLog((prev) => [{ pod: payload.pod, ns: payload.ns }, ...prev]);
+      });
+    };
+
+    if (drain) {
+      subscribe();
+    }
+  }, []);
+
   return (
     <div className="flex flex-row justify-center w-full">
       <DropdownMenu>
@@ -83,6 +126,18 @@ function Actions({
                   <Ruler size={8} className="mr-2" />
                 </div>
                 <div>Scale</div>
+              </div>
+            </DropdownMenuItem>
+          ) : (
+            <></>
+          )}
+          {drain ? (
+            <DropdownMenuItem onClick={() => setOpenDrainSheet(true)} className="text-xs">
+              <div className="flex flex-row items-center">
+                <div>
+                  <FireExtinguisher color="red" size={8} className="mr-2" />
+                </div>
+                <span className="text-red-500">Drain</span>
               </div>
             </DropdownMenuItem>
           ) : (
@@ -231,6 +286,110 @@ function Actions({
             </div>
           </DialogContent>
         </Dialog>
+      ) : (
+        <></>
+      )}
+      {drain ? (
+        <Sheet open={openDrainSheet} onOpenChange={setOpenDrainSheet}>
+          <SheetContent className="w-[400px] sm:w-[540px]">
+            <SheetHeader>
+              <SheetTitle className="text-xs">Set drain parameters</SheetTitle>
+              <SheetDescription>
+                <div className="flex flex-row items-center py-2">
+                  <Checkbox
+                    checked={drainForce}
+                    onCheckedChange={() => setDrainForce(!drainForce)}
+                    id="force"
+                  />
+                  <Label className="pl-1 text-xs" htmlFor="force">
+                    Force
+                  </Label>
+                </div>
+                <div className="flex flex-row items-center py-2">
+                  <Checkbox
+                    checked={IgnoreAllDaemonSets}
+                    onCheckedChange={() => setIgnoreAllDaemonSets(!IgnoreAllDaemonSets)}
+                    id="IgnoreAllDaemonSets"
+                  />
+                  <Label className="pl-1 text-xs" htmlFor="IgnoreAllDaemonSets">
+                    IgnoreAllDaemonSets
+                  </Label>
+                </div>
+                <div className="flex flex-row items-center py-2">
+                  <Checkbox
+                    checked={DeleteEmptyDirData}
+                    onCheckedChange={() => setDeleteEmptyDirData(!DeleteEmptyDirData)}
+                    id="DeleteEmptyDirData"
+                  />
+                  <Label className="pl-1 text-xs" htmlFor="DeleteEmptyDirData">
+                    DeleteEmptyDirData
+                  </Label>
+                </div>
+                <div className="flex flex-row items-center py-2">
+                  <Input
+                    type="number"
+                    id="Timeout"
+                    onChange={(e) => setDrainTimeout(parseInt(e.target.value))}
+                    value={drainTimeout}
+                    className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 w-[80px]"
+                  />
+                  <Label className="pl-1 text-xs" htmlFor="Timeout">
+                    Timeout sec
+                  </Label>
+                </div>
+                <div className="flex flex-row items-center py-2">
+                  <Button
+                    onClick={() => {
+                      toast.promise(
+                        call('drain_node', {
+                          drainForce: drainForce,
+                          IgnoreAllDaemonSets: IgnoreAllDaemonSets,
+                          DeleteEmptyDirData: DeleteEmptyDirData,
+                          drainTimeout: drainTimeout,
+                          resourceName: resource.metadata?.name,
+                          resourceUid: resource.metadata?.uid,
+                        }),
+                        {
+                          loading: 'Draining...',
+                          success: () => {
+                            return (
+                              <span>
+                                Node <b>{resource.metadata?.name}</b> drained
+                              </span>
+                            );
+                          },
+                          error: (err) => (
+                            <span>
+                              Cant drain <b>{resource.metadata?.name}</b>
+                              <br />
+                              {err.message}
+                            </span>
+                          ),
+                        },
+                      );
+                    }}
+                    className="text-xs"
+                    variant="plain"
+                  >
+                    Drain
+                  </Button>
+                </div>
+                <div className="w-full h-screen overflow-y-auto text-xs p-0">
+                  {drainLog.map((ev: any, index: number) => (
+                    <div key={index} className="text-xs flex flex-row items-center">
+                      <span>
+                        <Package size={12} />
+                      </span>
+                      <div>
+                        {ev.ns}/{ev.pod} Evicted
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
       ) : (
         <></>
       )}

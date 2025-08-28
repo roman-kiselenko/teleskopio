@@ -118,6 +118,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	router.POST("/api/create_kube_resource", r.CreateKubeResource)
 	router.POST("/api/cordon_node", r.NodeOperation)
 	router.POST("/api/uncordon_node", r.NodeOperation)
+	router.POST("/api/drain_node", r.NodeDrain)
 	router.POST("/api/scale_resource", r.ScaleResource)
 
 	webSocket.SetupWebsocket(hub, router)
