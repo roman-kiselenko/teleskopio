@@ -171,7 +171,7 @@ const columns: ColumnDef<any>[] = [
                 onClick={() =>
                   navigate(`/resource/Logs/${pod?.metadata?.namespace}/${pod?.metadata?.name}`)
                 }
-                disabled={actionDisabled}
+                disabled={actionDisabled || pod?.status?.phase === 'Pending'}
                 className="text-xs"
               >
                 <ScrollText />

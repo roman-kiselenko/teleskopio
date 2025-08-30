@@ -1,6 +1,7 @@
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
+import { toast } from 'sonner';
 
 export async function Load(kind: string, group: string, name: string, namespace: string) {
   const resource = apiResourcesState
@@ -14,5 +15,10 @@ export async function Load(kind: string, group: string, name: string, namespace:
   if (resource.namespaced && namespace !== '') {
     request = { namespace: namespace, ...request } as any;
   }
-  return await call('get_dynamic_resource', { request });
+  const response = await call('get_dynamic_resource', { request });
+  if (response.message) {
+    toast.error(`Error: ${response.message}`);
+    return;
+  }
+  return response;
 }

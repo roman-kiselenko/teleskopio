@@ -37,9 +37,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useWS } from '@/wsContext';
 
 function Actions({
@@ -69,6 +67,7 @@ function Actions({
   const [openDrainSheet, setOpenDrainSheet] = useState(false);
   const [drainLog, setDrainLog] = useState<{ pod: any; ns: any }[]>([]);
   const [drainForce, setDrainForce] = useState(true);
+  const [isDraining, setIsDraining] = useState(false);
   const [IgnoreAllDaemonSets, setIgnoreAllDaemonSets] = useState(true);
   const [DeleteEmptyDirData, setDeleteEmptyDirData] = useState(true);
   const [drainTimeout, setDrainTimeout] = useState(60);
@@ -227,7 +226,8 @@ function Actions({
               <DialogDescription></DialogDescription>
             </DialogHeader>
             <div className="text-xs">
-              {resource.metadata.namespace}/{resource.metadata.name}
+              {resource.metadata.namespace}/{resource.metadata.name} from {resource.spec?.replicas}{' '}
+              to {scaleValue}
             </div>
             <div className="flex flex-col items-center">
               <Input
@@ -291,7 +291,7 @@ function Actions({
       )}
       {drain ? (
         <Sheet open={openDrainSheet} onOpenChange={setOpenDrainSheet}>
-          <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetContent className="w-[500px] sm:w-[540px]">
             <SheetHeader>
               <SheetTitle className="text-xs">Set drain parameters</SheetTitle>
               <SheetDescription>
@@ -339,7 +339,9 @@ function Actions({
                 </div>
                 <div className="flex flex-row items-center py-2">
                   <Button
+                    disabled={isDraining}
                     onClick={() => {
+                      setIsDraining(true);
                       toast.promise(
                         call('drain_node', {
                           drainForce: drainForce,
@@ -352,31 +354,38 @@ function Actions({
                         {
                           loading: 'Draining...',
                           success: () => {
+                            setIsDraining(false);
                             return (
                               <span>
                                 Node <b>{resource.metadata?.name}</b> drained
                               </span>
                             );
                           },
-                          error: (err) => (
-                            <span>
-                              Cant drain <b>{resource.metadata?.name}</b>
-                              <br />
-                              {err.message}
-                            </span>
-                          ),
+                          error: (err) => {
+                            setIsDraining(false);
+                            return (
+                              <span>
+                                Cant drain <b>{resource.metadata?.name}</b>
+                                <br />
+                                {err.message}
+                              </span>
+                            );
+                          },
                         },
                       );
                     }}
                     className="text-xs"
                     variant="plain"
                   >
-                    Drain
+                    {isDraining ? 'Draining...' : 'Drain'}
                   </Button>
                 </div>
                 <div className="w-full h-screen overflow-y-auto text-xs p-0">
                   {drainLog.map((ev: any, index: number) => (
-                    <div key={index} className="text-xs flex flex-row items-center">
+                    <div
+                      key={index}
+                      className="text-xs flex flex-row whitespace-nowrap items-center"
+                    >
                       <span>
                         <Package size={12} />
                       </span>

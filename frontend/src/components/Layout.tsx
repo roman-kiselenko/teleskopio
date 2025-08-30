@@ -25,7 +25,7 @@ export default function Layout() {
         <SidebarProvider>
           <AppSidebar />
         </SidebarProvider>
-        <main className="bg-background relative flex w-full flex-col">
+        <main className="bg-background flex w-full flex-col h-screen">
           <Outlet />
         </main>
         <Toaster

@@ -306,7 +306,7 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	if v, ok := metadata["resourceVersion"].(string); ok {
 		resourceVersion = v
 	}
-	if v, ok := metadata["continue_"].(string); ok {
+	if v, ok := metadata["continue"].(string); ok {
 		continueToken = v
 	}
 	c.JSON(http.StatusOK, []interface{}{list.Items, continueToken, resourceVersion})

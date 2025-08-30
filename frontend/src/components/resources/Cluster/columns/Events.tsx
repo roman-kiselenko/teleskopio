@@ -4,6 +4,7 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import { compareVersions } from 'compare-versions';
 import { useVersionState } from '@/store/version';
+import { NavLink } from 'react-router-dom';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -36,6 +37,15 @@ const columns: ColumnDef<any>[] = [
     }),
   },
   {
+    accessorKey: 'metadata.namespace',
+    id: 'namespace',
+    meta: { className: 'min-w-[20ch] max-w-[20ch] truncate' },
+    header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
+    cell: ({ row }) => {
+      return <div>{row.original.metadata?.namespace}</div>;
+    },
+  },
+  {
     accessorKey: 'reason',
     id: 'reason',
     header: 'Reason',
@@ -45,13 +55,34 @@ const columns: ColumnDef<any>[] = [
     }),
   },
   {
-    accessorKey: 'metadata.namespace',
-    id: 'namespace',
+    accessorKey: 'regarding',
+    id: 'regarding',
+    header: 'Regarding',
     meta: { className: 'min-w-[20ch] max-w-[20ch] truncate' },
-    header: memo(({ column }) => <HeaderAction column={column} name={'Namespace'} />),
-    cell: ({ row }) => {
-      return <div>{row.original.metadata?.namespace}</div>;
-    },
+    cell: memo(({ row }) => {
+      const version = useVersionState();
+      let group = '';
+      let url = '';
+      let kind = '';
+      if (compareVersions(version.version.get(), '1.20') === 1) {
+        if (row.original?.regarding?.apiVersion?.includes('/')) {
+          group = row.original?.regarding.apiVersion.split('/')[0];
+        }
+        url = `/yaml/${row.original?.regarding?.kind}/${row.original?.regarding?.name}/${row.original?.regarding?.namespace}?group=${group}`;
+        kind = row.original?.regarding?.kind;
+      } else {
+        if (row.original?.involvedObject?.apiVersion?.includes('/')) {
+          group = row.original?.involvedObject.apiVersion.split('/')[0];
+        }
+        url = `/yaml/${row.original?.involvedObject?.kind}/${row.original?.involvedObject?.name}/${row.original?.involvedObject?.namespace}?group=${group}`;
+        kind = row.original?.involvedObject?.kind;
+      }
+      return (
+        <NavLink to={url} className="underline">
+          <div className="text-xs">{kind}</div>
+        </NavLink>
+      );
+    }),
   },
   {
     id: 'age',

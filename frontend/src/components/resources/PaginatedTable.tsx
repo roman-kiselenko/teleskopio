@@ -142,20 +142,22 @@ export function PaginatedTable<T>({
     );
   const showInitialLoader = loading && data.length === 0;
   return (
-    <div>
+    <>
       {!withoutJump && <Header withSearch={withSearch} withNsSelector={withNsSelector} />}
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
         </div>
       )}
-      <DataTable noResult={data.length === 0} columns={columns} data={data} />
-      {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
-      {loading && data.length > 0 && (
-        <div className="flex justify-center py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      )}
-    </div>
+      <div className="flex-1 overflow-y-auto">
+        <DataTable noResult={data.length === 0} columns={columns} data={data} />
+        {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
+        {loading && data.length > 0 && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </div>
+    </>
   );
 }

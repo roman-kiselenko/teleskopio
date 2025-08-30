@@ -30,7 +30,7 @@ const getPage = async ({
 }) => {
   return await call('list_dynamic_resource', {
     limit: limit,
-    continueToken: continueToken,
+    continue: continueToken,
     request: {
       ...apiResource,
       namespaced: false,

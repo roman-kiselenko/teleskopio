@@ -44,7 +44,7 @@ export function Header({
   }, []);
 
   return (
-    <div className="flex flex-row py-2 px-2 items-center justify-between text-dynamic">
+    <div className="flex flex-row py-2 px-2 border-b items-center justify-between sticky top-0 z-10 bg-background">
       {location.pathname === '/createkubernetesresource' ? (
         <></>
       ) : (

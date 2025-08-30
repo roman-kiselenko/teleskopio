@@ -42,6 +42,7 @@ import { StartPage } from './components/pages/Start';
 import { SettingsPage } from '@/components/pages/Settings';
 import Layout from '@/components/Layout';
 import ErrorPage from '@/components/ErrorPage';
+import { redirect } from 'react-router-dom';
 
 export const router = createBrowserRouter([
   {
@@ -255,11 +256,15 @@ export const router = createBrowserRouter([
         loader: async ({ params, request }: { params: any; request: Request }) => {
           const url = new URL(request.url);
           const query = Object.fromEntries(url.searchParams.entries());
+          const data = await Load(params.kind, query.group, params.name, params.namespace);
+          if (!data) {
+            return redirect(location.pathname);
+          }
           return {
             name: params.name,
             group: params.group,
             namespace: params.namespace,
-            data: await Load(params.kind, query.group, params.name, params.namespace),
+            data: data,
           };
         },
         element: <ResourceEditor />,

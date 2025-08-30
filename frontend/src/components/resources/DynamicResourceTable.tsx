@@ -1,12 +1,9 @@
 import { useEffect } from 'react';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
-import { apiResourcesState } from '@/store/apiResources';
 import { call } from '@/lib/api';
-// import { listenEvent } from '@/lib/events';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
 import { currentClusterState } from '@/store/cluster';
-import { addSubscription } from '@/lib/subscriptionManager';
 import { useWS } from '@/wsContext';
 
 interface DynamicResourceTableProps<T> {
@@ -71,7 +68,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   }) => {
     return await call('list_dynamic_resource', {
       limit: limit,
-      continueToken,
+      continue: continueToken,
       request: {
         ...apiResource,
       },
