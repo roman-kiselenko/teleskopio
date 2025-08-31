@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useWS } from '@/wsContext';
+import { useWS } from '@/context/WsContext';
 
 export function PodLogs() {
   const { name, ns, data } = useLoaderData();

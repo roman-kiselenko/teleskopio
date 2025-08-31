@@ -2,12 +2,25 @@ package middleware
 
 import (
 	"log/slog"
+	"net/http"
 	"time"
 
+	"teleskopio/pkg/config"
+	"teleskopio/pkg/model"
+
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func Logger() gin.HandlerFunc {
+type Middleware struct {
+	cfg *config.Config
+}
+
+func New(cfg *config.Config) Middleware {
+	return Middleware{cfg}
+}
+
+func (m Middleware) Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 		c.Next()
@@ -17,5 +30,25 @@ func Logger() gin.HandlerFunc {
 		latency := time.Since(t)
 		status := c.Writer.Status()
 		slog.Default().Debug("incoming request", "route", c.Request.RequestURI, "status", status, "latency", latency)
+	}
+}
+
+func (m Middleware) Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStr := c.GetHeader("Authorization")
+		if tokenStr == "" {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
+			return
+		}
+		token, err := jwt.ParseWithClaims(tokenStr, &model.Claims{}, func(t *jwt.Token) (interface{}, error) {
+			return []byte(m.cfg.JWTKey), nil
+		})
+		if err != nil || !token.Valid {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
+			return
+		}
+		c.Next()
 	}
 }

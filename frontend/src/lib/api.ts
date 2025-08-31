@@ -8,6 +8,7 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
     request.server = currentClusterState.server.get();
     request.context = currentClusterState.context.get();
   }
+  const token = localStorage.getItem('token');
   if (payload) {
     if (action !== 'lookup_configs' && action !== 'ping') {
       console.log(`[${action}] hit payload [${JSON.stringify(request)}]`);
@@ -16,6 +17,7 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: token ? token : '',
       },
       body: JSON.stringify(request),
     });
@@ -35,25 +37,8 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
   const res = await fetch(`/api/${action}`, {
     headers: {
       'Content-Type': 'application/json',
+      Authorization: token ? token : '',
     },
   });
   return res.json();
 }
-
-// export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T> {
-//   let request = { ...payload };
-//   if (currentClusterState.kube_config.get() !== '' && currentClusterState.context.get() !== '') {
-//     request.path = currentClusterState.kube_config.get();
-//     request.context = currentClusterState.context.get();
-//   }
-//   try {
-//     console.debug(`[Backend] invoke ${action} ${JSON.stringify(request)}`);
-//     return await invoke<T>(action, request);
-//   } catch (error: any) {
-//     console.error(`[Backend API Error] "${action}" ${JSON.stringify(request)} failed:`, error);
-//     if (error.message) {
-//       toast.error(`API Response ${error.message}`);
-//     }
-//     throw error;
-//   }
-// }

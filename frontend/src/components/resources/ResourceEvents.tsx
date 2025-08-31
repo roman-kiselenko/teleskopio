@@ -17,7 +17,7 @@ import type { ApiResource } from '@/types';
 import { compareVersions } from 'compare-versions';
 import { currentClusterState } from '@/store/cluster';
 import { getVersion } from '@/store/version';
-import { useWS } from '@/wsContext';
+import { useWS } from '@/context/WsContext';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -159,13 +159,12 @@ export function ResourceEvents() {
     return () => document.removeEventListener('keydown', down);
   }, []);
   return (
-    <div className="h-screen flex flex-col">
-      <Header />
-      <div className="flex gap-2 px-2 pb-1 border-b justify-items-stretch items-center">
+    <>
+      <div className="flex flex-row py-2 px-2 border-b items-center justify-start sticky top-0 z-10 bg-background">
         <Button title="back" className="text-xs bg-blue-500" onClick={() => navigate(-1)}>
           <ArrowBigLeft /> Esc
         </Button>
-        <div className="flex flex-row items-center text-xs">
+        <div className="flex flex-row px-2 items-start text-xs">
           <Rss className="mr-1" size={14} />
           <span>{namespace && namespace !== 'undefined' ? `${namespace}/${name}` : name}</span>
         </div>
@@ -183,6 +182,6 @@ export function ResourceEvents() {
         withNsSelector={false}
         withoutJump={true}
       />
-    </div>
+    </>
   );
 }

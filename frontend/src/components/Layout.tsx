@@ -7,9 +7,27 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { useTheme } from '@/components/ThemeProvider';
 import { useEffect } from 'react';
 import { FONT_KEY, FONT_SIZE_KEY, DEFAULT_FONT, DEFAULT_FONT_SIZE } from '@/settings';
+import { useAuth } from '@/context/AuthProvider';
+import { LoginForm } from '@/components/LoginForm';
+import { toast } from 'sonner';
+import { redirect } from 'react-router-dom';
 
 export default function Layout() {
   const { theme } = useTheme();
+  const { user, login, logout, isAuthenticated } = useAuth();
+
+  const handleLogin = async (username: string, password: string): Promise<boolean | void> => {
+    if (username === '' || password === '') {
+      return;
+    }
+    const response: any = await login(username, password);
+    if (response.message) {
+      toast.error(response.message);
+      redirect('/');
+      return;
+    }
+  };
+
   useEffect(() => {
     const savedFont = localStorage.getItem(FONT_KEY) || DEFAULT_FONT;
     document.body.classList.add(savedFont);
@@ -22,11 +40,23 @@ export default function Layout() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="teleskopio-ui-theme">
       <div className="group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full">
-        <SidebarProvider>
-          <AppSidebar />
-        </SidebarProvider>
+        {isAuthenticated ? (
+          <SidebarProvider>
+            <AppSidebar />
+          </SidebarProvider>
+        ) : (
+          <></>
+        )}
         <main className="bg-background flex w-full flex-col h-screen">
-          <Outlet />
+          {isAuthenticated ? (
+            <Outlet />
+          ) : (
+            <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+              <div className="w-full max-w-sm">
+                <LoginForm login={handleLogin} />
+              </div>
+            </div>
+          )}
         </main>
         <Toaster
           icons={{

@@ -1,11 +1,12 @@
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { WSProvider } from '@/wsContext';
+import { WSProvider } from '@/context/WsContext';
+import { AuthProvider } from '@/context/AuthProvider';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  // <React.StrictMode>
-  <WSProvider>
-    <App />,
-  </WSProvider>,
-  // </React.StrictMode>,
+  <AuthProvider>
+    <WSProvider>
+      <App />
+    </WSProvider>
+  </AuthProvider>,
 );

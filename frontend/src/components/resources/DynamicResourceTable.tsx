@@ -4,7 +4,7 @@ import { call } from '@/lib/api';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
 import { currentClusterState } from '@/store/cluster';
-import { useWS } from '@/wsContext';
+import { useWS } from '@/context/WsContext';
 
 interface DynamicResourceTableProps<T> {
   kind: string;

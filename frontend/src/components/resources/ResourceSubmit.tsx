@@ -11,6 +11,8 @@ import yaml from 'js-yaml';
 import { useTheme } from '@/components/ThemeProvider';
 import { Fonts, FONT_KEY } from '@/settings';
 loader.config({ monaco });
+import { NamespaceSelector } from '@/components/NamespaceSelector';
+import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 
 const yamlTokens = {
   tokenizer: {
@@ -34,6 +36,8 @@ export default function ResourceEditor() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [original, setOriginal] = useState('');
   const [stripManagedFields, setStripManagedFields] = useState(false);
+  const selectedNamespace = useSelectedNamespacesState();
+
   const [selectedFont] = useState<string>(() => {
     return (
       Fonts.find((f) => f.className === localStorage.getItem(FONT_KEY))?.label || 'Cascadia Code'
@@ -96,10 +100,12 @@ export default function ResourceEditor() {
     if (stripManagedFields && obj?.metadata?.managedFields) {
       delete obj.metadata.managedFields;
     }
-    const cleanedYaml = yaml.dump(obj);
-    if (!obj.metadata.namespace) {
-      toast.warning(<span>Namespace is missing</span>);
+    if (selectedNamespace.get() !== 'all') {
+      obj.metadata.namespace = selectedNamespace.get();
+      toast.warning(<span>Using current namespace {selectedNamespace.get()}</span>);
     }
+    const cleanedYaml = yaml.dump(obj);
+    setOriginal(yaml.dump(obj));
     const response = await call('create_kube_resource', {
       namespace: obj.metadata.namespace,
       yaml: cleanedYaml,
@@ -113,11 +119,12 @@ export default function ResourceEditor() {
         Resource created:
         <br />
         <span className="font-bold text-muted-foreground">
-          {obj.kind} {obj.metadata.name}
+          {obj.kind} {obj.metadata.namespace ? `${obj.metadata.namespace}/` : ''}
+          {obj.metadata.name}
         </span>
       </span>,
     );
-    setOriginal(value!);
+    setOriginal(cleanedYaml!);
   };
 
   const handleToggle = () => {
@@ -191,6 +198,9 @@ export default function ResourceEditor() {
         <Button title="increase font" className="text-xs bg-gray-500" onClick={() => changeFont(1)}>
           <Plus />
         </Button>
+        <div className="flex flex-row pr-2">
+          <NamespaceSelector />
+        </div>
       </div>
       <Editor
         height="90vh"

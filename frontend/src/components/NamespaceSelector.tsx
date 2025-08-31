@@ -46,7 +46,7 @@ export function NamespaceSelector() {
               {namespaceArray.map((ns: any, index: number) => (
                 <CommandItem
                   disabled={ns?.metadata?.deletionTimestamp}
-                  className="text-xs"
+                  className={ns?.metadata?.deletionTimestamp ? 'text-red-500 text-xs' : 'text-xs'}
                   key={index}
                   value={ns.metadata.name}
                   onSelect={(currentValue) => {

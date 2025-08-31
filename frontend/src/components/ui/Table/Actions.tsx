@@ -38,7 +38,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useWS } from '@/wsContext';
+import { useWS } from '@/context/WsContext';
 
 function Actions({
   resource,

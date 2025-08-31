@@ -13,8 +13,12 @@ import (
 	"time"
 
 	"teleskopio/pkg/config"
+	"teleskopio/pkg/model"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+
+	"golang.org/x/crypto/bcrypt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -164,6 +168,7 @@ type ResourceOperation struct {
 type Route struct {
 	cfg     *config.Config
 	clients *config.Clients
+	users   *config.Users
 	hub     *webSocket.Hub
 	// TODO
 	// Add mutex
@@ -171,10 +176,11 @@ type Route struct {
 	podLogsWatchers map[string]chan (bool)
 }
 
-func New(hub *webSocket.Hub, ginEngine *gin.Engine, cfg *config.Config, clients *config.Clients) (Route, error) {
+func New(hub *webSocket.Hub, ginEngine *gin.Engine, cfg *config.Config, clients *config.Clients, users *config.Users) (Route, error) {
 	r := Route{
 		cfg:             cfg,
 		clients:         clients,
+		users:           users,
 		hub:             hub,
 		watchers:        make(map[string]w.Interface),
 		podLogsWatchers: make(map[string]chan bool),
@@ -958,4 +964,40 @@ func (r *Route) ScaleResource(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": ""})
+}
+
+type creds struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (r *Route) Login(c *gin.Context) {
+	var req creds
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	u, ok := r.users.Users[req.Username]
+	if !ok || bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.Password)) != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
+		return
+	}
+
+	exp := time.Now().Add(1 * time.Hour)
+	claims := &model.Claims{
+		Username: u.Username,
+		Roles:    u.Roles,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(exp),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString([]byte(r.cfg.JWTKey))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": t})
 }

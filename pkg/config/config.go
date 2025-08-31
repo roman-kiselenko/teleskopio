@@ -12,11 +12,19 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+type User struct {
+	Username string   `yaml:"username"`
+	Password string   `yaml:"password"`
+	Roles    []string `yaml:"roles"`
+}
+
 type Config struct {
 	LogColor   bool   `yaml:"log_color,omitempty"`
 	LogJSON    bool   `yaml:"log_json,omitempty"`
 	LogLevel   string `yaml:"log_level,omitempty"`
 	ServerHttp string `yaml:"server_http,omitempty"`
+	JWTKey     string `yaml:"jwt_key"`
+	Users      []User `yaml:"users"`
 	Kube       struct {
 		Configs []map[string]any `yaml:"configs"`
 	} `yaml:"kube"`
@@ -28,54 +36,64 @@ type Clients struct {
 	Dynamic map[string]dynamic.Interface
 }
 
-func ParseConfig(configPath string) (Config, Clients, error) {
+type Users struct {
+	Users map[string]User
+}
+
+func ParseConfig(configPath string) (Config, Clients, Users, error) {
 	var cfg Config
 
 	clients := Clients{
 		Typed:   make(map[string]*kubernetes.Clientset),
 		Dynamic: make(map[string]dynamic.Interface),
 	}
+	users := Users{
+		Users: make(map[string]User),
+	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return cfg, clients, err
+		return cfg, clients, users, err
 	}
 
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return cfg, clients, err
+		return cfg, clients, users, err
 	}
 
 	for _, raw := range cfg.Kube.Configs {
 		b, err := yaml.Marshal(raw)
 		if err != nil {
-			return cfg, clients, err
+			return cfg, clients, users, err
 		}
 
 		kubeCfg, err := clientcmd.Load(b)
 		if err != nil {
-			return cfg, clients, err
+			return cfg, clients, users, err
 		}
 
 		restCfg, err := clientcmd.
 			NewNonInteractiveClientConfig(*kubeCfg, kubeCfg.CurrentContext, &clientcmd.ConfigOverrides{}, nil).
 			ClientConfig()
 		if err != nil {
-			return cfg, clients, err
+			return cfg, clients, users, err
 		}
 
 		clientset, err := kubernetes.NewForConfig(restCfg)
 		if err != nil {
-			return cfg, clients, err
+			return cfg, clients, users, err
 		}
 		dyn, err := dynamic.NewForConfig(restCfg)
 		if err != nil {
-			return cfg, clients, err
+			return cfg, clients, users, err
 		}
 		clients.Dynamic[kubeCfg.CurrentContext] = dyn
 		clients.Typed[kubeCfg.CurrentContext] = clientset
 	}
 
-	return cfg, clients, nil
+	for _, u := range cfg.Users {
+		users.Users[u.Username] = u
+	}
+	return cfg, clients, users, nil
 }
 
 func (c *Config) Validate() error {
