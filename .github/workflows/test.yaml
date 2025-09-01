@@ -9,9 +9,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Build
-        run: make build
-
       - name: Lint
         run: make lint
 
