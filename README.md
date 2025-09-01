@@ -76,11 +76,19 @@ $ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml telesko
 ...
 ```
 
+#### Run
+
+1. Generate config `teleskopio config > config.yaml`
+1. `teleskopio`
+
 ---
 
 ## Development
 
 1. `pnpm install`
+1. `make run-frontend`
+1. `make run-backend`
+1. `make lint`
 
 ## Contributing
 

@@ -10,7 +10,7 @@ RUN --mount=type=bind,source=frontend/package.json,target=/usr/src/app/package.j
     --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --prod --frozen-lockfile
 
-COPY frontend .
+COPY frontend/* .
 
 # Build
 RUN pnpm build

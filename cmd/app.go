@@ -33,6 +33,7 @@ func New(version string, configPath *string, exitchnl, signchnl chan (os.Signal)
 	if err != nil {
 		return app, err
 	}
+	app.Config = &cfg
 	app.Config.Version = version
 	app.Clients = &clients
 	app.Config = &cfg

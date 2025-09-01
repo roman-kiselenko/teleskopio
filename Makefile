@@ -25,7 +25,7 @@ build-frontend: ## Build frontend
 	cd frontend && pnpm build && cp -R dist ../
 
 build-docker: ## Build an image
-	docker build -t $(PROJECT_NAME) .
+	docker build --no-cache -t $(PROJECT_NAME) .
 
 bin/$(LINTER_BIN):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin $(LINTER_VERSION)
