@@ -25,7 +25,8 @@ build-frontend: ## Build frontend
 	cd frontend && pnpm build && cp -R dist ../
 
 build-docker: ## Build an image
-	docker build --no-cache -t $(PROJECT_NAME) .
+	docker build --build-arg APP_VERSION=$(BRANCH)-$(HASH) -t $(PROJECT_NAME) .
+
 
 bin/$(LINTER_BIN):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin $(LINTER_VERSION)
@@ -37,6 +38,10 @@ clean: ## Remove build related file
 ## Lint:
 lint: ./bin/$(LINTER_BIN) ## Lint sources with golangci-lint
 	./bin/$(LINTER_BIN) run
+
+## Run docker
+run-docker: ## Run docker container
+	docker run -it --rm -p 3080:3080 -v $(PWD)/config.yaml:/etc/config.yaml $(PROJECT_NAME) --config=/etc/config.yaml
 
 ## Run frontend:
 run-frontend: ## Run

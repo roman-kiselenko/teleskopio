@@ -4,3 +4,4 @@ dist
 examples
 */node_modules
 */dist
+.DS_Store

@@ -8,25 +8,25 @@ WORKDIR /usr/src/app
 RUN --mount=type=bind,source=frontend/package.json,target=/usr/src/app/package.json \
     --mount=type=bind,source=frontend/pnpm-lock.yaml,target=/usr/src/app/pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+    pnpm install --frozen-lockfile
 
-COPY frontend/* .
+COPY frontend .
 
 # Build
 RUN pnpm build
 
 FROM golang:1.25.0 AS builder
-ARG TARGETOS TARGETARCH
+ARG TARGETOS TARGETARCH APP_VERSION
 
-RUN mkdir /app && mkdir -p /usr/local/src/teleskopio
-WORKDIR /usr/local/src/teleskopio
-COPY --from=frontend /usr/src/app/dist  /usr/local/src/teleskopio
+RUN mkdir -p /app
+WORKDIR /app
+COPY --from=frontend /usr/src/app/dist  /app/dist
 
-ADD ./go.mod ./go.sum ./
+ADD ./go.mod ./go.sum .
 RUN go mod download
-ADD . ./
+ADD . /app
 
-RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -v -o /build/teleskopio
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-X main.version=$APP_VERSION" -v -o /build/teleskopio
 
 FROM golang:1.25.0 AS runner
 

@@ -17,7 +17,7 @@
     "jsx": "react-jsx",
     "noImplicitAny": false,
     "strictPropertyInitialization": false,
-
+    "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
