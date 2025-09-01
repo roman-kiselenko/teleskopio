@@ -5,6 +5,8 @@
     <img width="300" src="./assets/icon.png"/>
 </p>
 
+[![CI](https://github.com/roman-kiselenko/teleskopio/actions/workflows/test.yaml/badge.svg)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/test.yaml)
+
 ## Features
 
 - Multiple configs support - switch between clusters effortlessly.
