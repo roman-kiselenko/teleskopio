@@ -7,10 +7,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v1
-
+        uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build frontend
+        run: build-frontend
       - name: Lint
         run: make lint
-
       - name: Test
         run: make test
