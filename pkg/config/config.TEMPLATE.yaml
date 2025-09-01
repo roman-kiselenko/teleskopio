@@ -1,0 +1,33 @@
+log_color: true
+log_json: false
+log_level: DEBUG
+server_http: ":3080"
+jwt_key: "super-salt"
+users:
+  - username: admin
+    password: "" # htpasswd -nbB admin MySecret123
+    roles: ["admin"]
+  - username: user
+    password: ""
+    roles: ["viewer"]
+kube:
+  configs:
+    - apiVersion: v1
+      clusters:
+        - cluster:
+            certificate-authority-data: LS0tLS1...
+            server: https://127.0.0.1:57598
+          name: kind-kind
+      contexts:
+        - context:
+            cluster: kind-kind
+            user: kind-kind
+          name: kind-kind
+      current-context: kind-kind
+      kind: Config
+      preferences: {}
+      users:
+        - name: kind-kind
+          user:
+            client-certificate-data: LS0tL...
+            client-key-data: LS0tL...
