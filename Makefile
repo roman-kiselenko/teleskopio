@@ -10,6 +10,7 @@ RESET  := $(shell tput -Txterm sgr0)
 
 PROJECT_NAME := teleskopio
 LINTER_BIN ?= golangci-lint
+LINTER_VERSION ?= v2.4.0
 
 .PHONY: all test build clean run lint /bin/$(LINTER_BIN)
 
@@ -27,7 +28,7 @@ build-docker: ## Build an image
 	docker build -t $(PROJECT_NAME) .
 
 bin/$(LINTER_BIN):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v2.1.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin $(LINTER_VERSION)
 
 ## Clean:
 clean: ## Remove build related file
