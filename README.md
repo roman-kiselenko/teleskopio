@@ -60,13 +60,13 @@
 1. Pull docker image from [Packages](https://github.com/roman-kiselenko/teleskopio/pkgs/container/teleskopio)
 
 ```sh
-docker pull ghcr.io/roman-kiselenko/teleskopio:v0.0.2
+docker pull ghcr.io/roman-kiselenko/teleskopio:latest
 ```
 
 2. Generate config
 
 ```sh
-docker run -it --rm ghcr.io/roman-kiselenko/teleskopio:v0.0.2 config > config.yaml
+docker run -it --rm ghcr.io/roman-kiselenko/teleskopio:latest config > config.yaml
 ```
 
 3. Edit config
@@ -80,7 +80,7 @@ vim config.yaml # edit config and add admin user
 4. Run
 
 ```bash
-$ docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:v0.0.2 --config=/usr/bin/config.yaml
+$ docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:latest --config=/usr/bin/config.yaml
 5:47AM INF set loglevel level=DEBUG
 5:47AM INF version version=""
 5:47AM INF initialize web server addr=:3080
