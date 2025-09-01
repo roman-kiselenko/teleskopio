@@ -13,9 +13,9 @@ import (
 )
 
 type User struct {
-	Username string   `yaml:"username"`
-	Password string   `yaml:"password"`
-	Roles    []string `yaml:"roles"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Role     string `yaml:"role"`
 }
 
 type Config struct {

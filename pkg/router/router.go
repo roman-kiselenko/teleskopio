@@ -189,15 +189,13 @@ func New(hub *webSocket.Hub, ginEngine *gin.Engine, cfg *config.Config, clients 
 }
 
 func (r *Route) LookupConfigs(c *gin.Context) {
+	// TODO fix me
 	configs := []Cluster{}
 	for _, c := range r.cfg.Kube.Configs {
 		context := c["current-context"].(string)
 		for _, cluster := range c["clusters"].([]interface{}) {
-			// name := cluster.(map[string]interface{})["cluster"]
 			entry := cluster.(map[string]interface{})["cluster"]
 			address := entry.(map[string]interface{})["server"].(string)
-			// server := cluster.(map[string]interface{})["server"]
-			// slog.Default().Debug("config", "name", name, "context", context)
 			configs = append(configs, Cluster{Server: address, CurrentContext: context})
 		}
 	}
@@ -579,6 +577,11 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 }
 
 func (r *Route) CreateKubeResource(c *gin.Context) {
+	userRole := c.GetString("role")
+	if userRole == "viewer" || userRole == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+		return
+	}
 	var req CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -644,7 +647,84 @@ func (r *Route) CreateKubeResource(c *gin.Context) {
 	c.YAML(http.StatusOK, created)
 }
 
+func (r *Route) UpdateKubeResource(c *gin.Context) {
+	userRole := c.GetString("role")
+	if userRole == "viewer" || userRole == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+		return
+	}
+	var req CreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	decoder := k8sYAML.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(req.Yaml)), 1024)
+	obj := &unstructured.Unstructured{}
+	if err := decoder.Decode(obj); err != nil && err != io.EOF {
+		slog.Error("cant parse yaml", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	gvk := obj.GroupVersionKind()
+
+	apiResList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+		Group:   gvk.Group,
+		Version: gvk.Version,
+	}.String())
+	if err != nil {
+		slog.Error("api list", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	var plural string
+	for _, res := range apiResList.APIResources {
+		if res.Kind == gvk.Kind {
+			plural = res.Name
+			break
+		}
+	}
+	if plural == "" {
+		err := fmt.Errorf("resource kind %s not found in API group %s/%s", gvk.Kind, gvk.Group, gvk.Version)
+		slog.Error("resource not found", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	gvr := schema.GroupVersionResource{
+		Group:    gvk.Group,
+		Version:  gvk.Version,
+		Resource: plural,
+	}
+
+	ns := obj.GetNamespace()
+	var ri dynamic.ResourceInterface
+	if ns != "" {
+		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(ns)
+	} else {
+		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+	}
+
+	created, err := ri.Update(context.TODO(), obj, metav1.UpdateOptions{})
+	if err != nil {
+		slog.Error("cant update object", "err", err.Error(), "obj", obj)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.YAML(http.StatusOK, created)
+}
+
 func (r *Route) DeleteDynamicResource(c *gin.Context) {
+	userRole := c.GetString("role")
+	if userRole == "viewer" || userRole == "" {
+		slog.Error("wrong role", "role", userRole)
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+		return
+	}
 	var req DeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -687,6 +767,12 @@ func (r *Route) DeleteDynamicResource(c *gin.Context) {
 }
 
 func (r *Route) NodeOperation(c *gin.Context) {
+	userRole := c.GetString("role")
+	if userRole == "viewer" || userRole == "" {
+		slog.Error("wrong role", "role", userRole)
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+		return
+	}
 	var req NodeOperation
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -736,6 +822,12 @@ func (r *Route) NodeOperation(c *gin.Context) {
 }
 
 func (r *Route) NodeDrain(c *gin.Context) {
+	userRole := c.GetString("role")
+	if userRole == "viewer" || userRole == "" {
+		slog.Error("wrong role", "role", userRole)
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+		return
+	}
 	var req NodeDrain
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -915,6 +1007,12 @@ func (r *Route) StopStreamPodLogs(c *gin.Context) {
 }
 
 func (r *Route) ScaleResource(c *gin.Context) {
+	userRole := c.GetString("role")
+	if userRole == "viewer" || userRole == "" {
+		slog.Error("wrong role", "role", userRole)
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+		return
+	}
 	var req ResourceOperation
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -987,7 +1085,7 @@ func (r *Route) Login(c *gin.Context) {
 	exp := time.Now().Add(1 * time.Hour)
 	claims := &model.Claims{
 		Username: u.Username,
-		Roles:    u.Roles,
+		Role:     u.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(exp),
 		},

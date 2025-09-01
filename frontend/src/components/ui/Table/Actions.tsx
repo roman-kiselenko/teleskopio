@@ -260,12 +260,22 @@ function Actions({
                     replicas: parseInt(scaleValue),
                   })
                     .then((data) => {
-                      toast.info(
-                        <span>
-                          Scaling {resource.kind} <b>{resource.metadata.name}</b> from{' '}
-                          {resource.spec?.replicas} to {scaleValue}
-                        </span>,
-                      );
+                      if (data.message) {
+                        toast.error(
+                          <span>
+                            Cant scale <b>{resource.metadata.name}</b>
+                            <br />
+                            {data.message}
+                          </span>,
+                        );
+                      } else {
+                        toast.info(
+                          <span>
+                            Scaling {resource.kind} <b>{resource.metadata.name}</b> from{' '}
+                            {resource.spec?.replicas} to {scaleValue}
+                          </span>,
+                        );
+                      }
                     })
                     .catch((reason) => {
                       toast.error(
@@ -342,37 +352,43 @@ function Actions({
                     disabled={isDraining}
                     onClick={() => {
                       setIsDraining(true);
-                      toast.promise(
-                        call('drain_node', {
-                          drainForce: drainForce,
-                          IgnoreAllDaemonSets: IgnoreAllDaemonSets,
-                          DeleteEmptyDirData: DeleteEmptyDirData,
-                          drainTimeout: drainTimeout,
-                          resourceName: resource.metadata?.name,
-                          resourceUid: resource.metadata?.uid,
-                        }),
-                        {
-                          loading: 'Draining...',
-                          success: () => {
+                      call('drain_node', {
+                        drainForce: drainForce,
+                        IgnoreAllDaemonSets: IgnoreAllDaemonSets,
+                        DeleteEmptyDirData: DeleteEmptyDirData,
+                        drainTimeout: drainTimeout,
+                        resourceName: resource.metadata?.name,
+                        resourceUid: resource.metadata?.uid,
+                      })
+                        .then((data) => {
+                          if (data.message) {
                             setIsDraining(false);
-                            return (
+                            toast.error(
+                              <span>
+                                Cant drain Node <b>{resource.metadata?.name}</b>
+                                <br />
+                                {data.message}
+                              </span>,
+                            );
+                          } else {
+                            setIsDraining(false);
+                            toast.info(
                               <span>
                                 Node <b>{resource.metadata?.name}</b> drained
-                              </span>
+                              </span>,
                             );
-                          },
-                          error: (err) => {
-                            setIsDraining(false);
-                            return (
-                              <span>
-                                Cant drain <b>{resource.metadata?.name}</b>
-                                <br />
-                                {err.message}
-                              </span>
-                            );
-                          },
-                        },
-                      );
+                          }
+                        })
+                        .catch((reason) => {
+                          setIsDraining(false);
+                          toast.error(
+                            <span>
+                              Cant drain Node <b>{resource.metadata?.name}</b>
+                              <br />
+                              {reason.message}
+                            </span>,
+                          );
+                        });
                     }}
                     className="text-xs"
                     variant="plain"

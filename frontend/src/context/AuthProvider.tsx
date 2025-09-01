@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type User = {
   username: string;
-  roles: string[];
+  role: string;
 };
 
 type AuthContextType = {
@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { token } = data;
 
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const user: User = { username: payload.username, roles: payload.roles };
+      const user: User = { username: payload.username, role: payload.role };
 
       setToken(token);
       setUser(user);

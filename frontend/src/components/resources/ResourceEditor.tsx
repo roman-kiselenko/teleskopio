@@ -103,21 +103,25 @@ export default function ResourceEditor() {
       delete obj.metadata.managedFields;
     }
     const cleanedYaml = yaml.dump(obj);
-
-    toast.promise(call('update_kube_object', { yaml: cleanedYaml }), {
-      loading: 'Saving...',
-      success: () => {
-        return <span>Saving resource</span>;
-      },
-      error: (err) => (
-        <span>
-          Cant save resource
-          <br />
-          {err.message}
-        </span>
-      ),
+    const response = await call('update_kube_resource', {
+      namespace: obj.metadata.namespace,
+      yaml: cleanedYaml,
     });
-    setOriginal(value!);
+    if (response.message) {
+      toast.error(<span>Cant update resource: {response.message}</span>);
+      return;
+    }
+    toast.info(
+      <span>
+        Resource updated:
+        <br />
+        <span className="font-bold text-muted-foreground">
+          {obj.kind} {obj.metadata.namespace ? `${obj.metadata.namespace}/` : ''}
+          {obj.metadata.name}
+        </span>
+      </span>,
+    );
+    setOriginal(cleanedYaml!);
   };
 
   const handleToggle = () => {

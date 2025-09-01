@@ -210,23 +210,33 @@ const columns: ColumnDef<any>[] = [
                   className="text-xs"
                   variant="destructive"
                   onClick={() => {
-                    toast.promise(call('delete_dynamic_resource', { request: request }), {
-                      loading: 'Deleting...',
-                      success: () => {
-                        return (
+                    call('delete_dynamic_resource', { request: request })
+                      .then((data) => {
+                        if (data.message) {
+                          toast.error(
+                            <span>
+                              Cant terminating Pod <b>{pod.metadata.name}</b>
+                              <br />
+                              {data.message}
+                            </span>,
+                          );
+                        } else {
+                          toast.info(
+                            <span>
+                              Terminating Pod <b>{pod.metadata.name}</b>
+                            </span>,
+                          );
+                        }
+                      })
+                      .catch((reason) => {
+                        toast.error(
                           <span>
-                            Terminating Pod <b>{pod.metadata.name}</b>
-                          </span>
+                            Cant delete Pod <b>{pod.metadata.name}</b>
+                            <br />
+                            {reason.message}
+                          </span>,
                         );
-                      },
-                      error: (err) => (
-                        <span>
-                          Cant delete Pod <b>{pod.metadata.name}</b>
-                          <br />
-                          {err.message}
-                        </span>
-                      ),
-                    });
+                      });
                     setOpenDialog(false);
                   }}
                 >

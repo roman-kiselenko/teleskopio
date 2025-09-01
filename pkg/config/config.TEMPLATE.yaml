@@ -6,10 +6,10 @@ jwt_key: "super-salt"
 users:
   - username: admin
     password: "" # htpasswd -nbB admin MySecret123
-    roles: ["admin"]
+    role: "admin"
   - username: user
     password: ""
-    roles: ["viewer"]
+    role: "viewer"
 kube:
   configs:
     - apiVersion: v1
