@@ -6,7 +6,7 @@ import { useSearchState } from '@/store/search';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { toast } from 'sonner';
 import { removeAllSubscriptions } from '@/lib/subscriptionManager';
@@ -28,7 +28,9 @@ export function Header({
   let navigate = useNavigate();
   let location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const [user] = useState(() => {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  });
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
@@ -81,6 +83,7 @@ export function Header({
         ) : (
           <p className="text-muted-foreground text-xs pr-2">
             <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium opacity-100 select-none">
+              {user?.role ? `${user.role}:` : ''}
               {clusterState.context.get()}
             </kbd>
           </p>

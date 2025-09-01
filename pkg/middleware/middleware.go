@@ -41,7 +41,8 @@ func (m Middleware) Auth() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
 			return
 		}
-		token, err := jwt.ParseWithClaims(tokenStr, &model.Claims{}, func(t *jwt.Token) (interface{}, error) {
+		claim := &model.Claims{}
+		token, err := jwt.ParseWithClaims(tokenStr, claim, func(t *jwt.Token) (interface{}, error) {
 			return []byte(m.cfg.JWTKey), nil
 		})
 		if err != nil || !token.Valid {
@@ -49,6 +50,7 @@ func (m Middleware) Auth() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
 			return
 		}
+		c.Set("role", claim.Role)
 		c.Next()
 	}
 }

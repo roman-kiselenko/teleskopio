@@ -122,6 +122,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/stream_pod_logs", r.StreamPodLogs)
 	auth.POST("/delete_dynamic_resource", r.DeleteDynamicResource)
 	auth.POST("/create_kube_resource", r.CreateKubeResource)
+	auth.POST("/update_kube_resource", r.UpdateKubeResource)
 	auth.POST("/cordon_node", r.NodeOperation)
 	auth.POST("/uncordon_node", r.NodeOperation)
 	auth.POST("/drain_node", r.NodeDrain)

@@ -133,30 +133,37 @@ const columns: ColumnDef<any>[] = [
         <div>
           <DropdownMenuItem
             className="text-xs"
-            onClick={async () => {
-              toast.promise(
-                call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
-                  ...request,
-                  resourceName: node.metadata?.name,
-                }),
-                {
-                  loading: `${cordoned ? 'Uncordoning' : 'Cordoning'}...`,
-                  success: () => {
-                    return (
+            onClick={() => {
+              call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
+                ...request,
+                resourceName: node.metadata?.name,
+              })
+                .then((data) => {
+                  if (data.message) {
+                    toast.error(
+                      <span>
+                        Cant {cordoned ? 'uncordone' : 'cordone'} Node <b>{node.metadata?.name}</b>
+                        <br />
+                        {data.message}
+                      </span>,
+                    );
+                  } else {
+                    toast.info(
                       <span>
                         Node <b>{node.metadata?.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
-                      </span>
+                      </span>,
                     );
-                  },
-                  error: (err) => (
+                  }
+                })
+                .catch((reason) => {
+                  toast.error(
                     <span>
                       Cant {cordoned ? 'uncordon' : 'cordon'} <b>{node.metadata?.name}</b>
                       <br />
-                      {err.message}
-                    </span>
-                  ),
-                },
-              );
+                      {reason.message}
+                    </span>,
+                  );
+                });
             }}
           >
             {cordoned ? (

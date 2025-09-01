@@ -9,6 +9,7 @@
 
 - Multiple configs support - switch between clusters effortlessly.
 - Simple JWT token authorization.
+- Admin and Viewer role - Full access (admin) or Read Only access (viewer) to cluster.
 - Cluster overview - get a high-level view of cluster health and activity.
 - Resource editor/creator - integrated [Monaco Editor](https://microsoft.github.io/monaco-editor/) with syntax highlighting.
 - Live updates - real-time resource changes with Kubernetes watchers.

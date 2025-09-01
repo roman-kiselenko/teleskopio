@@ -1,0 +1,19 @@
+name: "CI"
+
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build Lint Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Build
+        run: make build
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
