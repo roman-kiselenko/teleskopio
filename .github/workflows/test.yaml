@@ -14,7 +14,7 @@ jobs:
       - name: Install dependencies
         run: cd frontend && pnpm install
       - name: Build frontend
-        run: build-frontend
+        run: make build-frontend
       - name: Lint
         run: make lint
       - name: Test
