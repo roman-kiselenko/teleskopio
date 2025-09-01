@@ -1,5 +1,5 @@
 <h2 align="center">
-    teleskopio is an open-source small and beautiful Kubernetes web client.
+    teleskopio is an open-source small and beautiful Kubernetes Web client.
 </h2>
 <p align="center">
     <img width="300" src="./assets/icon.png"/>
@@ -7,7 +7,8 @@
 
 ## Features
 
-- Multiple configs from `~/.kube` folder support - switch between clusters effortlessly.
+- Multiple configs support - switch between clusters effortlessly.
+- Simple JWT token authorization.
 - Cluster overview - get a high-level view of cluster health and activity.
 - Resource editor/creator - integrated [Monaco Editor](https://microsoft.github.io/monaco-editor/) with syntax highlighting.
 - Live updates - real-time resource changes with Kubernetes watchers.
@@ -22,8 +23,6 @@
 
 ## Planned Features
 
-- Shell access to containers.
-- Port forwarding.
 - Helm integration.
 - Kubernetes resource schemas per API version.
 - Resource metrics - CPU, memory, and other usage statistics.
@@ -34,10 +33,15 @@
 
 <p align="center">
     <img width="900" src="./assets/diagonal_split.png"/>
+    <img width="900" src="./assets/pods.png"/>
+    <img width="900" src="./assets/editor.png"/>
+    <img width="900" src="./assets/drain.png"/>
+    <img width="900" src="./assets/scale.png"/>
 </p>
 
 ## Stack
 
+- **Golang** - Kubernetes golang client.
 - **React** - responsive and modern frontend.
 - **[shadcn/ui](https://ui.shadcn.com/)** + **Tailwind CSS** - clean and flexible UI components.
 - **[Monaco Editor](https://microsoft.github.io/monaco-editor/)** - powerful code editor with syntax highlighting.
@@ -46,16 +50,28 @@
 
 ---
 
-## Installation
+## Usage
 
-### MacOS
+### Install
+
+#### MacOS
 
 1. `brew tap roman-kiselenko/homebrew-teleskopio`
 1. `brew install --cask teleskopio`
 
-### Linux
+#### Linux
 
 1. Download the latest release from [Releases](https://github.com/roman-kiselenko/teleskopio/releases).
+
+#### Docker
+
+```sh
+$ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml teleskopio --config=/usr/bin/config.yaml
+5:47AM INF set loglevel level=DEBUG
+5:47AM INF version version=""
+5:47AM INF initialize web server addr=:3080
+...
+```
 
 ---
 

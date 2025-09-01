@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 type LoginFormProps = React.ComponentProps<'div'> & {
   login: (username: string, password: string) => Promise<boolean | void>;
@@ -39,6 +40,14 @@ export function LoginForm({ login, className, ...props }: LoginFormProps) {
             <div className="flex flex-col gap-3">
               <Button
                 onClick={async () => {
+                  if (username === '') {
+                    toast.warning(<div>username is empty</div>);
+                    return;
+                  }
+                  if (password === '') {
+                    toast.warning(<div>password is empty</div>);
+                    return;
+                  }
                   await login(username, password);
                 }}
                 className="w-full text-xs"
