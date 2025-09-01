@@ -22,7 +22,7 @@ type Config struct {
 	LogColor   bool   `yaml:"log_color,omitempty"`
 	LogJSON    bool   `yaml:"log_json,omitempty"`
 	LogLevel   string `yaml:"log_level,omitempty"`
-	ServerHttp string `yaml:"server_http,omitempty"`
+	ServerHTTP string `yaml:"server_http,omitempty"`
 	JWTKey     string `yaml:"jwt_key"`
 	Users      []User `yaml:"users"`
 	Kube       struct {

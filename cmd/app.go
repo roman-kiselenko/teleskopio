@@ -33,6 +33,7 @@ func New(version string, configPath *string, exitchnl, signchnl chan (os.Signal)
 	if err != nil {
 		return app, err
 	}
+	app.Config.Version = version
 	app.Clients = &clients
 	app.Config = &cfg
 	app.Users = &users
@@ -78,7 +79,7 @@ func initLogger(cfg *config.Config) {
 }
 
 func (a *App) initServer(staticFiles embed.FS) error {
-	slog.Info("initialize web server", "addr", a.Config.ServerHttp)
+	slog.Info("initialize web server", "addr", a.Config.ServerHTTP)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	mdlwr := middleware.New(a.Config)
@@ -130,7 +131,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	webSocket.SetupWebsocket(hub, router)
 
 	go func() {
-		addr := a.Config.ServerHttp
+		addr := a.Config.ServerHTTP
 		if err := router.Run(addr); err != nil {
 			slog.Error("cant run server", "error", err)
 		}

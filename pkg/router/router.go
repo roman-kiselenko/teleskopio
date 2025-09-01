@@ -42,7 +42,7 @@ type Payload struct {
 	Server  string `json:"server"`
 }
 
-type ApiResourceInfo struct {
+type APIResourceInfo struct {
 	Group      string `json:"group"`
 	Version    string `json:"version"`
 	Kind       string `json:"kind"`
@@ -176,7 +176,9 @@ type Route struct {
 	podLogsWatchers map[string]chan (bool)
 }
 
-func New(hub *webSocket.Hub, ginEngine *gin.Engine, cfg *config.Config, clients *config.Clients, users *config.Users) (Route, error) {
+const viewerRole = "viewer"
+
+func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clients *config.Clients, users *config.Users) (Route, error) {
 	r := Route{
 		cfg:             cfg,
 		clients:         clients,
@@ -234,7 +236,7 @@ func (r *Route) ListResources(c *gin.Context) {
 		return
 	}
 
-	result := []ApiResourceInfo{}
+	result := []APIResourceInfo{}
 	for _, list := range apiGroupResources {
 		gv, err := schema.ParseGroupVersion(list.GroupVersion)
 		if err != nil {
@@ -243,7 +245,7 @@ func (r *Route) ListResources(c *gin.Context) {
 			return
 		}
 		for _, res := range list.APIResources {
-			result = append(result, ApiResourceInfo{
+			result = append(result, APIResourceInfo{
 				Group:      gv.Group,
 				Version:    gv.Version,
 				Kind:       res.Kind,
@@ -299,7 +301,7 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	}
 
 	for i := range list.Items {
-		list.Items[i].SetAPIVersion(fmt.Sprintf("%s", req.Request.Version))
+		list.Items[i].SetAPIVersion(req.Request.Version)
 		if req.Request.Group != "" {
 			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.Request.Group, req.Request.Version))
 		}
@@ -369,7 +371,7 @@ func (r *Route) ListEventsDynamicResource(c *gin.Context) {
 	}
 
 	for i := range list.Items {
-		list.Items[i].SetAPIVersion(fmt.Sprintf("%s", req.Request.Version))
+		list.Items[i].SetAPIVersion("%s")
 		if req.Request.Group != "" {
 			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.Request.Group, req.Request.Version))
 		}
@@ -576,9 +578,10 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 	c.YAML(http.StatusOK, res.Object)
 }
 
+//nolint:dupl
 func (r *Route) CreateKubeResource(c *gin.Context) {
 	userRole := c.GetString("role")
-	if userRole == "viewer" || userRole == "" {
+	if userRole == viewerRole || userRole == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
 		return
 	}
@@ -647,9 +650,10 @@ func (r *Route) CreateKubeResource(c *gin.Context) {
 	c.YAML(http.StatusOK, created)
 }
 
+//nolint:dupl
 func (r *Route) UpdateKubeResource(c *gin.Context) {
 	userRole := c.GetString("role")
-	if userRole == "viewer" || userRole == "" {
+	if userRole == viewerRole || userRole == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
 		return
 	}
@@ -720,7 +724,7 @@ func (r *Route) UpdateKubeResource(c *gin.Context) {
 
 func (r *Route) DeleteDynamicResource(c *gin.Context) {
 	userRole := c.GetString("role")
-	if userRole == "viewer" || userRole == "" {
+	if userRole == viewerRole || userRole == "" {
 		slog.Error("wrong role", "role", userRole)
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
 		return
@@ -768,7 +772,7 @@ func (r *Route) DeleteDynamicResource(c *gin.Context) {
 
 func (r *Route) NodeOperation(c *gin.Context) {
 	userRole := c.GetString("role")
-	if userRole == "viewer" || userRole == "" {
+	if userRole == viewerRole || userRole == "" {
 		slog.Error("wrong role", "role", userRole)
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
 		return
@@ -823,7 +827,7 @@ func (r *Route) NodeOperation(c *gin.Context) {
 
 func (r *Route) NodeDrain(c *gin.Context) {
 	userRole := c.GetString("role")
-	if userRole == "viewer" || userRole == "" {
+	if userRole == viewerRole || userRole == "" {
 		slog.Error("wrong role", "role", userRole)
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
 		return
@@ -917,10 +921,7 @@ func (r *Route) StreamPodLogs(c *gin.Context) {
 	}
 	go func() {
 		defer stopAndClean()
-		for {
-			if cancel() {
-				break
-			}
+		for cancel() {
 			buf := make([]byte, 2000)
 			numBytes, err := podLogs.Read(buf)
 			if err == io.EOF {
@@ -1008,7 +1009,7 @@ func (r *Route) StopStreamPodLogs(c *gin.Context) {
 
 func (r *Route) ScaleResource(c *gin.Context) {
 	userRole := c.GetString("role")
-	if userRole == "viewer" || userRole == "" {
+	if userRole == viewerRole || userRole == "" {
 		slog.Error("wrong role", "role", userRole)
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
 		return

@@ -42,7 +42,7 @@ func (m Middleware) Auth() gin.HandlerFunc {
 			return
 		}
 		claim := &model.Claims{}
-		token, err := jwt.ParseWithClaims(tokenStr, claim, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenStr, claim, func(_ *jwt.Token) (interface{}, error) {
 			return []byte(m.cfg.JWTKey), nil
 		})
 		if err != nil || !token.Valid {

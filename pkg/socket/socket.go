@@ -11,7 +11,8 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: func(_ *http.Request) bool {
+		// TODO add check origin
 		return true
 	},
 }
@@ -66,6 +67,7 @@ func SetupWebsocket(hub *Hub, router *gin.Engine) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			slog.Default().Error("error while Upgrading websocket connection", "err", err.Error())
+			//nolint:errcheck
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
