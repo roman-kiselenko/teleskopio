@@ -57,10 +57,27 @@
 
 #### Docker
 
+1. Pull
+
 ```sh
-$ docker pull ghcr.io/roman-kiselenko/teleskopio:v0.0.2
-$ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:v0.0.2 config > config.yaml
-$ vim config.yaml # edit config
+docker pull ghcr.io/roman-kiselenko/teleskopio:v0.0.2
+```
+
+2. Generate config
+
+```sh
+docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:v0.0.2 config > config.yaml
+```
+
+3. Edit config
+
+```sh
+vim config.yaml # edit config
+```
+
+4. Run
+
+```sh
 $ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:v0.0.2 --config=/usr/bin/config.yaml
 5:47AM INF set loglevel level=DEBUG
 5:47AM INF version version=""
@@ -85,3 +102,7 @@ $ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io
 ## Contributing
 
 **teleskopio** is an open-source project, and contributions are welcome.
+
+```
+
+```
