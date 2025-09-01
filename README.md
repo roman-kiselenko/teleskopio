@@ -55,21 +55,13 @@
 
 ## Usage
 
-### Install
-
-#### MacOS
-
-1. `brew tap roman-kiselenko/homebrew-teleskopio`
-1. `brew install --cask teleskopio`
-
-#### Linux
-
-1. Download the latest release from [Releases](https://github.com/roman-kiselenko/teleskopio/releases).
-
 #### Docker
 
 ```sh
-$ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml teleskopio --config=/usr/bin/config.yaml
+$ docker pull ghcr.io/roman-kiselenko/teleskopio:v0.0.2
+$ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:v0.0.2 config > config.yaml
+$ vim config.yaml # edit config
+$ docker run -it -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:v0.0.2 --config=/usr/bin/config.yaml
 5:47AM INF set loglevel level=DEBUG
 5:47AM INF version version=""
 5:47AM INF initialize web server addr=:3080
