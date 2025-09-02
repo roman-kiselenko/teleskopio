@@ -12,9 +12,9 @@ interface DynamicResourceTableProps<T> {
   columns: ColumnDef<T, any>[];
   state: () => Map<string, T>;
   setState: (setter: (prev: Map<string, T>) => Map<string, T>) => void;
-  withoutJump?: Boolean;
-  withNsSelector?: Boolean;
-  withSearch?: Boolean;
+  withoutJump?: boolean;
+  withNsSelector?: boolean;
+  withSearch?: boolean;
 }
 
 export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({

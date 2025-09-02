@@ -57,9 +57,9 @@ function Actions({
   action: string;
   request: any;
   children?: any;
-  noEvents?: Boolean;
-  scale?: Boolean;
-  drain?: Boolean;
+  noEvents?: boolean;
+  scale?: boolean;
+  drain?: boolean;
 }) {
   let navigate = useNavigate();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -193,23 +193,34 @@ function Actions({
               className="text-xs"
               variant="destructive"
               onClick={() => {
-                toast.promise(call(action, request), {
-                  loading: 'Deleting...',
-                  success: () => {
-                    return (
+                call(action, request)
+                  .then((data) => {
+                    if (data.message) {
+                      toast.error(
+                        <span>
+                          {' '}
+                          Cant delete {name} <b>{resource.metadata.name}</b> <br />{' '}
+                          {data.message}{' '}
+                        </span>,
+                      );
+                    } else {
+                      toast.info(
+                        <span>
+                          {' '}
+                          Terminating {name} <b>{resource.metadata.name}</b>{' '}
+                        </span>,
+                      );
+                    }
+                  })
+                  .catch((reason) => {
+                    toast.error(
                       <span>
-                        Terminating {name} <b>{resource.metadata.name}</b>
-                      </span>
+                        {' '}
+                        Cant delete {name} <b>{resource.metadata.name}</b> <br />{' '}
+                        {reason.message}{' '}
+                      </span>,
                     );
-                  },
-                  error: (err) => (
-                    <span>
-                      Cant delete {name} <b>{resource.metadata.name}</b>
-                      <br />
-                      {err.message}
-                    </span>
-                  ),
-                });
+                  });
                 setOpenDeleteDialog(false);
               }}
             >

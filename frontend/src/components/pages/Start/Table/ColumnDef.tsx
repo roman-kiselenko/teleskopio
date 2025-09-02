@@ -7,16 +7,13 @@ import { Cluster } from '@/types';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
-import { listenEvent } from '@/lib/events';
 import { setVersion } from '@/store/version';
-import { setCurrentCluster, getCurrentCluster } from '@/store/cluster';
+import { setCurrentCluster } from '@/store/cluster';
 import { apiResourcesState } from '@/store/apiResources';
 import { namespacesState } from '@/store/resources';
-import { crdsState } from '@/store/crdResources';
-import { crsState } from '@/store/resources';
 import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
-import { addSubscription } from '@/lib/subscriptionManager';
+import { useWS } from '@/context/WsContext';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -41,6 +38,7 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const loading = useloadingState();
+      const { listen } = useWS();
       const get_version = async (context: string, server: any) => {
         return await call('get_version', { context: context, server: server });
       };
@@ -49,7 +47,7 @@ const columns: ColumnDef<Cluster>[] = [
           className="text-xs"
           variant="outline"
           size="sm"
-          onClick={async (e) => {
+          onClick={async () => {
             loading.set(true);
             const clusterVersion = await get_version(
               row.original.current_context as string,
@@ -80,7 +78,7 @@ const columns: ColumnDef<Cluster>[] = [
                 server: row.original.server,
               }),
             );
-            fetchAndWatchNamespaces(row.original.current_context as string);
+            fetchAndWatchNamespaces(listen, row.original.current_context as string);
             navigate('/resource/Node');
             loading.set(false);
             return;
@@ -96,10 +94,11 @@ const columns: ColumnDef<Cluster>[] = [
 
 export default columns;
 
-async function fetchAndWatchNamespaces(context: string): Promise<void> {
+async function fetchAndWatchNamespaces(listen: any, context: string): Promise<void> {
   const nsResource = apiResourcesState
     .get()
     .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const [ns, _token, rv] = await call('list_dynamic_resource', {
     request: { ...nsResource },
   });
@@ -116,22 +115,18 @@ async function fetchAndWatchNamespaces(context: string): Promise<void> {
       resource_version: rv,
     },
   });
-  await addSubscription(
-    listenEvent(`Namespace-${context}-deleted`, async (ev: any) => {
-      namespacesState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(ev.metadata?.uid as string);
-        return newMap;
-      });
-    }),
-  );
-  await addSubscription(
-    listenEvent(`Namespace-${context}-updated`, async (ev: any) => {
-      namespacesState.set((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(ev.metadata?.uid as string, ev);
-        return newMap;
-      });
-    }),
-  );
+  listen(`Namespace-${context}-deleted`, async (ev: any) => {
+    namespacesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ev.metadata?.uid as string);
+      return newMap;
+    });
+  });
+  listen(`Namespace-${context}-updated`, async (ev: any) => {
+    namespacesState.set((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(ev.metadata?.uid as string, ev);
+      return newMap;
+    });
+  });
 }

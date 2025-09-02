@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "preview": "vite preview"
   },
   "dependencies": {

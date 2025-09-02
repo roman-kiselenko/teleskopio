@@ -15,13 +15,7 @@ import { apiResourcesState } from '@/store/apiResources';
 import { crdsState } from '@/store/crdResources';
 import { Input } from '@/components/ui/input';
 
-export function Header({
-  withNsSelector,
-  withSearch,
-}: {
-  withNsSelector?: Boolean;
-  withSearch?: Boolean;
-}) {
+export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
   const version = useVersionState();
   const clusterState = useCurrentClusterState();
   const searchQuery = useSearchState();

@@ -2,14 +2,12 @@ import { ArrowBigLeft, Rss } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { call } from '@/lib/api';
-import { stopEventsWatcher } from '@/lib/events';
 import { useNavigate } from 'react-router-dom';
 import { useVersionState } from '@/store/version';
 import { useLoaderData } from 'react-router';
 import { ColumnDef } from '@tanstack/react-table';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
-import { Header } from '@/components/Header';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { apiResourcesState } from '@/store/apiResources';
@@ -98,7 +96,6 @@ export function ResourceEvents() {
       if (unlisten) {
         unlisten();
       }
-      stopEventsWatcher(uid);
     };
   }, []);
 

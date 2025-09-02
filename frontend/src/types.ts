@@ -9,7 +9,7 @@ type ApiResource = {
   group: string;
   version: string;
   kind: string;
-  namespaced: Boolean;
+  namespaced: boolean;
 };
 
 export type { Cluster, ApiResource };

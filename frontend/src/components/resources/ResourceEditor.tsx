@@ -33,7 +33,7 @@ export default function ResourceEditor() {
   let navigate = useNavigate();
   const { name, namespace, data } = useLoaderData();
   const [fontSize, setFontsize] = useState(14);
-  const [hasErrors, setHasErrors] = useState(false);
+  const [hasErrors] = useState(false);
   const [minimap, setMinimap] = useState(true);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [original, setOriginal] = useState(() => {

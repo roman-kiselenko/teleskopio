@@ -21,14 +21,14 @@ function ContainerIcon({ container }: { container: any }) {
   let output = 'Unknown';
   let color = 'text-gray-400';
   let initcontainer = false;
-  let ephemeralcontainer = false;
+  // let ephemeralcontainer = false;
   let blink = true;
   if (container.containerType === 'Init') {
     initcontainer = true;
   }
-  if (container.containerType === 'Ephemeral') {
-    ephemeralcontainer = true;
-  }
+  // if (container.containerType === 'Ephemeral') {
+  //   ephemeralcontainer = true;
+  // }
   if (container?.state?.running) {
     output = value as string;
     blink = false;

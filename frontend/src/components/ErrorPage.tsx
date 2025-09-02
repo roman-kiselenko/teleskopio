@@ -1,4 +1,4 @@
-import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
+import { useRouteError, isRouteErrorResponse } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { Ban, ArrowBigLeft } from 'lucide-react';

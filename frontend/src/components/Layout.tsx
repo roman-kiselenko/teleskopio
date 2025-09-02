@@ -14,7 +14,7 @@ import { redirect } from 'react-router-dom';
 
 export default function Layout() {
   const { theme } = useTheme();
-  const { user, login, logout, isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   const handleLogin = async (username: string, password: string): Promise<boolean | void> => {
     if (username === '' || password === '') {

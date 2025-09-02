@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/table';
 
 declare module '@tanstack/react-table' {
+  /* eslint-disable @typescript-eslint/no-unnecessary-type-constraint */
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   interface ColumnMeta<TData extends unknown, TValue> {
     className?: string;
   }
@@ -26,7 +28,7 @@ declare module '@tanstack/react-table' {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  noResult?: Boolean;
+  noResult?: boolean;
 }
 
 export function DataTable<TData, TValue>({

@@ -1,6 +1,6 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { CirclePause, CirclePlay, BrushCleaning } from 'lucide-react';
+import { CirclePause, CirclePlay } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import Actions from '@/components/ui/Table/Actions';

@@ -2,7 +2,7 @@ import { hookstate, useHookstate } from '@hookstate/core';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
 
-export const kubeConfigsState = hookstate<{ configs: Object[] }>({
+export const kubeConfigsState = hookstate<{ configs: object[] }>({
   configs: [],
 });
 

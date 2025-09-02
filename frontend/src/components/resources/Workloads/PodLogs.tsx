@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { useEffect, useRef, useState } from 'react';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
-import { listenEvent, stopLogsWatcher } from '@/lib/events';
+import { stopLogsWatcher } from '@/lib/events';
 import { logsState, useLogsState } from '@/store/logs';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';

@@ -24,7 +24,7 @@ export const WSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         const { event: ev, payload } = JSON.parse(event.data);
         listeners[ev]?.forEach((cb) => cb(payload));
       } catch (e) {
-        console.warn('Invalid WS message', event.data);
+        console.warn(`Invalid WS message ${e}`, event.data);
       }
     });
 

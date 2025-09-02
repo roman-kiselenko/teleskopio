@@ -31,7 +31,7 @@ export default function ResourceEditor() {
   const { theme } = useTheme();
   let navigate = useNavigate();
   const [fontSize, setFontsize] = useState(14);
-  const [hasErrors, setHasErrors] = useState(false);
+  const [hasErrors] = useState(false);
   const [minimap, setMinimap] = useState(true);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [original, setOriginal] = useState('');

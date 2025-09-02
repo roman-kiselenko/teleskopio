@@ -24,10 +24,10 @@ interface PaginatedTableProps<T> {
   setState: (updater: (prev: Map<string, T>) => Map<string, T>) => void;
   extractKey: (item: T) => string;
   columns: any;
-  namespaced?: Boolean;
-  withNsSelector?: Boolean;
-  withoutJump?: Boolean;
-  withSearch?: Boolean;
+  namespaced?: boolean;
+  withNsSelector?: boolean;
+  withoutJump?: boolean;
+  withSearch?: boolean | undefined;
 }
 
 export function PaginatedTable<T>({
@@ -41,7 +41,6 @@ export function PaginatedTable<T>({
   columns,
   withoutJump,
   withNsSelector = true,
-  withSearch = true,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -119,7 +118,7 @@ export function PaginatedTable<T>({
       moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
     )
     .filter((x: any) => {
-      let attribute: String;
+      let attribute: string;
       if (kind === 'Event') {
         if (compareVersions(getVersion(), '1.20') === 1) {
           attribute = x.note;
@@ -143,7 +142,7 @@ export function PaginatedTable<T>({
   const showInitialLoader = loading && data.length === 0;
   return (
     <>
-      {!withoutJump && <Header withSearch={withSearch} withNsSelector={withNsSelector} />}
+      {!withoutJump && <Header withNsSelector={withNsSelector} />}
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />

@@ -38,6 +38,9 @@ func main() {
 	exitchnl := make(chan os.Signal)
 	app, err := cmd.New(version, configPath, exitchnl, sigchnl)
 	if err != nil {
+		if os.IsNotExist(err) {
+			log.Print("generate config with teleskopio config command")
+		}
 		log.Fatalf("failed to init app: %s", err)
 	}
 	if err := app.Run(staticFiles); err != nil {

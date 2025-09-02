@@ -1,4 +1,4 @@
-import { hookstate, useHookstate, State } from '@hookstate/core';
+import { hookstate, useHookstate } from '@hookstate/core';
 
 export const daemonSetsState = hookstate<Map<string, any>>(new Map());
 
