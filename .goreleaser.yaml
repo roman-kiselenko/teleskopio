@@ -1,0 +1,22 @@
+version: 2
+
+project_name: smolgit
+
+# setups builds for linux and darwin on amd64 and arm64
+# https://goreleaser.com/customization/build
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - arm
+      - arm64
+      - amd64
+    goarm:
+      - 6
+      - 7
+before:
+  hooks:
+    - make build-frontend
