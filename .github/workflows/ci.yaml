@@ -23,6 +23,8 @@ jobs:
     name: Lint frontend
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
           version: 10

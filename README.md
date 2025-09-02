@@ -5,7 +5,8 @@
     <img width="300" src="./assets/icon.png"/>
 </p>
 
-[![CI](https://github.com/roman-kiselenko/teleskopio/actions/workflows/test.yaml/badge.svg)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/test.yaml)
+[![Lint](https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml/badge.svg)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml)
+[![Create and publish a Docker image](https://github.com/roman-kiselenko/teleskopio/actions/workflows/docker.yaml/badge.svg?branch=master)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/docker.yaml)
 
 ## Features
 
