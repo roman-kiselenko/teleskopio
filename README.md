@@ -8,6 +8,12 @@
 [![Lint](https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml/badge.svg)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml)
 [![Create and publish a Docker image](https://github.com/roman-kiselenko/teleskopio/actions/workflows/docker.yaml/badge.svg?branch=master)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/docker.yaml)
 
+- [Features](#features)
+- [Planned Features](#planned-features)
+- [Screenshots](#screenshots)
+- [Stack](#stack)
+- [Install](#install)
+
 ## Features
 
 - Multiple configs support - switch between clusters effortlessly.
@@ -54,9 +60,20 @@
 
 ---
 
-## Usage
+## Install
 
-#### Docker
+### Linux
+
+Download [release](https://github.com/roman-kiselenko/teleskopio/releases).
+
+### MacOS
+
+Use brew (ARM and Intel):
+
+1. `brew tap roman-kiselenko/homebrew-teleskopio`
+1. `brew install --cask teleskopio`
+
+### Docker
 
 1. Pull docker image from [Packages](https://github.com/roman-kiselenko/teleskopio/pkgs/container/teleskopio)
 
@@ -105,7 +122,3 @@ $ docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml gh
 ## Contributing
 
 **teleskopio** is an open-source project, and contributions are welcome.
-
-```
-
-```
