@@ -20,3 +20,17 @@ builds:
 before:
   hooks:
     - make build-frontend
+
+homebrew_casks:
+  - name: teleskopio
+    binary: teleskopio
+    commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
+    directory: Casks
+    caveats: "teleskopio --config=config.yaml"
+    homepage: "https://github.com/roman-kiselenko/teleskopio"
+    description: "teleskopio is an open-source small and beautiful Web Kubernetes client."
+    skip_upload: true
+    repository:
+      owner: roman-kiselenko
+      name: homebrew-teleskopio
+      branch: master
