@@ -27,9 +27,9 @@ type App struct {
 	exitSig  chan (os.Signal)
 }
 
-func New(version string, configPath *string, exitchnl, signchnl chan (os.Signal)) (*App, error) {
+func New(version string, configPath string, exitchnl, signchnl chan (os.Signal)) (*App, error) {
 	app := &App{exitSig: exitchnl, signchnl: signchnl}
-	cfg, clients, users, err := config.ParseConfig(*configPath)
+	cfg, clients, users, err := config.ParseConfig(configPath)
 	if err != nil {
 		return app, err
 	}
@@ -39,6 +39,7 @@ func New(version string, configPath *string, exitchnl, signchnl chan (os.Signal)
 	app.Config = &cfg
 	app.Users = &users
 	initLogger(&cfg)
+	slog.Info("read config at", "path", configPath)
 	return app, nil
 }
 
