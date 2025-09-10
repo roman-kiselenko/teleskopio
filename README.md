@@ -92,13 +92,23 @@ docker run -it --rm ghcr.io/roman-kiselenko/teleskopio:latest config > config.ya
 ```sh
 $ htpasswd -nbB admin MySecret123 # apache2-utils
 > admin:$2y$05$U7puDu7wKOMP6i4eI1nO4ux909bH8FuPadEQq2oxx7SRXrBh3xJIG
-vim config.yaml # edit config and add admin user
+vim config.yaml # edit confAig and add admin user
+# add kubeconfig content to kube.configs
+# check example in config.yaml
 ```
 
 4. Run
 
+Run with `--network=host` if you're using kind cluster
+
 ```bash
-$ docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:latest --config=/usr/bin/config.yaml
+docker run -it --rm --network=host -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:latest --config=/usr/bin/config.yaml
+```
+
+Or run with docker network
+
+```bash
+docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:latest --config=/usr/bin/config.yaml
 5:47AM INF set loglevel level=DEBUG
 5:47AM INF version version=""
 5:47AM INF initialize web server addr=:3080
