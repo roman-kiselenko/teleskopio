@@ -1,6 +1,6 @@
 import { DynamicResourceTable } from '@/components/resources/DynamicResourceTable';
 import { useHorizontalPodAutoscalerState } from '@/store/resources';
-import columns from '@/components/resources/Cluster/columns/Namespaces';
+import columns from '@/components/resources/Configuration/columns/HorizontalPodAutoscalers';
 
 const HorizontalPodAutoscalers = () => {
   const ns = useHorizontalPodAutoscalerState();

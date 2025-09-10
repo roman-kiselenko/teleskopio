@@ -270,7 +270,7 @@ export function AppSidebar() {
                   href="https://github.com/roman-kiselenko/teleskopio"
                   className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}
                 >
-                  <span>teleskopio v0.0.6</span>
+                  <span>teleskopio v0.0.7</span>
                 </a>
               </div>
             </SidebarMenuButton>
