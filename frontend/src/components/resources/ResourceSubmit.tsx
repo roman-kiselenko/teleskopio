@@ -9,7 +9,7 @@ import { call } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 import yaml from 'js-yaml';
 import { useTheme } from '@/components/ThemeProvider';
-import { Fonts, FONT_KEY } from '@/settings';
+import { Fonts, FONT_KEY, EDITOR_FONT_SIZE_KEY, EDITOR_FONT_SIZE } from '@/settings';
 loader.config({ monaco });
 import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
@@ -30,7 +30,12 @@ const yamlTokens = {
 export default function ResourceEditor() {
   const { theme } = useTheme();
   let navigate = useNavigate();
-  const [fontSize, setFontsize] = useState(14);
+  const [fontSize, setFontsize] = useState<number>(() => {
+    return (
+      parseInt(localStorage.getItem(EDITOR_FONT_SIZE_KEY) || EDITOR_FONT_SIZE.toString()) ||
+      EDITOR_FONT_SIZE
+    );
+  });
   const [hasErrors] = useState(false);
   const [minimap, setMinimap] = useState(true);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -61,10 +66,12 @@ export default function ResourceEditor() {
   };
 
   const changeFont = async (size: number) => {
-    if (size < 0 && fontSize >= 10) {
+    if (size < 0 && fontSize >= 5) {
       setFontsize(fontSize - 1);
-    } else if (size > 0 && fontSize <= 20) {
+      localStorage.setItem(EDITOR_FONT_SIZE_KEY, (fontSize - 1).toString());
+    } else if (size > 0 && fontSize <= 40) {
       setFontsize(fontSize + 1);
+      localStorage.setItem(EDITOR_FONT_SIZE_KEY, (fontSize + 1).toString());
     }
   };
 
