@@ -17,7 +17,7 @@
 
 ## Features
 
-- Multiple configs support - switch between clusters effortlessly.
+- Multiple configs support - switch between clusters effortlessly. teleskopio reads `$KUBECONFIG` variable and check `config.yaml` file.
 - Simple JWT token authorization.
 - Admin and Viewer role - Full access (admin) or Read Only access (viewer) to cluster.
 - Cluster overview - get a high-level view of cluster health and activity.

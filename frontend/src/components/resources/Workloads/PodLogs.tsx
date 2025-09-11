@@ -8,7 +8,6 @@ import { stopLogsWatcher } from '@/lib/events';
 import { logsState, useLogsState } from '@/store/logs';
 import { useNavigate } from 'react-router-dom';
 import { useLoaderData } from 'react-router';
-import { currentClusterState } from '@/store/cluster';
 import yaml from 'js-yaml';
 import {
   Select,
