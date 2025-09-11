@@ -214,9 +214,9 @@ export function AppSidebar() {
                     state === 'collapsed' ? 'hidden' : '',
                     (item.title !== 'Main' &&
                       item.title !== 'Settings' &&
-                      cc.context.get() === '') ||
+                      cc.server.get() === '') ||
                       loading.get() ||
-                      (item.title === 'Main' && cc.context.get() !== '')
+                      (item.title === 'Main' && cc.server.get() !== '')
                       ? 'pointer-events-none opacity-50'
                       : '',
                   )}
@@ -270,7 +270,7 @@ export function AppSidebar() {
                   href="https://github.com/roman-kiselenko/teleskopio"
                   className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}
                 >
-                  <span>teleskopio v0.0.7</span>
+                  <span>teleskopio v0.0.8</span>
                 </a>
               </div>
             </SidebarMenuButton>

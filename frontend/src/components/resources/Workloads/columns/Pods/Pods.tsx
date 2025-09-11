@@ -27,7 +27,13 @@ import {
 import { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/apiResources';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -195,6 +201,7 @@ const columns: ColumnDef<any>[] = [
             <DialogContent>
               <DialogHeader>
                 <DialogTitle className="text-xs">Are you sure?</DialogTitle>
+                <DialogDescription></DialogDescription>
               </DialogHeader>
               <p className="text-xs">
                 This operation cant be undone!

@@ -69,9 +69,8 @@ export function ResourceEvents() {
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     const listenEvents = async () => {
-      const context = currentClusterState.context.get();
       const server = currentClusterState.server.get();
-      unlisten = await listen(`${uid}-${context}-${server}-updated`, (payload: any) => {
+      unlisten = await listen(`${uid}-${server}-updated`, (payload: any) => {
         if (compareVersions(version.version.get(), '1.20') === 1) {
           if (payload?.regarding?.uid === uid) {
             setEvents((prev) => {

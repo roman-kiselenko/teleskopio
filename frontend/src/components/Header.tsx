@@ -72,13 +72,21 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
         <></>
       )}
       <div className="flex flex-row">
-        {clusterState.context.get() === '' ? (
+        {user?.role ? (
+          <p className="text-muted-foreground text-xs pr-2">
+            <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium opacity-100 select-none">
+              {user.role}
+            </kbd>
+          </p>
+        ) : (
+          <></>
+        )}
+        {clusterState.server.get() === '' ? (
           <></>
         ) : (
           <p className="text-muted-foreground text-xs pr-2">
             <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium opacity-100 select-none">
-              {user?.role ? `${user.role}:` : ''}
-              {clusterState.context.get()}
+              {clusterState.server.get()}
             </kbd>
           </p>
         )}
@@ -99,7 +107,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
             className="bg-red-500 hover:bg-red-400"
             onClick={() => {
               toast.warning(<div>Disconnect cluster</div>);
-              setCurrentCluster('', '');
+              setCurrentCluster('');
               setVersion('');
               apiResourcesState.set([]);
               crdsState.set(new Map<string, any>());

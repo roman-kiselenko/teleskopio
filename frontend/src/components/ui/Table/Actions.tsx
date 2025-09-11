@@ -39,6 +39,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useWS } from '@/context/WsContext';
+import { addSubscription } from '@/lib/subscriptionManager';
 
 function Actions({
   resource,
@@ -76,9 +77,11 @@ function Actions({
 
   useEffect(() => {
     const subscribe = async () => {
-      await listen(`drain_${resource.metadata.name}_${resource.metadata.uid}`, (payload: any) => {
-        setDrainLog((prev) => [{ pod: payload.pod, ns: payload.ns }, ...prev]);
-      });
+      addSubscription(
+        await listen(`drain_${resource.metadata.name}_${resource.metadata.uid}`, (payload: any) => {
+          setDrainLog((prev) => [{ pod: payload.pod, ns: payload.ns }, ...prev]);
+        }),
+      );
     };
 
     if (drain) {

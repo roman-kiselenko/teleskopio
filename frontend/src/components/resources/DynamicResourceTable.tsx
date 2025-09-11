@@ -5,6 +5,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
 import { currentClusterState } from '@/store/cluster';
 import { useWS } from '@/context/WsContext';
+import { addSubscription } from '@/lib/subscriptionManager';
 
 interface DynamicResourceTableProps<T> {
   kind: string;
@@ -38,23 +39,26 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   const { listen } = useWS();
 
   const listenEvents = async () => {
-    const context = currentClusterState.context.get();
     const server = currentClusterState.server.get();
-    listen(`${kind}-${context}-${server}-deleted`, (payload: any) => {
-      setState((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(payload.metadata?.uid as string);
-        return newMap;
-      });
-    });
+    addSubscription(
+      await listen(`${kind}-${server}-deleted`, (payload: any) => {
+        setState((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(payload.metadata?.uid as string);
+          return newMap;
+        });
+      }),
+    );
 
-    listen(`${kind}-${context}-${server}-updated`, (payload: any) => {
-      setState((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(payload.metadata?.uid as string, payload);
-        return newMap;
-      });
-    });
+    addSubscription(
+      await listen(`${kind}-${server}-updated`, (payload: any) => {
+        setState((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(payload.metadata?.uid as string, payload);
+          return newMap;
+        });
+      }),
+    );
   };
 
   const getPage = async ({

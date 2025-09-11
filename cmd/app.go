@@ -21,7 +21,7 @@ var logOutput = os.Stdout
 
 type App struct {
 	Config   *config.Config
-	Clients  *config.Clients
+	Clusters []*config.Cluster
 	Users    *config.Users
 	signchnl chan (os.Signal)
 	exitSig  chan (os.Signal)
@@ -29,13 +29,13 @@ type App struct {
 
 func New(version string, configPath string, exitchnl, signchnl chan (os.Signal)) (*App, error) {
 	app := &App{exitSig: exitchnl, signchnl: signchnl}
-	cfg, clients, users, err := config.ParseConfig(configPath)
+	cfg, clusters, users, err := config.ParseConfig(configPath)
 	if err != nil {
 		return app, err
 	}
 	app.Config = &cfg
 	app.Config.Version = version
-	app.Clients = &clients
+	app.Clusters = clusters
 	app.Config = &cfg
 	app.Users = &users
 	initLogger(&cfg)
@@ -89,7 +89,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	router.Use(gin.Recovery())
 	hub := webSocket.NewHub()
 	go hub.Run()
-	r, err := httpRouter.New(hub, router, a.Config, a.Clients, a.Users)
+	r, err := httpRouter.New(hub, router, a.Config, a.Clusters, a.Users)
 	if err != nil {
 		return err
 	}

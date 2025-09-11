@@ -1,7 +1,6 @@
 type Cluster = {
   name: string;
   path: string;
-  current_context?: string;
   server?: string;
 };
 

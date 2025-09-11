@@ -1,7 +1,5 @@
 import { Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Cluster } from '@/types';
 import { useNavigate } from 'react-router';
@@ -14,15 +12,9 @@ import { namespacesState } from '@/store/resources';
 import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { useWS } from '@/context/WsContext';
+import { addSubscription } from '@/lib/subscriptionManager';
 
 const columns: ColumnDef<Cluster>[] = [
-  {
-    accessorKey: 'context',
-    id: 'context',
-    meta: { className: 'max-w-[35ch] truncate' },
-    header: memo(({ column }) => <HeaderAction column={column} name={'Context'} />),
-    cell: memo(({ row }) => <div>{row.original.current_context}</div>),
-  },
   {
     accessorKey: 'server',
     id: 'server',
@@ -39,8 +31,8 @@ const columns: ColumnDef<Cluster>[] = [
       const navigate = useNavigate();
       const loading = useloadingState();
       const { listen } = useWS();
-      const get_version = async (context: string, server: any) => {
-        return await call('get_version', { context: context, server: server });
+      const get_version = async (server: any) => {
+        return await call('get_version', { server: server });
       };
       return (
         <Button
@@ -49,10 +41,7 @@ const columns: ColumnDef<Cluster>[] = [
           size="sm"
           onClick={async () => {
             loading.set(true);
-            const clusterVersion = await get_version(
-              row.original.current_context as string,
-              row.original.server,
-            );
+            const clusterVersion = await get_version(row.original.server);
             if (!clusterVersion.gitVersion) {
               loading.set(false);
               toast.error(
@@ -60,25 +49,15 @@ const columns: ColumnDef<Cluster>[] = [
                   Cant connect to cluster
                   <br />
                   Server: {row.original.server}
-                  <br />
-                  Context: {row.original.current_context}
                 </div>,
               );
               return;
             }
             setVersion(clusterVersion.gitVersion);
-            setCurrentCluster(
-              row.original.current_context as string,
-              row.original.server as string,
-            );
+            setCurrentCluster(row.original.server);
             toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
-            apiResourcesState.set(
-              await call('list_apiresources', {
-                context: row.original.current_context,
-                server: row.original.server,
-              }),
-            );
-            fetchAndWatchNamespaces(listen, row.original.current_context as string);
+            apiResourcesState.set(await call('list_apiresources', { server: row.original.server }));
+            fetchAndWatchNamespaces(listen, row.original.server);
             navigate('/resource/Node');
             loading.set(false);
             return;
@@ -94,7 +73,7 @@ const columns: ColumnDef<Cluster>[] = [
 
 export default columns;
 
-async function fetchAndWatchNamespaces(listen: any, context: string): Promise<void> {
+async function fetchAndWatchNamespaces(listen: any, server: any): Promise<void> {
   const nsResource = apiResourcesState
     .get()
     .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
@@ -115,18 +94,22 @@ async function fetchAndWatchNamespaces(listen: any, context: string): Promise<vo
       resource_version: rv,
     },
   });
-  listen(`Namespace-${context}-deleted`, async (ev: any) => {
-    namespacesState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(ev.metadata?.uid as string);
-      return newMap;
-    });
-  });
-  listen(`Namespace-${context}-updated`, async (ev: any) => {
-    namespacesState.set((prev) => {
-      const newMap = new Map(prev);
-      newMap.set(ev.metadata?.uid as string, ev);
-      return newMap;
-    });
-  });
+  addSubscription(
+    listen(`Namespace-${server}-deleted`, async (ev: any) => {
+      namespacesState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(ev.metadata?.uid as string);
+        return newMap;
+      });
+    }),
+  );
+  addSubscription(
+    listen(`Namespace-${server}-updated`, async (ev: any) => {
+      namespacesState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(ev.metadata?.uid as string, ev);
+        return newMap;
+      });
+    }),
+  );
 }

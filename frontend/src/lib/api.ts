@@ -4,9 +4,8 @@ type InvokePayload = Record<string, unknown>;
 
 export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T | any> {
   let request = { ...payload };
-  if (currentClusterState.server.get() !== '' && currentClusterState.context.get() !== '') {
+  if (currentClusterState.server.get() !== '') {
     request.server = currentClusterState.server.get();
-    request.context = currentClusterState.context.get();
   }
   const token = localStorage.getItem('token');
   if (payload) {

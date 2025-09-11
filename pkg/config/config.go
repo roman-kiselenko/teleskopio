@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"html/template"
 	"os"
 
@@ -31,69 +32,89 @@ type Config struct {
 	Version string
 }
 
-type Clients struct {
-	Typed   map[string]*kubernetes.Clientset
-	Dynamic map[string]dynamic.Interface
+type Cluster struct {
+	Address string
+	Typed   *kubernetes.Clientset
+	Dynamic dynamic.Interface
 }
 
 type Users struct {
 	Users map[string]User
 }
 
-func ParseConfig(configPath string) (Config, Clients, Users, error) {
+func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 	var cfg Config
+	clusters := []*Cluster{}
 
-	clients := Clients{
-		Typed:   make(map[string]*kubernetes.Clientset),
-		Dynamic: make(map[string]dynamic.Interface),
-	}
 	users := Users{
 		Users: make(map[string]User),
 	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return cfg, clients, users, err
+		return cfg, clusters, users, err
 	}
 
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return cfg, clients, users, err
+		return cfg, clusters, users, err
 	}
-
 	for _, raw := range cfg.Kube.Configs {
 		b, err := yaml.Marshal(raw)
 		if err != nil {
-			return cfg, clients, users, err
+			return cfg, clusters, users, err
 		}
 
 		kubeCfg, err := clientcmd.Load(b)
 		if err != nil {
-			return cfg, clients, users, err
+			return cfg, clusters, users, err
 		}
 
 		restCfg, err := clientcmd.
 			NewNonInteractiveClientConfig(*kubeCfg, kubeCfg.CurrentContext, &clientcmd.ConfigOverrides{}, nil).
 			ClientConfig()
 		if err != nil {
-			return cfg, clients, users, err
+			return cfg, clusters, users, err
 		}
 
 		clientset, err := kubernetes.NewForConfig(restCfg)
 		if err != nil {
-			return cfg, clients, users, err
+			return cfg, clusters, users, err
 		}
 		dyn, err := dynamic.NewForConfig(restCfg)
 		if err != nil {
-			return cfg, clients, users, err
+			return cfg, clusters, users, err
 		}
-		clients.Dynamic[kubeCfg.CurrentContext] = dyn
-		clients.Typed[kubeCfg.CurrentContext] = clientset
+		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn})
+	}
+
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig != "" {
+		kubeCfg, err := clientcmd.LoadFromFile(kubeconfig)
+		if err != nil {
+			return cfg, clusters, users, fmt.Errorf("cant read KUBECONFIG %s", err)
+		}
+		restCfg, err := clientcmd.
+			NewNonInteractiveClientConfig(*kubeCfg, kubeCfg.CurrentContext, &clientcmd.ConfigOverrides{}, nil).
+			ClientConfig()
+		if err != nil {
+			return cfg, clusters, users, fmt.Errorf("cant read KUBECONFIG %s", err)
+		}
+
+		clientset, err := kubernetes.NewForConfig(restCfg)
+		if err != nil {
+			return cfg, clusters, users, fmt.Errorf("cant read KUBECONFIG %s", err)
+		}
+		dyn, err := dynamic.NewForConfig(restCfg)
+		if err != nil {
+			return cfg, clusters, users, fmt.Errorf("cant read KUBECONFIG %s", err)
+		}
+		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn})
 	}
 
 	for _, u := range cfg.Users {
 		users.Users[u.Username] = u
 	}
-	return cfg, clients, users, nil
+	return cfg, clusters, users, nil
 }
 
 func (c *Config) Validate() error {

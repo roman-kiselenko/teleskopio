@@ -59,8 +59,7 @@ export function PodLogs() {
           return { c: currentContainer, l: l };
         }),
       );
-      const context = currentClusterState.context.get();
-      unlisten = await listen(`pod_log_line_${name}_${ns}_${context}`, (payload: any) => {
+      unlisten = await listen(`pod_log_line_${name}_${ns}`, (payload: any) => {
         const p = payload as {
           pod: string;
           container: string;

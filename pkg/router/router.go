@@ -33,15 +33,14 @@ import (
 )
 
 type Cluster struct {
-	CurrentContext string `json:"current_context"`
-	Server         string `json:"server"`
+	Server string `json:"server"`
 }
 
 type Payload struct {
-	Context string `json:"context"`
-	Server  string `json:"server"`
+	Server string `json:"server"`
 }
 
+// TODO move types and refactor
 type APIResourceInfo struct {
 	Group      string `json:"group"`
 	Version    string `json:"version"`
@@ -54,7 +53,6 @@ type ListRequest struct {
 	Continue string `json:"continue"`
 	Limit    int64  `json:"limit"`
 	Server   string `json:"server"`
-	Context  string `json:"context"`
 	Resource string `json:"resource"`
 	Request  struct {
 		Namespace  string `json:"namespace"`
@@ -68,7 +66,6 @@ type ListRequest struct {
 type WatchRequest struct {
 	UID      string `json:"uid"`
 	Server   string `json:"server"`
-	Context  string `json:"context"`
 	Resource string `json:"resource"`
 	Request  struct {
 		Namespace       string `json:"namespace"`
@@ -82,7 +79,6 @@ type WatchRequest struct {
 
 type GetRequest struct {
 	Server   string `json:"server"`
-	Context  string `json:"context"`
 	Resource string `json:"resource"`
 	Request  struct {
 		Name       string `json:"name"`
@@ -96,7 +92,6 @@ type GetRequest struct {
 
 type PodLogRequest struct {
 	Server    string `json:"server"`
-	Context   string `json:"context"`
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 	Container string `json:"container"`
@@ -105,7 +100,6 @@ type PodLogRequest struct {
 
 type DeleteRequest struct {
 	Server   string `json:"server"`
-	Context  string `json:"context"`
 	Resource string `json:"resource"`
 	Request  struct {
 		Name            string `json:"name"`
@@ -120,7 +114,6 @@ type DeleteRequest struct {
 
 type CreateRequest struct {
 	Server    string `json:"server"`
-	Context   string `json:"context"`
 	Namespace string `json:"namespace"`
 	Yaml      string `json:"yaml"`
 }
@@ -133,7 +126,6 @@ type NodeOperation struct {
 	Namespaced   bool   `json:"namespaced"`
 	ResourceName string `json:"resourceName"`
 	Server       string `json:"server"`
-	Context      string `json:"context"`
 	Resource     string `json:"resource"`
 	Cordon       bool   `json:"cordon"`
 }
@@ -142,7 +134,6 @@ type NodeDrain struct {
 	ResourceName        string `json:"resourceName"`
 	ResourceUID         string `json:"resourceUid"`
 	Server              string `json:"server"`
-	Context             string `json:"context"`
 	DrainForce          bool   `json:"drainForce"`
 	IgnoreAllDaemonSets bool   `json:"IgnoreAllDaemonSets"`
 	DeleteEmptyDirData  bool   `json:"DeleteEmptyDirData"`
@@ -160,16 +151,15 @@ type ResourceOperation struct {
 		ResourceVersion string `json:"resource_version"`
 	} `json:"request"`
 	Server   string `json:"server"`
-	Context  string `json:"context"`
 	Resource string `json:"resource"`
 	Replicas int64  `json:"replicas"`
 }
 
 type Route struct {
-	cfg     *config.Config
-	clients *config.Clients
-	users   *config.Users
-	hub     *webSocket.Hub
+	cfg      *config.Config
+	clusters []*config.Cluster
+	users    *config.Users
+	hub      *webSocket.Hub
 	// TODO
 	// Add mutex
 	watchers        map[string]w.Interface
@@ -178,10 +168,10 @@ type Route struct {
 
 const viewerRole = "viewer"
 
-func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clients *config.Clients, users *config.Users) (Route, error) {
+func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*config.Cluster, users *config.Users) (Route, error) {
 	r := Route{
 		cfg:             cfg,
-		clients:         clients,
+		clusters:        clusters,
 		users:           users,
 		hub:             hub,
 		watchers:        make(map[string]w.Interface),
@@ -191,17 +181,21 @@ func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clients *config.
 }
 
 func (r *Route) LookupConfigs(c *gin.Context) {
-	// TODO fix me
+	slog.Debug("configs", "clusters", r.clusters)
 	configs := []Cluster{}
-	for _, c := range r.cfg.Kube.Configs {
-		context := c["current-context"].(string)
-		for _, cluster := range c["clusters"].([]interface{}) {
-			entry := cluster.(map[string]interface{})["cluster"]
-			address := entry.(map[string]interface{})["server"].(string)
-			configs = append(configs, Cluster{Server: address, CurrentContext: context})
-		}
+	for _, k := range r.clusters {
+		configs = append(configs, Cluster{Server: k.Address})
 	}
 	c.JSON(http.StatusOK, configs)
+}
+
+func (r *Route) GetCluster(server string) *config.Cluster {
+	for _, c := range r.clusters {
+		if c.Address == server {
+			return c
+		}
+	}
+	return nil
 }
 
 func (r *Route) GetVersion(c *gin.Context) {
@@ -211,7 +205,7 @@ func (r *Route) GetVersion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	ver, err := r.clients.Typed[req.Context].Discovery().ServerVersion()
+	ver, err := r.GetCluster(req.Server).Typed.Discovery().ServerVersion()
 	if err != nil {
 		slog.Error("client", "err", err.Error(), "req", req)
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -227,7 +221,7 @@ func (r *Route) ListResources(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	discoveryClient := r.clients.Typed[req.Context].Discovery()
+	discoveryClient := r.GetCluster(req.Server).Typed.Discovery()
 
 	apiGroupResources, err := discoveryClient.ServerPreferredResources()
 	if err != nil {
@@ -263,7 +257,7 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -285,9 +279,9 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	}
 	var ri dynamic.ResourceInterface
 	if req.Request.Namespace != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 
 	list, err := ri.List(context.TODO(), metav1.ListOptions{
@@ -325,7 +319,7 @@ func (r *Route) ListEventsDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -347,9 +341,9 @@ func (r *Route) ListEventsDynamicResource(c *gin.Context) {
 	}
 	var ri dynamic.ResourceInterface
 	if req.Request.Namespace != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 	fieldSelector := ""
 	if req.Request.Group == "" {
@@ -395,7 +389,7 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -417,11 +411,11 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 	}
 	var ri dynamic.ResourceInterface
 	if req.Request.Namespace != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
-	watcherKey := fmt.Sprintf("%s-%s-%s-updated", req.UID, req.Context, req.Server)
+	watcherKey := fmt.Sprintf("%s-%s-updated", req.UID, req.Server)
 	_, ok := r.watchers[watcherKey]
 	if ok {
 		slog.Info("watcher exist", "gvr", gvr.String(), "key", watcherKey)
@@ -449,14 +443,14 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 		for event := range ch {
 			switch event.Type {
 			case w.Added, w.Modified:
-				slog.Debug("message received", "gvr", gvr.String(), "type", event.Type)
+				slog.Debug("message received", "gvr", gvr.String(), "watchKey", watcherKey, "type", event.Type)
 				payload, _ := json.Marshal(map[string]interface{}{
 					"event":   watcherKey,
 					"payload": event.Object,
 				})
 				r.hub.Broadcast(payload)
 			case w.Error:
-				slog.Error("watching error", "gvr", gvr.String(), "error", event.Object.DeepCopyObject().GetObjectKind())
+				slog.Error("watching error", "gvr", gvr.String(), "watchKey", watcherKey, "error", event.Object.DeepCopyObject().GetObjectKind())
 				delete(r.watchers, watcherKey)
 			}
 		}
@@ -472,7 +466,7 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -494,11 +488,11 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 	}
 	var ri dynamic.ResourceInterface
 	if req.Request.Namespace != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
-	watcherKey := fmt.Sprintf("%s-%s-%s", req.Request.Kind, req.Context, req.Server)
+	watcherKey := fmt.Sprintf("%s-%s", req.Request.Kind, req.Server)
 	watch, err := ri.Watch(context.TODO(), metav1.ListOptions{ResourceVersion: req.Request.ResourceVersion})
 	if err != nil {
 		slog.Error("watcher", "err", err.Error())
@@ -512,21 +506,21 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 		for event := range ch {
 			switch event.Type {
 			case w.Added, w.Modified:
-				slog.Debug("message received", "gvr", gvr.String(), "type", event.Type)
+				slog.Debug("message received", "gvr", gvr.String(), "watchKey", watcherKey, "type", event.Type)
 				payload, _ := json.Marshal(map[string]interface{}{
-					"event":   fmt.Sprintf("%s-%s-%s-updated", req.Request.Kind, req.Context, req.Server),
+					"event":   fmt.Sprintf("%s-%s-updated", req.Request.Kind, req.Server),
 					"payload": event.Object,
 				})
 				r.hub.Broadcast(payload)
 			case w.Deleted:
-				slog.Debug("message received", "gvr", gvr.String(), "type", event.Type)
+				slog.Debug("message received", "gvr", gvr.String(), "watchKey", watcherKey, "type", event.Type)
 				payload, _ := json.Marshal(map[string]interface{}{
-					"event":   fmt.Sprintf("%s-%s-%s-deleted", req.Request.Kind, req.Context, req.Server),
+					"event":   fmt.Sprintf("%s-%s-deleted", req.Request.Kind, req.Server),
 					"payload": event.Object,
 				})
 				r.hub.Broadcast(payload)
 			case w.Error:
-				slog.Error("watching error", "gvr", gvr.String(), "error", event.Object.DeepCopyObject().GetObjectKind())
+				slog.Error("watching error", "gvr", gvr.String(), "watchKey", watcherKey, "error", event.Object.DeepCopyObject().GetObjectKind())
 				delete(r.watchers, watcherKey)
 			}
 		}
@@ -542,7 +536,7 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -564,9 +558,9 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 	}
 	var ri dynamic.ResourceInterface
 	if req.Request.Namespace != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 
 	res, err := ri.Get(context.TODO(), req.Request.Name, metav1.GetOptions{})
@@ -602,7 +596,7 @@ func (r *Route) CreateKubeResource(c *gin.Context) {
 
 	gvk := obj.GroupVersionKind()
 
-	apiResList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   gvk.Group,
 		Version: gvk.Version,
 	}.String())
@@ -635,9 +629,9 @@ func (r *Route) CreateKubeResource(c *gin.Context) {
 	ns := obj.GetNamespace()
 	var ri dynamic.ResourceInterface
 	if ns != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(ns)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(ns)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 
 	created, err := ri.Create(context.TODO(), obj, metav1.CreateOptions{})
@@ -674,7 +668,7 @@ func (r *Route) UpdateKubeResource(c *gin.Context) {
 
 	gvk := obj.GroupVersionKind()
 
-	apiResList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   gvk.Group,
 		Version: gvk.Version,
 	}.String())
@@ -707,9 +701,9 @@ func (r *Route) UpdateKubeResource(c *gin.Context) {
 	ns := obj.GetNamespace()
 	var ri dynamic.ResourceInterface
 	if ns != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(ns)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(ns)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 
 	created, err := ri.Update(context.TODO(), obj, metav1.UpdateOptions{})
@@ -735,7 +729,7 @@ func (r *Route) DeleteDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -757,9 +751,9 @@ func (r *Route) DeleteDynamicResource(c *gin.Context) {
 	}
 	var ri dynamic.ResourceInterface
 	if req.Request.Namespace != "" {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr).Namespace(req.Request.Namespace)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
 	} else {
-		ri = r.clients.Dynamic[req.Context].Resource(gvr)
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 
 	if err := ri.Delete(context.TODO(), req.Request.Name, metav1.DeleteOptions{}); err != nil {
@@ -783,7 +777,7 @@ func (r *Route) NodeOperation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Group,
 		Version: req.Version,
 	}.String())
@@ -803,7 +797,7 @@ func (r *Route) NodeOperation(c *gin.Context) {
 		Version:  req.Version,
 		Resource: req.Resource,
 	}
-	ri := r.clients.Dynamic[req.Context].Resource(gvr)
+	ri := r.GetCluster(req.Server).Dynamic.Resource(gvr)
 
 	payload := []struct {
 		Op    string `json:"op"`
@@ -839,7 +833,7 @@ func (r *Route) NodeDrain(c *gin.Context) {
 		return
 	}
 
-	node, err := r.clients.Typed[req.Context].CoreV1().Nodes().Get(context.TODO(), req.ResourceName, metav1.GetOptions{})
+	node, err := r.GetCluster(req.Server).Typed.CoreV1().Nodes().Get(context.TODO(), req.ResourceName, metav1.GetOptions{})
 	if err != nil {
 		slog.Error("get node", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -847,7 +841,7 @@ func (r *Route) NodeDrain(c *gin.Context) {
 	}
 	drainer := &drain.Helper{
 		Ctx:                 context.TODO(),
-		Client:              r.clients.Typed[req.Context],
+		Client:              r.GetCluster(req.Server).Typed,
 		Force:               req.DrainForce,
 		IgnoreAllDaemonSets: req.IgnoreAllDaemonSets,
 		DeleteEmptyDirData:  req.DeleteEmptyDirData,
@@ -892,14 +886,14 @@ func (r *Route) StreamPodLogs(c *gin.Context) {
 	}
 	timeNow := metav1.NewTime(time.Now())
 	podLogOptions.SinceTime = &timeNow
-	logsReq := r.clients.Typed[req.Context].CoreV1().Pods(req.Namespace).GetLogs(req.Name, podLogOptions)
+	logsReq := r.GetCluster(req.Server).Typed.CoreV1().Pods(req.Namespace).GetLogs(req.Name, podLogOptions)
 	podLogs, err := logsReq.Stream(context.Background())
 	if err != nil {
 		slog.Error("get stream", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s_%s", req.Name, req.Namespace, req.Context)
+	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s", req.Name, req.Namespace)
 	if _, ok := r.podLogsWatchers[podLogsKey]; ok {
 		slog.Info("pod logs exist", "key", podLogsKey)
 		c.JSON(http.StatusOK, gin.H{"success": ""})
@@ -964,7 +958,7 @@ func (r *Route) GetPodLogs(c *gin.Context) {
 		TailLines: req.TailLines,
 		Container: req.Container,
 	}
-	logsReq := r.clients.Typed[req.Context].CoreV1().Pods(req.Namespace).GetLogs(req.Name, podLogOptions)
+	logsReq := r.GetCluster(req.Server).Typed.CoreV1().Pods(req.Namespace).GetLogs(req.Name, podLogOptions)
 	podLogs, err := logsReq.Stream(context.Background())
 	if err != nil {
 		slog.Error("get stream", "err", err.Error())
@@ -1000,7 +994,7 @@ func (r *Route) StopStreamPodLogs(c *gin.Context) {
 		return
 	}
 
-	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s_%s", req.Name, req.Namespace, req.Context)
+	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s", req.Name, req.Namespace)
 
 	r.podLogsWatchers[podLogsKey] <- true
 
@@ -1020,7 +1014,7 @@ func (r *Route) ScaleResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	apiResourceList, err := r.clients.Typed[req.Context].ServerResourcesForGroupVersion(schema.GroupVersion{
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
 		Group:   req.Request.Group,
 		Version: req.Request.Version,
 	}.String())
@@ -1040,7 +1034,7 @@ func (r *Route) ScaleResource(c *gin.Context) {
 		Version:  req.Request.Version,
 		Resource: req.Resource,
 	}
-	resource, err := r.clients.Dynamic[req.Context].Resource(gvr).
+	resource, err := r.GetCluster(req.Server).Dynamic.Resource(gvr).
 		Namespace(req.Request.Namespace).
 		Get(context.Background(), req.Request.Name, metav1.GetOptions{})
 	if err != nil {
@@ -1054,7 +1048,7 @@ func (r *Route) ScaleResource(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	if _, err := r.clients.Dynamic[req.Context].Resource(gvr).
+	if _, err := r.GetCluster(req.Server).Dynamic.Resource(gvr).
 		Namespace(req.Request.Namespace).
 		Update(context.Background(), unstr, metav1.UpdateOptions{}); err != nil {
 		slog.Error("update", "err", err.Error(), "req", req)

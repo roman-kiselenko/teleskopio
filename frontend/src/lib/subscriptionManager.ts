@@ -2,7 +2,7 @@ type UnlistenFn = () => void;
 
 const subscriptions: UnlistenFn[] = [];
 
-export async function addSubscription(listenerPromise: Promise<UnlistenFn>): Promise<void> {
+export async function addSubscription(listenerPromise: () => void): Promise<void> {
   const unlisten = await listenerPromise;
   subscriptions.push(unlisten);
 }

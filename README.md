@@ -13,6 +13,7 @@
 - [Screenshots](#screenshots)
 - [Stack](#stack)
 - [Install](#install)
+- [Keymaps](#keymaps)
 
 ## Features
 
@@ -121,6 +122,13 @@ docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr
 1. `teleskopio`
 
 ---
+
+## Keymaps
+
+1. Hide/Show sidebar `CTRL+B`
+1. Get back `ESC`
+1. In editor `CTRL+S` save
+1. `CTRL+J` Jump to some section (Pod, Deployments, Configuration e.t.c.)
 
 ## Development
 
