@@ -1,9 +1,9 @@
-log_color: false
-log_json: true
-log_level: INFO
-server_http: ":3080"
-jwt_key: "super-salt"
-auth_disabled: true
+log_color: false # Color output (only work with text)
+log_json: true # Output logs as JSON
+log_level: INFO # Log Level
+server_http: ":3080" # HTTP address
+jwt_key: "super-salt" # salt for JWT token
+auth_disabled: false # set to true to disable auth completly
 users:
   - username: admin
     password: "" # htpasswd -nbB admin MySecret123

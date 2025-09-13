@@ -25,6 +25,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
   const [user] = useState(() => {
     return JSON.parse(localStorage.getItem('user') || '{}');
   });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {

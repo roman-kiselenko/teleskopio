@@ -116,6 +116,47 @@ docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr
 ...
 ```
 
+### Config
+
+```yaml
+log_color: false # Color output (only work with text)
+log_json: true # Output logs as JSON
+log_level: INFO # Log Level
+server_http: ":3080" # HTTP address
+jwt_key: "super-salt" # salt for JWT token
+auth_disabled: false # set to true to disable auth completly
+users:
+  - username: admin
+    password: "" # htpasswd -nbB admin MySecret123
+    role: "admin"
+  - username: user
+    password: ""
+    role: "viewer"
+kube:
+  configs:
+    # Paste content of ~/.kube/config
+    # or set KUBECONFIG env variable
+    - apiVersion: v1
+      clusters:
+        - cluster:
+            certificate-authority-data: LS0tLS1...
+            server: https://127.0.0.1:57598
+          name: kind-kind
+      contexts:
+        - context:
+            cluster: kind-kind
+            user: kind-kind
+          name: kind-kind
+      current-context: kind-kind
+      kind: Config
+      preferences: {}
+      users:
+        - name: kind-kind
+          user:
+            client-certificate-data: LS0tL...
+            client-key-data: LS0tL...
+```
+
 #### Run
 
 1. Generate config `teleskopio config > config.yaml`

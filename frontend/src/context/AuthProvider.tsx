@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data: any = await res.json();
       setAuthDisabled(data.message);
     } catch (error: any) {
+      setAuthDisabled(true);
       console.error(error);
     }
   }, [authDisabled]);
@@ -63,7 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setToken(token);
       setUser(user);
-      setAuthDisabled(false);
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 

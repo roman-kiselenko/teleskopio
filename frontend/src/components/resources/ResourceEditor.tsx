@@ -189,7 +189,7 @@ export default function ResourceEditor() {
           <ArrowBigLeft /> Esc
         </Button>
         <Button title="save" className="text-xs bg-green-500" disabled={hasErrors} onClick={onSave}>
-          <Save /> Save
+          <Save /> Update
         </Button>
         {getLocalBoolean(MANAGED_FIELDS) ? (
           <></>
