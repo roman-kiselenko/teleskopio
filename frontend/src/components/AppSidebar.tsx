@@ -56,7 +56,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
-import { useCrdsState } from '@/store/crdResources';
+import { useCrdsState } from '@/store/resources';
 import { useVersionState } from '@/store/version';
 import { compareVersions } from 'compare-versions';
 
