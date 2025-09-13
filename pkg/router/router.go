@@ -179,7 +179,6 @@ func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*conf
 }
 
 func (r *Route) LookupConfigs(c *gin.Context) {
-	slog.Debug("configs", "clusters", r.clusters)
 	configs := []Cluster{}
 	for _, k := range r.clusters {
 		configs = append(configs, Cluster{Server: k.Address})
