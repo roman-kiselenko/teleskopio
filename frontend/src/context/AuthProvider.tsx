@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 type User = {
   username: string;
@@ -11,6 +11,7 @@ type AuthContextType = {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  AuthDisabled: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,8 +19,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [authDisabled, setAuthDisabled] = useState<boolean | null>(null);
+
+  const fetchAuthData = useCallback(async () => {
+    try {
+      const res: any = await fetch('/api/auth_disabled', {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data: any = await res.json();
+      setAuthDisabled(data.message);
+    } catch (error: any) {
+      setAuthDisabled(true);
+      console.error(error);
+    }
+  }, [authDisabled]);
 
   useEffect(() => {
+    fetchAuthData();
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
@@ -66,7 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{ user, token, login, logout, isAuthenticated: !!token, AuthDisabled: !!authDisabled }}
+    >
       {children}
     </AuthContext.Provider>
   );

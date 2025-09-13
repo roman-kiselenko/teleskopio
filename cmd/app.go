@@ -109,6 +109,11 @@ func (a *App) initServer(staticFiles embed.FS) error {
 			"message": "pong",
 		})
 	})
+	router.GET("/api/auth_disabled", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": a.Config.AuthDisabled,
+		})
+	})
 	router.POST("/api/login", r.Login)
 	auth := router.Group("/api")
 	auth.Use(mdlwr.Auth())
@@ -123,13 +128,13 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/get_pod_logs", r.GetPodLogs)
 	auth.POST("/stop_pod_log_stream", r.StopStreamPodLogs)
 	auth.POST("/stream_pod_logs", r.StreamPodLogs)
-	auth.POST("/delete_dynamic_resource", r.DeleteDynamicResource)
-	auth.POST("/create_kube_resource", r.CreateKubeResource)
-	auth.POST("/update_kube_resource", r.UpdateKubeResource)
-	auth.POST("/cordon_node", r.NodeOperation)
-	auth.POST("/uncordon_node", r.NodeOperation)
-	auth.POST("/drain_node", r.NodeDrain)
-	auth.POST("/scale_resource", r.ScaleResource)
+	auth.POST("/delete_dynamic_resource", mdlwr.CheckRole(), r.DeleteDynamicResource)
+	auth.POST("/create_kube_resource", mdlwr.CheckRole(), r.CreateKubeResource)
+	auth.POST("/update_kube_resource", mdlwr.CheckRole(), r.UpdateKubeResource)
+	auth.POST("/cordon_node", mdlwr.CheckRole(), r.NodeOperation)
+	auth.POST("/uncordon_node", mdlwr.CheckRole(), r.NodeOperation)
+	auth.POST("/drain_node", mdlwr.CheckRole(), r.NodeDrain)
+	auth.POST("/scale_resource", mdlwr.CheckRole(), r.ScaleResource)
 	webSocket.SetupWebsocket(hub, router)
 
 	go func() {

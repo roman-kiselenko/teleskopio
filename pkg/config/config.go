@@ -20,13 +20,14 @@ type User struct {
 }
 
 type Config struct {
-	LogColor   bool   `yaml:"log_color,omitempty"`
-	LogJSON    bool   `yaml:"log_json,omitempty"`
-	LogLevel   string `yaml:"log_level,omitempty"`
-	ServerHTTP string `yaml:"server_http,omitempty"`
-	JWTKey     string `yaml:"jwt_key"`
-	Users      []User `yaml:"users"`
-	Kube       struct {
+	LogColor     bool   `yaml:"log_color,omitempty"`
+	LogJSON      bool   `yaml:"log_json,omitempty"`
+	LogLevel     string `yaml:"log_level,omitempty"`
+	ServerHTTP   string `yaml:"server_http,omitempty"`
+	AuthDisabled bool   `yaml:"auth_disabled"`
+	JWTKey       string `yaml:"jwt_key"`
+	Users        []User `yaml:"users"`
+	Kube         struct {
 		Configs []map[string]any `yaml:"configs"`
 	} `yaml:"kube"`
 	Version string

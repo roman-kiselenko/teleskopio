@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { removeAllSubscriptions } from '@/lib/subscriptionManager';
 import { flushAllStates } from '@/store/resources';
 import { apiResourcesState } from '@/store/apiResources';
-import { crdsState } from '@/store/crdResources';
 import { Input } from '@/components/ui/input';
 
 export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
@@ -25,6 +24,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
   const [user] = useState(() => {
     return JSON.parse(localStorage.getItem('user') || '{}');
   });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
@@ -110,7 +110,6 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
               setCurrentCluster('');
               setVersion('');
               apiResourcesState.set([]);
-              crdsState.set(new Map<string, any>());
               flushAllStates();
               removeAllSubscriptions();
               navigate('/');

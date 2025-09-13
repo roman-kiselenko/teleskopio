@@ -166,8 +166,6 @@ type Route struct {
 	podLogsWatchers map[string]chan (bool)
 }
 
-const viewerRole = "viewer"
-
 func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*config.Cluster, users *config.Users) (Route, error) {
 	r := Route{
 		cfg:             cfg,
@@ -181,7 +179,6 @@ func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*conf
 }
 
 func (r *Route) LookupConfigs(c *gin.Context) {
-	slog.Debug("configs", "clusters", r.clusters)
 	configs := []Cluster{}
 	for _, k := range r.clusters {
 		configs = append(configs, Cluster{Server: k.Address})
@@ -574,11 +571,6 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 
 //nolint:dupl
 func (r *Route) CreateKubeResource(c *gin.Context) {
-	userRole := c.GetString("role")
-	if userRole == viewerRole || userRole == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
-		return
-	}
 	var req CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -646,11 +638,6 @@ func (r *Route) CreateKubeResource(c *gin.Context) {
 
 //nolint:dupl
 func (r *Route) UpdateKubeResource(c *gin.Context) {
-	userRole := c.GetString("role")
-	if userRole == viewerRole || userRole == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
-		return
-	}
 	var req CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -717,12 +704,6 @@ func (r *Route) UpdateKubeResource(c *gin.Context) {
 }
 
 func (r *Route) DeleteDynamicResource(c *gin.Context) {
-	userRole := c.GetString("role")
-	if userRole == viewerRole || userRole == "" {
-		slog.Error("wrong role", "role", userRole)
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
-		return
-	}
 	var req DeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -765,12 +746,6 @@ func (r *Route) DeleteDynamicResource(c *gin.Context) {
 }
 
 func (r *Route) NodeOperation(c *gin.Context) {
-	userRole := c.GetString("role")
-	if userRole == viewerRole || userRole == "" {
-		slog.Error("wrong role", "role", userRole)
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
-		return
-	}
 	var req NodeOperation
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -820,12 +795,6 @@ func (r *Route) NodeOperation(c *gin.Context) {
 }
 
 func (r *Route) NodeDrain(c *gin.Context) {
-	userRole := c.GetString("role")
-	if userRole == viewerRole || userRole == "" {
-		slog.Error("wrong role", "role", userRole)
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
-		return
-	}
 	var req NodeDrain
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -1002,12 +971,6 @@ func (r *Route) StopStreamPodLogs(c *gin.Context) {
 }
 
 func (r *Route) ScaleResource(c *gin.Context) {
-	userRole := c.GetString("role")
-	if userRole == viewerRole || userRole == "" {
-		slog.Error("wrong role", "role", userRole)
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
-		return
-	}
 	var req ResourceOperation
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
