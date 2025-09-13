@@ -3,6 +3,7 @@ log_json: true
 log_level: INFO
 server_http: ":3080"
 jwt_key: "super-salt"
+auth_disabled: true
 users:
   - username: admin
     password: "" # htpasswd -nbB admin MySecret123

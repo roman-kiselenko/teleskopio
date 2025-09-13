@@ -12,6 +12,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const viewerRole = "viewer"
+
 type Middleware struct {
 	cfg *config.Config
 }
@@ -33,8 +35,28 @@ func (m Middleware) Logger() gin.HandlerFunc {
 	}
 }
 
+func (m Middleware) CheckRole() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if m.cfg.AuthDisabled {
+			c.Next()
+			return
+		}
+		userRole := c.GetString("role")
+		if userRole == viewerRole || userRole == "" {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "read only access"})
+			return
+		}
+		c.Next()
+	}
+}
+
 func (m Middleware) Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if m.cfg.AuthDisabled {
+			c.Next()
+			return
+		}
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" {
 			c.Abort()

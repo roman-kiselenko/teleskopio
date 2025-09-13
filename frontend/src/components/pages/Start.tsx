@@ -8,7 +8,7 @@ import { useConfigsState, getConfigs } from '@/store/kubeconfigs';
 import { Input } from '@/components/ui/input';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthProvider';
 
 export function StartPage() {
@@ -16,7 +16,7 @@ export function StartPage() {
   const searchQuery = useSearchState();
   const query = searchQuery.q.get();
   const loading = useloadingState();
-  const { logout } = useAuth();
+  const { logout, AuthDisabled } = useAuth();
 
   const fetchData = useCallback(async () => {
     try {
@@ -47,9 +47,11 @@ export function StartPage() {
           className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           onChange={(e) => searchQuery.q.set(e.target.value)}
         />
-        <Button onClick={logout} className="ml-2 text-xs">
-          <LogOut size={12} />
-        </Button>
+        {!AuthDisabled && (
+          <Button onClick={logout} className="ml-2 text-xs">
+            <LogOut size={12} />
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1">

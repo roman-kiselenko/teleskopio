@@ -14,7 +14,7 @@ import { redirect } from 'react-router-dom';
 
 export default function Layout() {
   const { theme } = useTheme();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, AuthDisabled } = useAuth();
 
   const handleLogin = async (username: string, password: string): Promise<boolean | void> => {
     if (username === '' || password === '') {
@@ -48,8 +48,8 @@ export default function Layout() {
           <></>
         )}
         <main className="bg-background flex w-full flex-col h-screen">
-          {isAuthenticated ? (
-            <Outlet />
+          {AuthDisabled ? (
+            isAuthenticated && <Outlet />
           ) : (
             <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
               <div className="w-full max-w-sm">
