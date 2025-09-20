@@ -135,6 +135,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/uncordon_node", mdlwr.CheckRole(), r.NodeOperation)
 	auth.POST("/drain_node", mdlwr.CheckRole(), r.NodeDrain)
 	auth.POST("/scale_resource", mdlwr.CheckRole(), r.ScaleResource)
+	auth.POST("/trigger_cronjob", mdlwr.CheckRole(), r.TriggerCronjob)
 	webSocket.SetupWebsocket(hub, router)
 
 	go func() {
