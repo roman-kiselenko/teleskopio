@@ -19,6 +19,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"golang.org/x/crypto/bcrypt"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -138,6 +139,17 @@ type NodeDrain struct {
 	IgnoreAllDaemonSets bool   `json:"IgnoreAllDaemonSets"`
 	DeleteEmptyDirData  bool   `json:"DeleteEmptyDirData"`
 	DrainTimeout        int64  `json:"drainTimeout"`
+}
+
+type TriggerCronjob struct {
+	Group        string `json:"group"`
+	Version      string `json:"version"`
+	Kind         string `json:"kind"`
+	Namespaced   bool   `json:"namespaced"`
+	Namespace    string `json:"namespace"`
+	ResourceName string `json:"resourceName"`
+	Server       string `json:"server"`
+	Resource     string
 }
 
 type ResourceOperation struct {
@@ -1020,6 +1032,54 @@ func (r *Route) ScaleResource(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": ""})
+}
+
+func (r *Route) TriggerCronjob(c *gin.Context) {
+	var req TriggerCronjob
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
+		Group:   req.Group,
+		Version: req.Version,
+	}.String())
+	if err != nil {
+		slog.Error("api list", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	for _, r := range apiResourceList.APIResources {
+		if r.Kind == req.Kind && r.SingularName == strings.ToLower(req.Kind) {
+			req.Resource = r.Name
+		}
+	}
+	cronJob, err := r.GetCluster(req.Server).Typed.BatchV1().CronJobs(req.Namespace).Get(context.TODO(), req.ResourceName, metav1.GetOptions{})
+	if err != nil {
+		slog.Error("get cronjob", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	jobSpec := cronJob.Spec.JobTemplate.Spec
+	jobName := fmt.Sprintf("%s-manual-%d", req.ResourceName, metav1.Now().Unix())
+
+	_, err = r.GetCluster(req.Server).Typed.BatchV1().Jobs(req.Namespace).Create(context.TODO(), &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      jobName,
+			Namespace: req.Namespace,
+		},
+		Spec: jobSpec,
+	}, metav1.CreateOptions{})
+	if err != nil {
+		slog.Error("create job", "err", err.Error(), "job", jobName)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": jobName})
 }
 
 type creds struct {

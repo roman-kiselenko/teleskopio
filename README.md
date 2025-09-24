@@ -10,10 +10,10 @@
 
 - [Features](#features)
 - [Planned Features](#planned-features)
-- [Screenshots](#screenshots)
 - [Stack](#stack)
 - [Install](#install)
 - [Keymaps](#keymaps)
+- [Screenshots](#screenshots)
 
 ## Features
 
@@ -26,6 +26,8 @@
 - Pod logs and events - inspect logs and event history directly in the UI.
 - Owner links - navigate from a resource to its owner.
 - Multiple font options - customize the UI appearance.
+- Manual CronJob triggering
+- Slace resources (Deployments, ReplicaSets)
 - Filter `CTRL + F` any resource.
 - Jump to section `CTRL + J` any menu.
 - Light and dark themes.
@@ -39,16 +41,6 @@
 - Resource metrics - CPU, memory, and other usage statistics.
 
 ---
-
-## Screenshots
-
-<p align="center">
-    <img width="900" src="./assets/diagonal_split.png"/>
-    <img width="900" src="./assets/pods.png"/>
-    <img width="900" src="./assets/editor.png"/>
-    <img width="900" src="./assets/drain.png"/>
-    <img width="900" src="./assets/scale.png"/>
-</p>
 
 ## Stack
 
@@ -181,3 +173,16 @@ kube:
 ## Contributing
 
 **teleskopio** is an open-source project, and contributions are welcome.
+
+## Screenshots
+
+<p align="center">
+    <img width="900" src="./assets/login.png"/>
+    <img width="900" src="./assets/pods.png"/>
+    <img width="900" src="./assets/logs.png"/>
+    <img width="900" src="./assets/jump.png"/>
+    <img width="900" src="./assets/fonts.png"/>
+    <img width="900" src="./assets/editor.png"/>
+    <img width="900" src="./assets/drain.png"/>
+    <img width="900" src="./assets/scale.png"/>
+</p>
