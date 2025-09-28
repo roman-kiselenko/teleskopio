@@ -23,11 +23,11 @@
 - Cluster overview - get a high-level view of cluster health and activity.
 - Resource editor/creator - integrated [Monaco Editor](https://microsoft.github.io/monaco-editor/) with syntax highlighting.
 - Live updates - real-time resource changes with Kubernetes watchers.
-- Pod logs and events - inspect logs and event history directly in the UI.
+- `Pod` logs and events - inspect logs and event history directly in the UI.
 - Owner links - navigate from a resource to its owner.
 - Multiple font options - customize the UI appearance.
-- Manual CronJob triggering
-- Slace resources (Deployments, ReplicaSets)
+- Manual `CronJob` triggering
+- Scale resources (`Deployments`, `ReplicaSets`)
 - Filter `CTRL + F` any resource.
 - Jump to section `CTRL + J` any menu.
 - Light and dark themes.
