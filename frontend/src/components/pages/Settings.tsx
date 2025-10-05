@@ -33,6 +33,7 @@ import {
   DEFAULT_FONT,
   DEFAULT_FONT_SIZE,
   MANAGED_FIELDS,
+  JSONSCHEMA_KEY,
 } from '@/settings';
 
 export function SettingsPage() {
@@ -41,6 +42,10 @@ export function SettingsPage() {
 
   const [managedFields, setManagedFields] = useState<boolean>(() => {
     return getLocalBoolean(MANAGED_FIELDS, false);
+  });
+
+  const [jsonSchema, setJsonSchema] = useState<boolean>(() => {
+    return getLocalBoolean(JSONSCHEMA_KEY, false);
   });
 
   const [selectedFont, setSelectedFont] = useState<string>(() => {
@@ -154,6 +159,29 @@ export function SettingsPage() {
               </div>
               <p className="py-1">
                 If checked the yaml resource with <b>metadata.managedFields</b> will be stripped.
+              </p>
+              <div className="flex flex-row items-center">
+                <Checkbox
+                  checked={jsonSchema}
+                  onCheckedChange={() => {
+                    setJsonSchema(!jsonSchema);
+                    setLocalBoolean(JSONSCHEMA_KEY, !jsonSchema);
+                  }}
+                  id="schema"
+                />
+                <Label className="pl-1 text-xs" htmlFor="schema">
+                  Enable remote JSON Schema{' '}
+                </Label>
+              </div>
+              <p className="py-1">
+                Source of the schema{' '}
+                <a
+                  className="bg-blue-300"
+                  target="_blank"
+                  href="https://github.com/yannh/kubernetes-json-schema?tab=readme-ov-file#kubernetes-json-schemas"
+                >
+                  yannh/kubernetes-json-schema
+                </a>
               </p>
             </div>
           </TabsContent>

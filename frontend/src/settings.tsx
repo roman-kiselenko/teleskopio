@@ -1,4 +1,5 @@
 export const MANAGED_FIELDS = 'managedfields';
+export const JSONSCHEMA_KEY = 'jsonschema';
 
 export const FONT_KEY = 'app-font';
 export const DEFAULT_FONT = 'cascadia';

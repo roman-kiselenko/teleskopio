@@ -3,6 +3,8 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as monaco from 'monaco-editor';
+import YamlWorker from '@/yaml.worker.js?worker';
+import { configureMonacoYaml } from 'monaco-yaml';
 import { loader } from '@monaco-editor/react';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
@@ -10,22 +12,22 @@ import { useNavigate } from 'react-router-dom';
 import yaml from 'js-yaml';
 import { useTheme } from '@/components/ThemeProvider';
 import { Fonts, FONT_KEY, EDITOR_FONT_SIZE_KEY, EDITOR_FONT_SIZE } from '@/settings';
-loader.config({ monaco });
 import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 
-const yamlTokens = {
-  tokenizer: {
-    root: [
-      [/#.*/, 'comment', ''],
-      [/\b(true|false|null)\b/, 'keyword', ''],
-      [/\b[0-9]+(\.[0-9]+)?\b/, 'number', ''],
-      [/".*?"/, 'string', ''],
-      [/'.*?'/, 'string', ''],
-      [/[^:]+:/, 'key', ''],
-    ],
+window.MonacoEnvironment = {
+  getWorker(moduleId, label) {
+    switch (label) {
+      // Handle other cases
+      case 'yaml':
+        return new YamlWorker();
+      default:
+        throw new Error(`Unknown label ${label}`);
+    }
   },
 };
+
+loader.config({ monaco });
 
 export default function ResourceEditor() {
   const { theme } = useTheme();
@@ -50,18 +52,10 @@ export default function ResourceEditor() {
   });
 
   const handleEditorMount: OnMount = (editor, monacoInstance) => {
-    editorRef.current = editor;
-    monacoInstance.languages.register({ id: 'yaml' });
-    monaco.languages.setMonarchTokensProvider('yaml', yamlTokens as any);
-    monaco.languages.setLanguageConfiguration('yaml', {
-      comments: {
-        lineComment: '#',
-      },
-      brackets: [
-        ['{', '}'],
-        ['[', ']'],
-      ],
+    configureMonacoYaml(monacoInstance, {
+      enableSchemaRequest: false,
     });
+    editorRef.current = editor;
     editor.focus();
   };
 
@@ -85,8 +79,10 @@ export default function ResourceEditor() {
       toast.error(
         <div className="flex flex-col">
           <div>YAML has validation errors. Please fix them before saving.</div>
-          {markers.map((m) => (
-            <div className="font-bold">{m.message}</div>
+          {markers.map((m, i: number) => (
+            <div key={i} className="font-bold">
+              {m.message}
+            </div>
           ))}
         </div>,
       );

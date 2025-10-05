@@ -4,6 +4,8 @@ import { Save, ArrowBigLeft, Shredder, Plus, Minus, Pencil, Map } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { getLocalBoolean } from '@/lib/localStorage';
 import * as monaco from 'monaco-editor';
+import YamlWorker from '@/yaml.worker.js?worker';
+import { configureMonacoYaml, MonacoYamlOptions } from 'monaco-yaml';
 import { loader } from '@monaco-editor/react';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
@@ -16,28 +18,33 @@ import {
   EDITOR_FONT_SIZE_KEY,
   EDITOR_FONT_SIZE,
   MANAGED_FIELDS,
+  JSONSCHEMA_KEY,
 } from '@/settings';
 import { useLoaderData } from 'react-router';
+import { useVersionState } from '@/store/version';
 
-loader.config({ monaco });
-
-const yamlTokens = {
-  tokenizer: {
-    root: [
-      [/#.*/, 'comment', ''],
-      [/\b(true|false|null)\b/, 'keyword', ''],
-      [/\b[0-9]+(\.[0-9]+)?\b/, 'number', ''],
-      [/".*?"/, 'string', ''],
-      [/'.*?'/, 'string', ''],
-      [/[^:]+:/, 'key', ''],
-    ],
+window.MonacoEnvironment = {
+  getWorker(moduleId, label) {
+    switch (label) {
+      // Handle other cases
+      case 'yaml':
+        return new YamlWorker();
+      default:
+        throw new Error(`Unknown label ${label}`);
+    }
   },
 };
 
+loader.config({ monaco });
+
 export default function ResourceEditor() {
   const { theme } = useTheme();
+  const version = useVersionState();
   let navigate = useNavigate();
   const { name, namespace, data } = useLoaderData();
+  const [jsonSchema] = useState<boolean>(() => {
+    return getLocalBoolean(JSONSCHEMA_KEY);
+  });
   const [fontSize, setFontsize] = useState<number>(() => {
     return (
       parseInt(localStorage.getItem(EDITOR_FONT_SIZE_KEY) || EDITOR_FONT_SIZE.toString()) ||
@@ -67,18 +74,22 @@ export default function ResourceEditor() {
   });
 
   const handleEditorMount: OnMount = (editor, monacoInstance) => {
+    let monacoParams: MonacoYamlOptions = { enableSchemaRequest: false };
+    let obj = yaml.load(data);
+    if (jsonSchema) {
+      const file = `file:///yaml/${obj.kind}/**`;
+      monacoParams = {
+        enableSchemaRequest: true,
+        schemas: [
+          {
+            fileMatch: [file],
+            uri: `https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/${version.version.get()}/${obj.kind.toLowerCase()}.json`,
+          },
+        ],
+      };
+    }
+    configureMonacoYaml(monacoInstance, monacoParams);
     editorRef.current = editor;
-    monacoInstance.languages.register({ id: 'yaml' });
-    monaco.languages.setMonarchTokensProvider('yaml', yamlTokens as any);
-    monaco.languages.setLanguageConfiguration('yaml', {
-      comments: {
-        lineComment: '#',
-      },
-      brackets: [
-        ['{', '}'],
-        ['[', ']'],
-      ],
-    });
     editor.focus();
   };
 
@@ -102,8 +113,10 @@ export default function ResourceEditor() {
       toast.error(
         <div className="flex flex-col">
           <div>YAML has validation errors. Please fix them before saving.</div>
-          {markers.map((m) => (
-            <div className="font-bold">{m.message}</div>
+          {markers.map((m, i: number) => (
+            <div key={i} className="font-bold">
+              {m.message}
+            </div>
           ))}
         </div>,
       );
@@ -228,6 +241,7 @@ export default function ResourceEditor() {
       <Editor
         height="90vh"
         defaultLanguage="yaml"
+        path={location.pathname}
         options={{
           minimap: { enabled: minimap },
           fontFamily: selectedFont,
