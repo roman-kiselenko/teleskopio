@@ -30,6 +30,7 @@
 - Scale resources (`Deployments`, `ReplicaSets`)
 - Filter `CTRL + F` any resource.
 - Jump to section `CTRL + J` any menu.
+- Kubernetes [resource schemas](https://github.com/yannh/kubernetes-json-schema?tab=readme-ov-file#kubernetes-json-schemas) per API version.
 - Light and dark themes.
 
 ---
@@ -37,7 +38,6 @@
 ## Planned Features
 
 - Helm integration.
-- Kubernetes resource schemas per API version.
 - Resource metrics - CPU, memory, and other usage statistics.
 
 ---
