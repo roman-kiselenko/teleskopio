@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Save, ArrowBigLeft, Shredder, Plus, Minus, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getLocalBoolean } from '@/lib/localStorage';
 import * as monaco from 'monaco-editor';
 import { configureMonacoYaml, MonacoYamlOptions } from 'monaco-yaml';
 import YamlWorker from '@/yaml.worker.js?worker';
@@ -12,16 +11,9 @@ import { call } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 import yaml from 'js-yaml';
 import { useTheme } from '@/components/ThemeProvider';
-import {
-  Fonts,
-  FONT_KEY,
-  EDITOR_FONT_SIZE_KEY,
-  EDITOR_FONT_SIZE,
-  JSONSCHEMA_KEY,
-} from '@/settings';
+import { Fonts, FONT_KEY, EDITOR_FONT_SIZE_KEY, EDITOR_FONT_SIZE } from '@/settings';
 import { NamespaceSelector } from '@/components/NamespaceSelector';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
-import { useVersionState } from '@/store/version';
 
 window.MonacoEnvironment = {
   getWorker(moduleId, label) {
@@ -40,10 +32,6 @@ loader.config({ monaco });
 export default function ResourceEditor() {
   const { theme } = useTheme();
   let navigate = useNavigate();
-  const version = useVersionState();
-  const [jsonSchema] = useState<boolean>(() => {
-    return getLocalBoolean(JSONSCHEMA_KEY);
-  });
   const [fontSize, setFontsize] = useState<number>(() => {
     return (
       parseInt(localStorage.getItem(EDITOR_FONT_SIZE_KEY) || EDITOR_FONT_SIZE.toString()) ||
