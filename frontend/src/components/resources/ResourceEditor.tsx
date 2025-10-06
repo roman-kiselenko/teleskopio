@@ -77,13 +77,14 @@ export default function ResourceEditor() {
     let monacoParams: MonacoYamlOptions = { enableSchemaRequest: false };
     let obj = yaml.load(data);
     if (jsonSchema) {
+      const k8sv = version.version.get().split('+')[0];
       const file = `file:///yaml/${obj.kind}/**`;
       monacoParams = {
         enableSchemaRequest: true,
         schemas: [
           {
             fileMatch: [file],
-            uri: `https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/${version.version.get()}/${obj.kind.toLowerCase()}.json`,
+            uri: `https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/${k8sv}/${obj.kind.toLowerCase()}.json`,
           },
         ],
       };

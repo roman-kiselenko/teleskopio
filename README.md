@@ -185,4 +185,5 @@ kube:
     <img width="900" src="./assets/editor.png"/>
     <img width="900" src="./assets/drain.png"/>
     <img width="900" src="./assets/scale.png"/>
+    <img width="900" src="./assets/jsonschema.png"/>
 </p>
