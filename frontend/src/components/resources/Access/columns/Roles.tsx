@@ -46,7 +46,7 @@ const columns: ColumnDef<any>[] = [
           resource={role}
           name={'Role'}
           action={'delete_dynamic_resource'}
-          request={request}
+          request={{ request: request }}
         />
       );
     },

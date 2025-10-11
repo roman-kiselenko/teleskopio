@@ -6,7 +6,7 @@ jwt_key: "super-salt" # salt for JWT token
 auth_disabled: false # set to true to disable auth completly
 users:
   - username: admin
-    password: "" # htpasswd -nbB admin MySecret123
+    password: "" # htpasswd -nbB admin MySecret12345
     role: "admin"
   - username: user
     password: ""

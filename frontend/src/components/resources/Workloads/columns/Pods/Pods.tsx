@@ -200,14 +200,25 @@ const columns: ColumnDef<any>[] = [
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-xs">Are you sure?</DialogTitle>
+                <DialogTitle className="text-xs"></DialogTitle>
                 <DialogDescription></DialogDescription>
               </DialogHeader>
+              <span className="text-xs text-red-600 font-bold">
+                This operation can't be undone!
+              </span>
               <p className="text-xs">
-                This operation cant be undone!
+                Delete <span className="underline">{pod.kind}</span> resource
                 <br />
-                {pod.kind} <span className="text-red-600">{pod.metadata.name}</span> will be
-                deleted.
+                Name: <span className="font-bold">{pod.metadata.name}</span>
+                <br />
+                {pod.metadata?.namespace ? (
+                  <span>
+                    {' '}
+                    Namespace: <span className="font-bold">{pod.metadata.namespace}</span>
+                  </span>
+                ) : (
+                  <></>
+                )}
               </p>
               <div className="flex justify-end gap-2">
                 <Button className="text-xs" variant="outline" onClick={() => setOpenDialog(false)}>

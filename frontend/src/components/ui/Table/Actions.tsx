@@ -88,7 +88,6 @@ function Actions({
       subscribe();
     }
   }, []);
-
   return (
     <div className="flex flex-row justify-center w-full">
       <DropdownMenu>
@@ -175,14 +174,23 @@ function Actions({
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-xs">Are you sure?</DialogTitle>
-            <DialogDescription></DialogDescription>
+            <DialogTitle className="text-xs"></DialogTitle>
+            <DialogDescription className="flex flex-row"></DialogDescription>
           </DialogHeader>
+          <span className="text-xs text-red-600 font-bold">This operation can't be undone!</span>
           <p className="text-xs">
-            This operation cant be undone!
+            Delete <span className="underline">{resource.kind}</span> resource
             <br />
-            {resource.kind} <span className="text-red-600">{resource.metadata.name}</span> will be
-            deleted.
+            Name: <span className="font-bold">{resource.metadata.name}</span>
+            <br />
+            {request.request?.namespaced ? (
+              <span>
+                {' '}
+                Namespace: <span className="font-bold">{resource.metadata?.namespace}</span>
+              </span>
+            ) : (
+              <></>
+            )}
           </p>
           <div className="flex justify-end gap-2">
             <Button

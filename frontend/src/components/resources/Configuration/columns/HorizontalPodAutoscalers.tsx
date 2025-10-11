@@ -74,6 +74,7 @@ const columns: ColumnDef<any>[] = [
           request={{
             request: {
               name: ns.metadata?.name,
+              namespace: ns.metadata?.namespace,
               ...resource,
             },
           }}
