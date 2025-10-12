@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"gopkg.in/yaml.v3"
+	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -34,9 +35,10 @@ type Config struct {
 }
 
 type Cluster struct {
-	Address string
-	Typed   *kubernetes.Clientset
-	Dynamic dynamic.Interface
+	Address      string
+	Typed        *kubernetes.Clientset
+	Dynamic      dynamic.Interface
+	APIExtension *apiextensionsclientset.Clientset
 }
 
 type Users struct {
@@ -85,7 +87,11 @@ func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 		if err != nil {
 			return cfg, clusters, users, err
 		}
-		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn})
+		apiExtension, err := apiextensionsclientset.NewForConfig(restCfg)
+		if err != nil {
+			return cfg, clusters, users, err
+		}
+		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn, APIExtension: apiExtension})
 	}
 
 	kubeconfig := os.Getenv("KUBECONFIG")
@@ -109,7 +115,12 @@ func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 		if err != nil {
 			return cfg, clusters, users, fmt.Errorf("cant read KUBECONFIG %s", err)
 		}
-		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn})
+		apiExtension, err := apiextensionsclientset.NewForConfig(restCfg)
+		if err != nil {
+			return cfg, clusters, users, err
+		}
+
+		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn, APIExtension: apiExtension})
 	}
 
 	for _, u := range cfg.Users {

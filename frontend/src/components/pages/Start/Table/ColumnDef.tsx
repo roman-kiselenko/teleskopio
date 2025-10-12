@@ -13,6 +13,7 @@ import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { useWS } from '@/context/WsContext';
 import { addSubscription } from '@/lib/subscriptionManager';
+import { useCrdResourcesState } from '@/store/crdResources';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -30,6 +31,7 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const loading = useloadingState();
+      const crdResources = useCrdResourcesState();
       const { listen } = useWS();
       const get_version = async (server: any) => {
         return await call('get_version', { server: server });
@@ -57,6 +59,17 @@ const columns: ColumnDef<Cluster>[] = [
             setCurrentCluster(row.original.server);
             toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
             apiResourcesState.set(await call('list_apiresources', { server: row.original.server }));
+            const [resources, rv] = await call('list_crd_resource', {
+              server: row.original.server,
+            });
+            // TODO crd
+            (resources || []).forEach((x) => {
+              crdResources.set((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(x.metadata?.uid as string, x);
+                return newMap;
+              });
+            });
             fetchAndWatchNamespaces(listen, row.original.server);
             navigate('/resource/Node');
             loading.set(false);

@@ -12,12 +12,14 @@ import { toast } from 'sonner';
 import { removeAllSubscriptions } from '@/lib/subscriptionManager';
 import { flushAllStates } from '@/store/resources';
 import { apiResourcesState } from '@/store/apiResources';
+import { useCrdResourcesState } from '@/store/crdResources';
 import { Input } from '@/components/ui/input';
 
 export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
   const version = useVersionState();
   const clusterState = useCurrentClusterState();
   const searchQuery = useSearchState();
+  const crdResources = useCrdResourcesState();
   let navigate = useNavigate();
   let location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +112,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
               setCurrentCluster('');
               setVersion('');
               apiResourcesState.set([]);
+              crdResources.set(new Map());
               flushAllStates();
               removeAllSubscriptions();
               navigate('/');

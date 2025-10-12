@@ -25,6 +25,7 @@
 - Live updates - real-time resource changes with Kubernetes watchers.
 - `Pod` logs and events - inspect logs and event history directly in the UI.
 - Owner links - navigate from a resource to its owner.
+- `CRD` - custom resource definition editor.
 - Multiple font options - customize the UI appearance.
 - Manual `CronJob` triggering
 - Scale resources (`Deployments`, `ReplicaSets`)
@@ -186,4 +187,5 @@ kube:
     <img width="900" src="./assets/drain.png"/>
     <img width="900" src="./assets/scale.png"/>
     <img width="900" src="./assets/jsonschema.png"/>
+    <img width="900" src="./assets/crd-viewer.png"/>
 </p>

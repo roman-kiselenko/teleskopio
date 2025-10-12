@@ -56,7 +56,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
-import { useCrdsState } from '@/store/resources';
+import { useCrdResourcesState } from '@/store/crdResources';
 import { useVersionState } from '@/store/version';
 import { compareVersions } from 'compare-versions';
 
@@ -154,7 +154,7 @@ export const items = [
 export function AppSidebar() {
   const cc = useCurrentClusterState();
   const { state } = useSidebar();
-  const crds = useCrdsState();
+  const crds = useCrdResourcesState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
   const loading = useloadingState();
   const version = useVersionState();
