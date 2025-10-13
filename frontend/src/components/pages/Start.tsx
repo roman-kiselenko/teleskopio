@@ -44,7 +44,7 @@ export function StartPage() {
       <div className="flex flex-row py-2 px-2 items-center justify-between">
         <Input
           placeholder="Filter by name..."
-          className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+          className="placeholder:text-muted-foreground flex h-6 w-full rounded-md bg-transparent py-2 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           onChange={(e) => searchQuery.q.set(e.target.value)}
         />
         {!AuthDisabled && (

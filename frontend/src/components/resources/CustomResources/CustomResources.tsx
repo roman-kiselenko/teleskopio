@@ -116,7 +116,7 @@ const CustomResources = () => {
     );
   const showInitialLoader = loading && data.length === 0;
   return (
-    <div>
+    <>
       <Header />
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
@@ -135,7 +135,7 @@ const CustomResources = () => {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

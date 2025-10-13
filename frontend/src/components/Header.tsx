@@ -49,7 +49,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
         <div className="text-muted-foreground items-center flex flex-grow w-1/3">
           <div className="flex items-center">
             <Button className="text-xs" onClick={() => navigate('/createkubernetesresource')}>
-              <Plus size={16} /> Create
+              <Plus /> Create
             </Button>
           </div>
         </div>
@@ -61,11 +61,11 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
         <Input
           ref={inputRef}
           placeholder="Filter by name..."
-          className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+          className="placeholder:text-muted-foreground flex h-6 w-full rounded-md bg-transparent py-2 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           onChange={(e) => searchQuery.q.set(e.target.value)}
         />
       </div>
-      <div className="text-muted-foreground items-center flex  justify-between"></div>
+      <div className="text-muted-foreground items-center flex justify-between"></div>
       {withNsSelector ? (
         <div className="flex flex-row pr-2">
           <NamespaceSelector />
@@ -118,7 +118,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
               navigate('/');
             }}
           >
-            <Unplug className="" size={16} />
+            <Unplug />
           </Button>
         </div>
       </div>
