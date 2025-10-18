@@ -59,6 +59,7 @@ const CustomResources = () => {
   const [loading, setLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadPage = async () => {
     if (loading) return;
@@ -113,11 +114,16 @@ const CustomResources = () => {
     .filter((x) => x.kind === kind)
     .sort((a: any, b: any) =>
       moment(b.metadata.creationTimestamp).diff(moment(a.metadata.creationTimestamp)),
-    );
+    )
+    .filter((x: any) => {
+      return String(x.metadata.name || '')
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+    });
   const showInitialLoader = loading && data.length === 0;
   return (
     <>
-      <Header />
+      <Header setSearchQuery={setSearchQuery} />
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />

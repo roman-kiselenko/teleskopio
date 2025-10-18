@@ -2,7 +2,6 @@ import { JumpCommand } from '@/components/ui/jump-command';
 import { useVersionState, setVersion } from '@/store/version';
 import { useCurrentClusterState, setCurrentCluster } from '@/store/cluster';
 import { Plus, Unplug } from 'lucide-react';
-import { useSearchState } from '@/store/search';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
@@ -15,10 +14,15 @@ import { apiResourcesState } from '@/store/apiResources';
 import { useCrdResourcesState } from '@/store/crdResources';
 import { Input } from '@/components/ui/input';
 
-export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
+export function Header({
+  setSearchQuery,
+  withNsSelector,
+}: {
+  setSearchQuery: any;
+  withNsSelector?: boolean;
+}) {
   const version = useVersionState();
   const clusterState = useCurrentClusterState();
-  const searchQuery = useSearchState();
   const crdResources = useCrdResourcesState();
   let navigate = useNavigate();
   let location = useLocation();
@@ -62,7 +66,7 @@ export function Header({ withNsSelector }: { withNsSelector?: boolean }) {
           ref={inputRef}
           placeholder="Filter by name..."
           className="placeholder:text-muted-foreground flex h-6 w-full rounded-md bg-transparent py-2 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-          onChange={(e) => searchQuery.q.set(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
       <div className="text-muted-foreground items-center flex justify-between"></div>
