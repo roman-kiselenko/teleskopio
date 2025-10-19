@@ -12,6 +12,8 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type User struct {
@@ -21,15 +23,16 @@ type User struct {
 }
 
 type Config struct {
-	LogColor     bool   `yaml:"log_color,omitempty"`
-	LogJSON      bool   `yaml:"log_json,omitempty"`
-	LogLevel     string `yaml:"log_level,omitempty"`
-	ServerHTTP   string `yaml:"server_http,omitempty"`
+	LogColor     bool   `yaml:"log_color"`
+	LogJSON      bool   `yaml:"log_json"`
+	LogLevel     string `yaml:"log_level"`
+	ServerHTTP   string `yaml:"server_http"`
 	AuthDisabled bool   `yaml:"auth_disabled"`
 	JWTKey       string `yaml:"jwt_key"`
 	Users        []User `yaml:"users"`
 	Kube         struct {
-		Configs []map[string]any `yaml:"configs"`
+		APIRequestTimeout string           `yaml:"api_request_timeout"`
+		Configs           []map[string]any `yaml:"configs"`
 	} `yaml:"kube"`
 	Version string
 }
@@ -130,8 +133,9 @@ func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 }
 
 func (c *Config) Validate() error {
-	// TODO
-	return nil
+	return validation.ValidateStruct(c,
+		validation.Field(&c.LogLevel, validation.Required, validation.In("INFO", "DEBUG", "WARN").Error("must be one of 'INFO', 'DEBUG', 'WARN'")),
+	)
 }
 
 //go:embed config.TEMPLATE.yaml

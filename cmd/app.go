@@ -40,6 +40,9 @@ func New(version string, configPath string, exitchnl, signchnl chan (os.Signal))
 	app.Users = &users
 	initLogger(&cfg)
 	slog.Info("read config at", "path", configPath)
+	if err := cfg.Validate(); err != nil {
+		return app, err
+	}
 	return app, nil
 }
 

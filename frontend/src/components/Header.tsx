@@ -112,7 +112,7 @@ export function Header({
             title="disconnect cluster"
             className="bg-red-500 hover:bg-red-400"
             onClick={() => {
-              toast.warning(<div>Disconnect cluster</div>);
+              toast.warning(<div>Disconnect cluster {clusterState.server.get()}</div>);
               setCurrentCluster('');
               setVersion('');
               apiResourcesState.set([]);

@@ -90,6 +90,9 @@ async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<P
     .get()
     .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
   const [resources, rv] = await call('list_crd_resource', {});
+  if (!resources) {
+    return;
+  }
   if (resources.length > 0) {
     toast.info(<div>CRD Resources loaded: {resources.length}</div>);
   }
