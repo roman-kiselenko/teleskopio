@@ -40,6 +40,9 @@ func New(version string, configPath string, exitchnl, signchnl chan (os.Signal))
 	app.Users = &users
 	initLogger(&cfg)
 	slog.Info("read config at", "path", configPath)
+	if err := cfg.Validate(); err != nil {
+		return app, err
+	}
 	return app, nil
 }
 
@@ -121,6 +124,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/get_version", r.GetVersion)
 	auth.POST("/list_apiresources", r.ListResources)
 	auth.POST("/list_dynamic_resource", r.ListDynamicResource)
+	auth.POST("/list_crd_resource", r.ListCustomResourceDefinitions)
 	auth.POST("/list_events_dynamic_resource", r.ListEventsDynamicResource)
 	auth.POST("/watch_events_dynamic_resource", r.WatchEventsDynamicResource)
 	auth.POST("/watch_dynamic_resource", r.WatchDynamicResource)

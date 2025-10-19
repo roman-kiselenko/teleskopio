@@ -13,6 +13,8 @@ import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { useWS } from '@/context/WsContext';
 import { addSubscription } from '@/lib/subscriptionManager';
+import { crdsState, useCrdResourcesState } from '@/store/crdResources';
+import { crsState } from '@/store/resources';
 
 const columns: ColumnDef<Cluster>[] = [
   {
@@ -30,6 +32,7 @@ const columns: ColumnDef<Cluster>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const loading = useloadingState();
+      const crdResources = useCrdResourcesState();
       const { listen } = useWS();
       const get_version = async (server: any) => {
         return await call('get_version', { server: server });
@@ -57,6 +60,15 @@ const columns: ColumnDef<Cluster>[] = [
             setCurrentCluster(row.original.server);
             toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
             apiResourcesState.set(await call('list_apiresources', { server: row.original.server }));
+            await fetchAndWatchCRDs(listen, row.original.server as string);
+            Array.from(crdResources.get().values()).forEach((x) => {
+              fetchAndWatchCRs(
+                listen,
+                row.original.server as string,
+                x.spec.names.kind,
+                x.spec.group,
+              );
+            });
             fetchAndWatchNamespaces(listen, row.original.server);
             navigate('/resource/Node');
             loading.set(false);
@@ -72,6 +84,101 @@ const columns: ColumnDef<Cluster>[] = [
 ];
 
 export default columns;
+
+async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<Promise<void>>> {
+  const resource = apiResourcesState
+    .get()
+    .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
+  const [resources, rv] = await call('list_crd_resource', {});
+  if (!resources) {
+    return;
+  }
+  if (resources.length > 0) {
+    toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+  }
+  await call('watch_dynamic_resource', { request: { ...resource, resource_version: rv } });
+  resources
+    .filter((x) => x.kind !== 'SelfSubjectReview')
+    .forEach((x) => {
+      crdsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(x.metadata?.uid as string, x);
+        return newMap;
+      });
+    });
+  addSubscription(
+    listen(`CustomResourceDefinition-${server}-deleted`, async (ev: any) => {
+      apiResourcesState.set(await call('list_apiresources', {}));
+      fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group);
+      crdsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(ev.metadata?.uid as string);
+        return newMap;
+      });
+    }),
+  );
+  addSubscription(
+    listen(`CustomResourceDefinition-${server}-updated`, async (ev: any) => {
+      apiResourcesState.set(await call('list_apiresources', {}));
+      fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group);
+      crdsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(ev.metadata?.uid as string, ev);
+        return newMap;
+      });
+    }),
+  );
+}
+
+async function fetchAndWatchCRs(
+  listen: any,
+  server: string,
+  kind: string,
+  group: string,
+): Promise<Promise<Promise<void>>> {
+  const customResource = apiResourcesState
+    .get()
+    .find((r: ApiResource) => r.kind === kind && r.group === group);
+  if (!customResource) {
+    return;
+  }
+  const [resources, rv] = await call('list_dynamic_resource', {
+    request: { ...customResource },
+  });
+  crsState.set((prev) => {
+    const newMap = new Map(prev);
+    resources.forEach((item) => {
+      newMap.set(item.metadata.uid, item);
+    });
+    return newMap;
+  });
+  const request = {
+    ...customResource,
+    resource_version: rv,
+  };
+  if (kind === 'ComponentStatus') {
+    return;
+  }
+  await call('watch_dynamic_resource', { request });
+  addSubscription(
+    listen(`${kind}-${server}-deleted`, (ev: any) => {
+      crsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(ev.metadata.uid);
+        return newMap;
+      });
+    }),
+  );
+  addSubscription(
+    listen(`${kind}-${server}-updated`, (ev: any) => {
+      crsState.set((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(ev.metadata.uid, ev);
+        return newMap;
+      });
+    }),
+  );
+}
 
 async function fetchAndWatchNamespaces(listen: any, server: any): Promise<void> {
   const nsResource = apiResourcesState

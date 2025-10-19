@@ -11,7 +11,7 @@ export async function getConfigs(query: string) {
     let configs = await call<any[]>('lookup_configs');
     if (query !== '') {
       configs = configs.filter((c) => {
-        return String(c.name || '')
+        return String(c.server || '')
           .toLowerCase()
           .includes(query.toLowerCase());
       });

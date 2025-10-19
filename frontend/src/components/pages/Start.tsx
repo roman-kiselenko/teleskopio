@@ -1,7 +1,6 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Loader2, LogOut } from 'lucide-react';
 import { useloadingState } from '@/store/loader';
-import { useSearchState } from '@/store/search';
 import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Start/Table/ColumnDef';
 import { useConfigsState, getConfigs } from '@/store/kubeconfigs';
@@ -13,19 +12,18 @@ import { useAuth } from '@/context/AuthProvider';
 
 export function StartPage() {
   const configs = useConfigsState();
-  const searchQuery = useSearchState();
-  const query = searchQuery.q.get();
+  const [searchQuery, setSearchQuery] = useState('');
   const loading = useloadingState();
   const { logout, AuthDisabled } = useAuth();
 
   const fetchData = useCallback(async () => {
     try {
       await call<any[]>('ping');
-      await getConfigs(query);
+      await getConfigs(searchQuery);
     } catch (error: any) {
       toast.error('Error! Cant ping server\n' + error.message);
     }
-  }, [query]);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchData();
@@ -44,8 +42,8 @@ export function StartPage() {
       <div className="flex flex-row py-2 px-2 items-center justify-between">
         <Input
           placeholder="Filter by name..."
-          className="placeholder:text-muted-foreground flex h-7 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-          onChange={(e) => searchQuery.q.set(e.target.value)}
+          className="placeholder:text-muted-foreground flex h-6 w-full rounded-md bg-transparent py-2 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
         {!AuthDisabled && (
           <Button onClick={logout} className="ml-2 text-xs">

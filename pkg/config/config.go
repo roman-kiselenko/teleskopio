@@ -8,9 +8,12 @@ import (
 	"os"
 
 	"gopkg.in/yaml.v3"
+	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type User struct {
@@ -20,23 +23,25 @@ type User struct {
 }
 
 type Config struct {
-	LogColor     bool   `yaml:"log_color,omitempty"`
-	LogJSON      bool   `yaml:"log_json,omitempty"`
-	LogLevel     string `yaml:"log_level,omitempty"`
-	ServerHTTP   string `yaml:"server_http,omitempty"`
+	LogColor     bool   `yaml:"log_color"`
+	LogJSON      bool   `yaml:"log_json"`
+	LogLevel     string `yaml:"log_level"`
+	ServerHTTP   string `yaml:"server_http"`
 	AuthDisabled bool   `yaml:"auth_disabled"`
 	JWTKey       string `yaml:"jwt_key"`
 	Users        []User `yaml:"users"`
 	Kube         struct {
-		Configs []map[string]any `yaml:"configs"`
+		APIRequestTimeout string           `yaml:"api_request_timeout"`
+		Configs           []map[string]any `yaml:"configs"`
 	} `yaml:"kube"`
 	Version string
 }
 
 type Cluster struct {
-	Address string
-	Typed   *kubernetes.Clientset
-	Dynamic dynamic.Interface
+	Address      string
+	Typed        *kubernetes.Clientset
+	Dynamic      dynamic.Interface
+	APIExtension *apiextensionsclientset.Clientset
 }
 
 type Users struct {
@@ -85,7 +90,11 @@ func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 		if err != nil {
 			return cfg, clusters, users, err
 		}
-		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn})
+		apiExtension, err := apiextensionsclientset.NewForConfig(restCfg)
+		if err != nil {
+			return cfg, clusters, users, err
+		}
+		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn, APIExtension: apiExtension})
 	}
 
 	kubeconfig := os.Getenv("KUBECONFIG")
@@ -109,7 +118,12 @@ func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 		if err != nil {
 			return cfg, clusters, users, fmt.Errorf("cant read KUBECONFIG %s", err)
 		}
-		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn})
+		apiExtension, err := apiextensionsclientset.NewForConfig(restCfg)
+		if err != nil {
+			return cfg, clusters, users, err
+		}
+
+		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn, APIExtension: apiExtension})
 	}
 
 	for _, u := range cfg.Users {
@@ -119,8 +133,9 @@ func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
 }
 
 func (c *Config) Validate() error {
-	// TODO
-	return nil
+	return validation.ValidateStruct(c,
+		validation.Field(&c.LogLevel, validation.Required, validation.In("INFO", "DEBUG", "WARN").Error("must be one of 'INFO', 'DEBUG', 'WARN'")),
+	)
 }
 
 //go:embed config.TEMPLATE.yaml

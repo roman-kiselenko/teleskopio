@@ -26,7 +26,6 @@ export default function Layout() {
       redirect('/');
       return;
     }
-    console.log(isAuthenticated, AuthDisabled);
     redirect('/resource/Node');
   };
 

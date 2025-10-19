@@ -7,7 +7,6 @@ import { Header } from '@/components/Header';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 import type { ApiResource } from '@/types';
 import { apiResourcesState } from '@/store/apiResources';
-import { useSearchState } from '@/store/search';
 import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
 
@@ -47,7 +46,7 @@ export function PaginatedTable<T>({
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const selectedNamespace = useSelectedNamespacesState();
-  const searchQuery = useSearchState();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getApiResource = ({
     kind,
@@ -130,7 +129,7 @@ export function PaginatedTable<T>({
       }
       return String(attribute || '')
         .toLowerCase()
-        .includes(searchQuery.q.get().toLowerCase());
+        .includes(searchQuery.toLowerCase());
     })
     .filter(
       (x: any) =>
@@ -142,7 +141,7 @@ export function PaginatedTable<T>({
   const showInitialLoader = loading && data.length === 0;
   return (
     <>
-      {!withoutJump && <Header withNsSelector={withNsSelector} />}
+      {!withoutJump && <Header setSearchQuery={setSearchQuery} withNsSelector={withNsSelector} />}
       {showInitialLoader && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
           <Loader2 className="h-6 w-6 animate-spin text-gray-500" />

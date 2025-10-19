@@ -23,6 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
@@ -221,6 +222,24 @@ func (r *Route) GetVersion(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, ver)
+}
+
+func (r *Route) ListCustomResourceDefinitions(c *gin.Context) {
+	var req Payload
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	crdList, err := r.GetCluster(req.Server).APIExtension.ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		slog.Error("api extension", "err", err.Error(), "req", req)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, []interface{}{crdList.Items, crdList.Continue, crdList.ResourceVersion})
 }
 
 func (r *Route) ListResources(c *gin.Context) {

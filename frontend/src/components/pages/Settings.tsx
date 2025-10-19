@@ -193,9 +193,9 @@ export function SettingsPage() {
                 <Table className="text-xs">
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Kind</TableHead>
                       <TableHead>Group</TableHead>
                       <TableHead>Version</TableHead>
-                      <TableHead>Kind</TableHead>
                       <TableHead>Namespaced</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -206,9 +206,9 @@ export function SettingsPage() {
                       .sort()
                       .map((a: any, index: number) => (
                         <TableRow key={index}>
+                          <TableCell>{a.kind}</TableCell>
                           <TableCell className="font-medium">{a.group}</TableCell>
                           <TableCell>{a.version}</TableCell>
-                          <TableCell>{a.kind}</TableCell>
                           <TableCell>{a.namespaced ? 'True' : 'False'}</TableCell>
                         </TableRow>
                       ))}
