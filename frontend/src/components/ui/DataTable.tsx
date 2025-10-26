@@ -47,7 +47,6 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   noResult?: boolean;
   doubleClickDisabled?: boolean;
-  deleteDisabled?: boolean;
   menuDisabled?: boolean;
 }
 
@@ -58,7 +57,6 @@ export function DataTable<TData, TValue>({
   data,
   noResult,
   doubleClickDisabled = false,
-  deleteDisabled = false,
   menuDisabled = false,
 }: DataTableProps<TData, TValue>) {
   let navigate = useNavigate();
@@ -82,7 +80,9 @@ export function DataTable<TData, TValue>({
       rowSelection,
     },
   });
-
+  const tableRows = table
+    .getSelectedRowModel()
+    .rows.filter((x) => (x.original as ColumnData)?.metadata);
   return (
     <Table>
       <TableHeader className="text-xs">
@@ -145,30 +145,29 @@ export function DataTable<TData, TValue>({
           </TableRow>
         )}
       </TableBody>
-      {table.getSelectedRowModel().rows.filter((x) => x.id !== '0').length > 0 && (
+      {tableRows.length > 0 && (
         <DeleteDialog
           apiResource={apiResource}
           kind={kind}
-          rows={table.getSelectedRowModel().rows.filter((x) => x.id !== '0')}
+          rows={tableRows}
           open={openDeleteDialog}
           setOpenDialog={setOpenDeleteDialog}
         />
       )}
-      {(kind === 'Deployment' || kind === 'ReplicaSet') &&
-        table.getSelectedRowModel().rows.length > 0 && (
-          <ScaleDialog
-            apiResource={apiResource}
-            kind={kind}
-            rows={table.getSelectedRowModel().rows.filter((x) => x.id !== '0')}
-            open={openScaleDialog}
-            setOpenDialog={setOpenScaleDialog}
-          />
-        )}
-      {kind === 'Node' && table.getSelectedRowModel().rows.length > 0 && (
+      {(kind === 'Deployment' || kind === 'ReplicaSet') && tableRows.length > 0 && (
+        <ScaleDialog
+          apiResource={apiResource}
+          kind={kind}
+          rows={tableRows}
+          open={openScaleDialog}
+          setOpenDialog={setOpenScaleDialog}
+        />
+      )}
+      {kind === 'Node' && tableRows.length > 0 && (
         <DrainDialog
           apiResource={apiResource}
           kind={kind}
-          rows={table.getSelectedRowModel().rows.filter((x) => x.id !== '0')}
+          rows={tableRows}
           open={openDrainDialog}
           setOpenDialog={setOpenDrainDialog}
         />

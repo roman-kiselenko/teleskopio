@@ -24,7 +24,6 @@ interface DynamicResourceTableProps<T> {
 export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   kind,
   group,
-  contextMenuItems,
   columns,
   state,
   setState,
@@ -32,7 +31,6 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   withNsSelector = true,
   withSearch = true,
   doubleClickDisabled = false,
-  deleteDisabled = false,
 }: DynamicResourceTableProps<T>) => {
   const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
     await call('watch_dynamic_resource', {
@@ -93,7 +91,6 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     <PaginatedTable<T>
       kind={kind}
       group={group}
-      contextMenuItems={contextMenuItems}
       subscribeEvents={subscribeEvents}
       getPage={getPage}
       state={state}
@@ -104,7 +101,6 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       withNsSelector={withNsSelector}
       withSearch={withSearch}
       doubleClickDisabled={doubleClickDisabled}
-      deleteDisabled={deleteDisabled}
     />
   );
 };

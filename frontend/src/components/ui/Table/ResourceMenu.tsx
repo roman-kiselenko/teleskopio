@@ -50,7 +50,9 @@ export default function ResourceMenu({
           key={`${key}-${Math.random()}`}
           className="text-xs"
           hidden={table.getSelectedRowModel().rows.length > 0}
-          onClick={() => navigator.clipboard.writeText(obj.metadata?.name)}
+          onClick={() => {
+            navigator.clipboard.writeText(obj.metadata?.name);
+          }}
         >
           <ClipboardCopy size={8} />
           Copy name
@@ -195,19 +197,18 @@ export default function ResourceMenu({
             </div>
           </ContextMenuItem>
         )}
-        {(kind === 'Deployment' || kind === 'ReplicaSet') &&
-          table.getSelectedRowModel().rows.length === 1 && (
-            <ContextMenuItem
-              key={`${key}-${Math.random()}`}
-              onClick={() => setOpenScaleDialog(true)}
-              className="text-xs"
-            >
-              <div className="flex flex-row items-center">
-                <Ruler size={8} className="mr-2" />
-                <div>Scale</div>
-              </div>
-            </ContextMenuItem>
-          )}
+        {(kind === 'Deployment' || kind === 'ReplicaSet') && (
+          <ContextMenuItem
+            key={`${key}-${Math.random()}`}
+            onClick={() => setOpenScaleDialog(true)}
+            className="text-xs"
+          >
+            <div className="flex flex-row items-center">
+              <Ruler size={8} className="mr-2" />
+              <div>Scale</div>
+            </div>
+          </ContextMenuItem>
+        )}
         {kind === 'Node' && table.getSelectedRowModel().rows.length > 0 && (
           <ContextMenuItem
             key={`${key}-${Math.random()}`}
