@@ -10,23 +10,29 @@ import { addSubscription } from '@/lib/subscriptionManager';
 interface DynamicResourceTableProps<T> {
   kind: string;
   group: string;
+  contextMenuItems?: any;
   columns: ColumnDef<T, any>[];
   state: () => Map<string, T>;
   setState: (setter: (prev: Map<string, T>) => Map<string, T>) => void;
   withoutJump?: boolean;
   withNsSelector?: boolean;
   withSearch?: boolean;
+  doubleClickDisabled?: boolean;
+  deleteDisabled?: boolean;
 }
 
 export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
   kind,
   group,
+  contextMenuItems,
   columns,
   state,
   setState,
   withoutJump,
   withNsSelector = true,
   withSearch = true,
+  doubleClickDisabled = false,
+  deleteDisabled = false,
 }: DynamicResourceTableProps<T>) => {
   const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
     await call('watch_dynamic_resource', {
@@ -87,6 +93,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     <PaginatedTable<T>
       kind={kind}
       group={group}
+      contextMenuItems={contextMenuItems}
       subscribeEvents={subscribeEvents}
       getPage={getPage}
       state={state}
@@ -96,6 +103,8 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
       withoutJump={withoutJump}
       withNsSelector={withNsSelector}
       withSearch={withSearch}
+      doubleClickDisabled={doubleClickDisabled}
+      deleteDisabled={deleteDisabled}
     />
   );
 };

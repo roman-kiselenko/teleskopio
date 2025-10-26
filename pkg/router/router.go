@@ -101,11 +101,14 @@ type PodLogRequest struct {
 }
 
 type DeleteRequest struct {
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
+	Server    string `json:"server"`
+	Resource  string `json:"resource"`
+	Resources []struct {
+		Name      string `json:"name"`
+		Namespace string `json:"namespace"`
+	} `json:"resources"`
+	Request struct {
 		Name            string `json:"name"`
-		Namespace       string `json:"namespace"`
 		Group           string `json:"group"`
 		Version         string `json:"version"`
 		Kind            string `json:"kind"`
@@ -734,7 +737,7 @@ func (r *Route) UpdateKubeResource(c *gin.Context) {
 	c.YAML(http.StatusOK, created)
 }
 
-func (r *Route) DeleteDynamicResource(c *gin.Context) {
+func (r *Route) DeleteDynamicResources(c *gin.Context) {
 	var req DeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -761,17 +764,22 @@ func (r *Route) DeleteDynamicResource(c *gin.Context) {
 		Version:  req.Request.Version,
 		Resource: req.Resource,
 	}
-	var ri dynamic.ResourceInterface
-	if req.Request.Namespace != "" {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
+	if req.Request.Namespaced {
+		for _, res := range req.Resources {
+			if err := r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(res.Namespace).Delete(context.TODO(), res.Name, metav1.DeleteOptions{}); err != nil {
+				slog.Error("delete", "err", err.Error(), "ns", true, "res", res)
+				c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+				return
+			}
+		}
 	} else {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
-	}
-
-	if err := ri.Delete(context.TODO(), req.Request.Name, metav1.DeleteOptions{}); err != nil {
-		slog.Error("delete", "err", err.Error(), "req", req)
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
+		for _, res := range req.Resources {
+			if err := r.GetCluster(req.Server).Dynamic.Resource(gvr).Delete(context.TODO(), res.Name, metav1.DeleteOptions{}); err != nil {
+				slog.Error("delete", "err", err.Error(), "ns", false, "res", res)
+				c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+				return
+			}
+		}
 	}
 	c.JSON(http.StatusOK, gin.H{"success": ""})
 }

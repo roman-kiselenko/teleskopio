@@ -13,6 +13,7 @@ import { compareVersions } from 'compare-versions';
 interface PaginatedTableProps<T> {
   kind: string;
   group: string;
+  contextMenuItems: any;
   getPage: (args: {
     apiResource: ApiResource | undefined;
     limit: number;
@@ -27,12 +28,15 @@ interface PaginatedTableProps<T> {
   withNsSelector?: boolean;
   withoutJump?: boolean;
   withSearch?: boolean | undefined;
+  doubleClickDisabled?: boolean;
+  deleteDisabled?: boolean;
 }
 
 export function PaginatedTable<T>({
   getPage,
   kind,
   group,
+  contextMenuItems,
   subscribeEvents,
   state,
   setState,
@@ -40,6 +44,8 @@ export function PaginatedTable<T>({
   columns,
   withoutJump,
   withNsSelector = true,
+  doubleClickDisabled = false,
+  deleteDisabled = false,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -148,7 +154,16 @@ export function PaginatedTable<T>({
         </div>
       )}
       <div className="flex-1 overflow-y-auto">
-        <DataTable noResult={data.length === 0} columns={columns} data={data} />
+        <DataTable
+          kind={kind}
+          contextMenuItems={contextMenuItems}
+          apiResource={getApiResource({ kind, group })}
+          doubleClickDisabled={doubleClickDisabled}
+          deleteDisabled={deleteDisabled}
+          noResult={data.length === 0}
+          columns={columns}
+          data={data}
+        />
         {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
         {loading && data.length > 0 && (
           <div className="flex justify-center py-4">
