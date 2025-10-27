@@ -132,7 +132,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/get_pod_logs", r.GetPodLogs)
 	auth.POST("/stop_pod_log_stream", r.StopStreamPodLogs)
 	auth.POST("/stream_pod_logs", r.StreamPodLogs)
-	auth.POST("/delete_dynamic_resource", mdlwr.CheckRole(), r.DeleteDynamicResource)
+	auth.POST("/delete_dynamic_resources", mdlwr.CheckRole(), r.DeleteDynamicResources)
 	auth.POST("/create_kube_resource", mdlwr.CheckRole(), r.CreateKubeResource)
 	auth.POST("/update_kube_resource", mdlwr.CheckRole(), r.UpdateKubeResource)
 	auth.POST("/cordon_node", mdlwr.CheckRole(), r.NodeOperation)

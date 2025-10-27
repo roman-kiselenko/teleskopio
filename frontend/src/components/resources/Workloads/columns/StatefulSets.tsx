@@ -50,29 +50,6 @@ const columns: ColumnDef<any>[] = [
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
   },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const ss = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'StatefulSet');
-      return (
-        <Actions
-          url={`/yaml/StatefulSet/${ss.metadata?.name}/${ss?.metadata?.namespace}?group=${ss.apiVersion.split('/')[0]}`}
-          resource={ss}
-          name={'StatefulSet'}
-          scale={true}
-          action={'delete_dynamic_resource'}
-          request={{
-            request: {
-              name: ss.metadata?.name,
-              namespace: ss?.metadata?.namespace,
-              ...resource,
-            },
-          }}
-        />
-      );
-    },
-  },
 ];
 
 export default columns;

@@ -130,9 +130,11 @@ const CustomResources = () => {
         </div>
       )}
       <DataTable
+        kind={kind}
         key={`${kind}-${Math.random()}`}
         noResult={data.length === 0}
         columns={columns}
+        apiResource={getApiResource({ kind, group })}
         data={data}
       />
       {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}

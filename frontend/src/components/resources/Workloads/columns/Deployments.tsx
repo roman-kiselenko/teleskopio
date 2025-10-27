@@ -3,9 +3,6 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import DsName from '@/components/ui/Table/ResourceName';
-import Actions from '@/components/ui/Table/Actions';
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -49,29 +46,6 @@ const columns: ColumnDef<any>[] = [
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const dp = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Deployment');
-      return (
-        <Actions
-          url={`/yaml/Deployment/${dp.metadata?.name}/${dp?.metadata?.namespace}?group=${dp.apiVersion.split('/')[0]}`}
-          resource={dp}
-          name={'Deployment'}
-          action={'delete_dynamic_resource'}
-          scale={true}
-          request={{
-            request: {
-              name: dp.metadata?.name,
-              namespace: dp?.metadata?.namespace,
-              ...resource,
-            },
-          }}
-        />
-      );
-    },
   },
 ];
 

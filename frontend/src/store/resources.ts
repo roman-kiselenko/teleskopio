@@ -217,6 +217,7 @@ export function flushAllStates() {
     resourceQuotasState,
     limitRangesState,
     crdsState,
+    crsState,
     mutatingwebhooksState,
     ingressClassesState,
     endpointsState,
