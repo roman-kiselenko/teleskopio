@@ -1,4 +1,4 @@
-import { ClipboardCopy, ArrowBigLeft, Rss } from 'lucide-react';
+import { ArrowBigLeft, Rss } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { call } from '@/lib/api';
@@ -16,7 +16,6 @@ import { compareVersions } from 'compare-versions';
 import { currentClusterState } from '@/store/cluster';
 import { getVersion } from '@/store/version';
 import { useWS } from '@/context/WsContext';
-import { ContextMenuItem } from '@/components/ui/context-menu';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -169,28 +168,7 @@ export function ResourceEvents() {
       <PaginatedTable
         kind={kind}
         group={group}
-        contextMenuItems={(obj: any) => {
-          let attribute = '';
-          let attribute_name = '';
-          if (compareVersions(getVersion(), '1.20') === 1) {
-            attribute = obj.note;
-            attribute_name = 'note';
-          } else {
-            attribute = obj.message;
-            attribute_name = 'message';
-          }
-          return [
-            <ContextMenuItem
-              className="text-xs"
-              onClick={() => navigator.clipboard.writeText(attribute)}
-            >
-              <ClipboardCopy size={8} />
-              Copy {attribute_name}
-            </ContextMenuItem>,
-          ];
-        }}
         subscribeEvents={subscribeEvents}
-        deleteDisabled={true}
         getPage={getPage}
         state={() => events as Map<string, any>}
         setState={setEvents}
