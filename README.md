@@ -31,6 +31,7 @@
 - Scale resources (`Deployments`, `ReplicaSets`)
 - Filter `CTRL + F` any resource.
 - Jump to section `CTRL + J` any menu.
+- Objects multi-select operations (delete, drain, cordon, e.t.c.)
 - Kubernetes [resource schemas](https://github.com/yannh/kubernetes-json-schema?tab=readme-ov-file#kubernetes-json-schemas) per API version.
 - Light and dark themes.
 
