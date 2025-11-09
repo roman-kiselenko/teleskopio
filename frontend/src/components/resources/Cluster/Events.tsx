@@ -3,8 +3,6 @@ import { useEventsState } from '@/store/resources';
 import columns from '@/components/resources/Cluster/columns/Events';
 import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
-import { ContextMenuItem } from '@/components/ui/context-menu';
-import { ClipboardCopy } from 'lucide-react';
 
 const Events = () => {
   const ev = useEventsState();

@@ -5,9 +5,6 @@ import PodName from '@/components/resources/Workloads/columns/Pods/PodName';
 import PodStatus from '@/components/resources/Workloads/columns/Pods/PodStatus';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
-
 const columns: ColumnDef<any>[] = [
   {
     accessorKey: 'metadata.name',

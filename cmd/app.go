@@ -29,7 +29,7 @@ type App struct {
 
 func New(version string, configPath string, exitchnl, signchnl chan (os.Signal)) (*App, error) {
 	app := &App{exitSig: exitchnl, signchnl: signchnl}
-	cfg, clusters, users, err := config.ParseConfig(configPath)
+	cfg, clusters, users, err := config.Parse(configPath)
 	if err != nil {
 		return app, err
 	}

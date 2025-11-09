@@ -2,7 +2,6 @@ import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import JobName from '@/components/ui/Table/ResourceName';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -10,7 +9,9 @@ const columns: ColumnDef<any>[] = [
     meta: { className: 'min-w-[30ch] max-w-[30ch]' },
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
+    cell: memo(({ row }) => (
+      <div className="flex flex-row items-center">{row.original.metadata?.name}</div>
+    )),
   },
   {
     accessorKey: 'metadata.namespace',

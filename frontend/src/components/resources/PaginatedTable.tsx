@@ -57,10 +57,7 @@ export function PaginatedTable<T>({
     kind: string;
     group: string;
   }): ApiResource | undefined => {
-    const resource = apiResourcesState
-      .get()
-      .find((r: ApiResource) => r.kind === kind && r.group === group);
-    return resource;
+    return apiResourcesState.get().find((r: ApiResource) => r.kind === kind && r.group === group);
   };
 
   const loadPage = async () => {

@@ -48,7 +48,7 @@ type Users struct {
 	Users map[string]User
 }
 
-func ParseConfig(configPath string) (Config, []*Cluster, Users, error) {
+func Parse(configPath string) (Config, []*Cluster, Users, error) {
 	var cfg Config
 	clusters := []*Cluster{}
 

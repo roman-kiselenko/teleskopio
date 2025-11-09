@@ -1,6 +1,7 @@
 import type { ApiResource } from '@/types';
 import { DeleteDialog } from '@/components/ui/Dialog/DeleteDialog';
 import { ScaleDialog } from '@/components/ui/Dialog/ScaleDialog';
+import { CordonDialog } from '@/components/ui/Dialog/CordonDialog';
 import { DrainDialog } from '@/components/ui/Dialog/DrainDialog';
 import ResourceMenu from '@/components/ui/Table/ResourceMenu';
 import {
@@ -60,6 +61,7 @@ export function DataTable<TData, TValue>({
   menuDisabled = false,
 }: DataTableProps<TData, TValue>) {
   let navigate = useNavigate();
+  const [openCordonDialog, setOpenCordonDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openScaleDialog, setOpenScaleDialog] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -122,6 +124,7 @@ export function DataTable<TData, TValue>({
                     setOpenDeleteDialog={setOpenDeleteDialog}
                     setOpenScaleDialog={setOpenScaleDialog}
                     setOpenDrainDialog={setOpenDrainDialog}
+                    setOpenCordonDialog={setOpenCordonDialog}
                     obj={cell.row.original}
                     kind={kind}
                   >
@@ -154,7 +157,7 @@ export function DataTable<TData, TValue>({
           setOpenDialog={setOpenDeleteDialog}
         />
       )}
-      {(kind === 'Deployment' || kind === 'ReplicaSet') && tableRows.length > 0 && (
+      {(kind === 'Deployment' || kind === 'ReplicaSet') && tableRows.length === 1 && (
         <ScaleDialog
           apiResource={apiResource}
           kind={kind}
@@ -164,13 +167,16 @@ export function DataTable<TData, TValue>({
         />
       )}
       {kind === 'Node' && tableRows.length > 0 && (
-        <DrainDialog
-          apiResource={apiResource}
-          kind={kind}
-          rows={tableRows}
-          open={openDrainDialog}
-          setOpenDialog={setOpenDrainDialog}
-        />
+        <>
+          <DrainDialog rows={tableRows} open={openDrainDialog} setOpenDialog={setOpenDrainDialog} />
+          <CordonDialog
+            apiResource={apiResource}
+            kind={kind}
+            rows={tableRows}
+            open={openCordonDialog}
+            setOpenDialog={setOpenCordonDialog}
+          />
+        </>
       )}
     </Table>
   );

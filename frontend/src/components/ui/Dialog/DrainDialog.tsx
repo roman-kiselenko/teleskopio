@@ -2,7 +2,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
-import type { ApiResource } from '@/types';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,14 +17,12 @@ import { useWS } from '@/context/WsContext';
 import { addSubscription } from '@/lib/subscriptionManager';
 
 interface DrainDialogProps {
-  kind: string;
-  apiResource: ApiResource | undefined;
   rows: any;
   open: boolean;
   setOpenDialog: (close: boolean) => void;
 }
 
-export function DrainDialog({ apiResource, kind, rows, open, setOpenDialog }: DrainDialogProps) {
+export function DrainDialog({ rows, open, setOpenDialog }: DrainDialogProps) {
   const obj = rows[0].original;
   const [drainLog, setDrainLog] = useState<{ pod: any; ns: any }[]>([]);
   const [drainForce, setDrainForce] = useState(true);

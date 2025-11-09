@@ -4,21 +4,11 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import {
-  FireExtinguisher,
-  ClipboardCopy,
-  Rss,
-  Trash,
-  Ruler,
-  CirclePlay,
-  CirclePause,
-  ScrollText,
-  RotateCw,
-} from 'lucide-react';
+import { ClipboardCopy, Rss, Trash, Ruler, HandHelping, ScrollText } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
+import { NodeDrainMenu, NodeCordonMenu } from '@/components/ui/Table/ContextMenu/Node';
 import type { ApiResource } from '@/types';
-import { call } from '@/lib/api';
+import { CronJobTriggerMenu } from './ContextMenu/CronJob';
 
 export default function ResourceMenu({
   apiResource,
@@ -27,6 +17,7 @@ export default function ResourceMenu({
   setOpenDeleteDialog,
   setOpenScaleDialog,
   setOpenDrainDialog,
+  setOpenCordonDialog,
   table,
   obj,
 }: {
@@ -34,6 +25,7 @@ export default function ResourceMenu({
   apiResource: ApiResource | undefined;
   setOpenDeleteDialog: (close: boolean) => void;
   setOpenScaleDialog: any;
+  setOpenCordonDialog: any;
   setOpenDrainDialog: any;
   table: any;
   children: any;
@@ -41,6 +33,8 @@ export default function ResourceMenu({
 }) {
   let navigate = useNavigate();
   const key = obj?.metadata?.name;
+  const owner =
+    obj?.metadata?.ownerReferences?.length > 0 ? obj?.metadata?.ownerReferences[0] : undefined;
 
   return (
     <ContextMenu>
@@ -73,112 +67,23 @@ export default function ResourceMenu({
             </div>
           </ContextMenuItem>
         )}
-        {kind === 'Node' && table.getSelectedRowModel().rows.length === 0 && (
-          <ContextMenuItem
-            key={`${key}-${Math.random()}`}
-            className="text-xs"
-            onClick={() => {
-              const cordoned = obj.spec?.taints?.find(
-                (t) => t.effect === 'NoSchedule' && t.key === 'node.kubernetes.io/unschedulable',
-              );
-              let request = {
-                cordon: cordoned ? false : true,
-                name: obj.metadata?.name,
-                ...apiResource,
-              };
-              call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
-                ...request,
-                resourceName: obj.metadata?.name,
-              })
-                .then((data) => {
-                  if (data.message) {
-                    toast.error(
-                      <span>
-                        Cant {cordoned ? 'uncordone' : 'cordone'} Node <b>{obj.metadata?.name}</b>
-                        <br />
-                        {data.message}
-                      </span>,
-                    );
-                  } else {
-                    toast.info(
-                      <span>
-                        Node <b>{obj.metadata?.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
-                      </span>,
-                    );
-                  }
-                })
-                .catch((reason) => {
-                  toast.error(
-                    <span>
-                      Cant {cordoned ? 'uncordon' : 'cordon'} <b>{obj.metadata?.name}</b>
-                      <br />
-                      {reason.message}
-                    </span>,
-                  );
-                });
-            }}
-          >
-            {obj.spec?.taints?.find(
-              (t) => t.effect === 'NoSchedule' && t.key === 'node.kubernetes.io/unschedulable',
-            ) ? (
-              <div className="flex flex-row items-center">
-                <div>
-                  <CirclePause className="mr-2" />
-                </div>
-                <div>Uncordon</div>
-              </div>
-            ) : (
-              <div className="flex flex-row items-center">
-                <div>
-                  <CirclePlay className="mr-2" />
-                </div>
-                <div>Cordon</div>
-              </div>
-            )}
-          </ContextMenuItem>
-        )}
         {kind === 'CronJob' && table.getSelectedRowModel().rows.length === 0 && (
+          <CronJobTriggerMenu key={key} obj={obj} apiResource={apiResource} />
+        )}
+        {table.getSelectedRowModel().rows.length === 0 && (
           <ContextMenuItem
             key={`${key}-${Math.random()}`}
             className="text-xs"
-            onClick={() => {
-              call(`trigger_cronjob`, {
-                ...apiResource,
-                namespace: obj.metadata?.namespace,
-                resourceName: obj.metadata?.name,
-              })
-                .then((data) => {
-                  if (data.message) {
-                    toast.error(
-                      <span>
-                        Cant trigger cronjob {obj.metadata?.name}
-                        <br />
-                        {data.message}
-                      </span>,
-                    );
-                  } else {
-                    toast.info(
-                      <span>
-                        Cronjob {obj.metadata?.name} triggered
-                        <br />
-                        Job: {data.success} created
-                      </span>,
-                    );
-                  }
-                })
-                .catch((reason) => {
-                  toast.error(
-                    <span>
-                      Cant trigger cronjob {obj.metadata?.name}
-                      <br />
-                      {reason.message}
-                    </span>,
-                  );
-                });
-            }}
+            onClick={() =>
+              navigate(
+                `/yaml/${owner.kind}/${owner.name}/${obj?.metadata?.namespace}?group=${owner.apiVersion.split('/')[0]}`,
+              )
+            }
+            hidden={owner === undefined}
           >
-            <RotateCw />
-            Trigger
+            <div className="flex flex-row">
+              <HandHelping size={8} /> <span className="ml-2">Owner</span>
+            </div>
           </ContextMenuItem>
         )}
         {kind === 'Pod' && table.getSelectedRowModel().rows.length === 0 && (
@@ -200,6 +105,7 @@ export default function ResourceMenu({
         {(kind === 'Deployment' || kind === 'ReplicaSet') && (
           <ContextMenuItem
             key={`${key}-${Math.random()}`}
+            hidden={table.getSelectedRowModel().rows.length !== 1}
             onClick={() => setOpenScaleDialog(true)}
             className="text-xs"
           >
@@ -210,18 +116,14 @@ export default function ResourceMenu({
           </ContextMenuItem>
         )}
         {kind === 'Node' && table.getSelectedRowModel().rows.length > 0 && (
-          <ContextMenuItem
-            key={`${key}-${Math.random()}`}
-            className="text-xs"
-            variant="destructive"
-            onClick={() => setOpenDrainDialog(true)}
-          >
-            <FireExtinguisher color="red" size={8} />
-            Drain{' '}
-            {table.getSelectedRowModel().rows.length > 0
-              ? `(${table.getSelectedRowModel().rows.length})`
-              : ``}
-          </ContextMenuItem>
+          <>
+            <NodeCordonMenu
+              keyPrefix={key}
+              setOpenCordonDialog={setOpenCordonDialog}
+              table={table}
+            />
+            <NodeDrainMenu keyPrefix={key} setOpenDrainDialog={setOpenDrainDialog} table={table} />
+          </>
         )}
         <ContextMenuItem
           key={`${key}-${Math.random()}`}
