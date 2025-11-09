@@ -59,7 +59,13 @@ export function StartPage() {
               <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
             </div>
           )}
-          <DataTable noResult={true} columns={columns as any} data={configs.configs.get() as any} />
+          <DataTable
+            menuDisabled={true}
+            kind={'configs'}
+            noResult={true}
+            columns={columns as any}
+            data={configs.configs.get() as any}
+          />
         </div>
       </div>
     </div>

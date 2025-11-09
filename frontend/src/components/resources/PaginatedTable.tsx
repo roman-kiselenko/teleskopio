@@ -27,6 +27,7 @@ interface PaginatedTableProps<T> {
   withNsSelector?: boolean;
   withoutJump?: boolean;
   withSearch?: boolean | undefined;
+  doubleClickDisabled?: boolean;
 }
 
 export function PaginatedTable<T>({
@@ -40,6 +41,7 @@ export function PaginatedTable<T>({
   columns,
   withoutJump,
   withNsSelector = true,
+  doubleClickDisabled = false,
 }: PaginatedTableProps<T>) {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,11 +57,7 @@ export function PaginatedTable<T>({
     kind: string;
     group: string;
   }): ApiResource | undefined => {
-    const resource = apiResourcesState
-      .get()
-      .find((r: ApiResource) => r.kind === kind && r.group === group);
-    if (!resource) throw new Error(`API resource for kind ${kind} and group ${group} not found`);
-    return resource;
+    return apiResourcesState.get().find((r: ApiResource) => r.kind === kind && r.group === group);
   };
 
   const loadPage = async () => {
@@ -148,7 +146,14 @@ export function PaginatedTable<T>({
         </div>
       )}
       <div className="flex-1 overflow-y-auto">
-        <DataTable noResult={data.length === 0} columns={columns} data={data} />
+        <DataTable
+          kind={kind}
+          apiResource={getApiResource({ kind, group })}
+          doubleClickDisabled={doubleClickDisabled}
+          noResult={data.length === 0}
+          columns={columns}
+          data={data}
+        />
         {nextToken && <div ref={loaderRef} style={{ height: 1, marginTop: -1 }} />}
         {loading && data.length > 0 && (
           <div className="flex justify-center py-4">

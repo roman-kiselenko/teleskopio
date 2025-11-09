@@ -29,7 +29,7 @@ type App struct {
 
 func New(version string, configPath string, exitchnl, signchnl chan (os.Signal)) (*App, error) {
 	app := &App{exitSig: exitchnl, signchnl: signchnl}
-	cfg, clusters, users, err := config.ParseConfig(configPath)
+	cfg, clusters, users, err := config.Parse(configPath)
 	if err != nil {
 		return app, err
 	}
@@ -132,7 +132,7 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/get_pod_logs", r.GetPodLogs)
 	auth.POST("/stop_pod_log_stream", r.StopStreamPodLogs)
 	auth.POST("/stream_pod_logs", r.StreamPodLogs)
-	auth.POST("/delete_dynamic_resource", mdlwr.CheckRole(), r.DeleteDynamicResource)
+	auth.POST("/delete_dynamic_resources", mdlwr.CheckRole(), r.DeleteDynamicResources)
 	auth.POST("/create_kube_resource", mdlwr.CheckRole(), r.CreateKubeResource)
 	auth.POST("/update_kube_resource", mdlwr.CheckRole(), r.UpdateKubeResource)
 	auth.POST("/cordon_node", mdlwr.CheckRole(), r.NodeOperation)

@@ -115,9 +115,9 @@ export function Header({
               toast.warning(<div>Disconnect cluster {clusterState.server.get()}</div>);
               setCurrentCluster('');
               setVersion('');
+              flushAllStates();
               apiResourcesState.set([]);
               crdResources.set(new Map());
-              flushAllStates();
               removeAllSubscriptions();
               navigate('/');
             }}

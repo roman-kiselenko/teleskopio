@@ -23,6 +23,7 @@ const Events = () => {
       state={() => ev.get() as Map<string, any>}
       setState={ev.set}
       withSearch={false}
+      doubleClickDisabled={true}
     />
   );
 };

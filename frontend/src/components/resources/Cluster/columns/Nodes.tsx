@@ -1,17 +1,10 @@
 import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
-import { CirclePause, CirclePlay } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import Actions from '@/components/ui/Table/Actions';
 import { cn } from '@/util';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
 import { memo } from 'react';
-import { call } from '@/lib/api';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -114,88 +107,6 @@ const columns: ColumnDef<any>[] = [
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
-  },
-  {
-    id: 'actions',
-    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
-    cell: ({ row }) => {
-      const node = row.original;
-      const cordoned = node.spec?.taints?.find(
-        (t) => t.effect === 'NoSchedule' && t.key === 'node.kubernetes.io/unschedulable',
-      );
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Node');
-      let request = {
-        cordon: cordoned ? false : true,
-        name: node.metadata?.name,
-        ...resource,
-      };
-      const additional = (
-        <div>
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => {
-              call(`${cordoned ? 'uncordon' : 'cordon'}_node`, {
-                ...request,
-                resourceName: node.metadata?.name,
-              })
-                .then((data) => {
-                  if (data.message) {
-                    toast.error(
-                      <span>
-                        Cant {cordoned ? 'uncordone' : 'cordone'} Node <b>{node.metadata?.name}</b>
-                        <br />
-                        {data.message}
-                      </span>,
-                    );
-                  } else {
-                    toast.info(
-                      <span>
-                        Node <b>{node.metadata?.name}</b> {cordoned ? 'uncordoned' : 'cordoned'}
-                      </span>,
-                    );
-                  }
-                })
-                .catch((reason) => {
-                  toast.error(
-                    <span>
-                      Cant {cordoned ? 'uncordon' : 'cordon'} <b>{node.metadata?.name}</b>
-                      <br />
-                      {reason.message}
-                    </span>,
-                  );
-                });
-            }}
-          >
-            {cordoned ? (
-              <div className="flex flex-row items-center">
-                <div>
-                  <CirclePause className="mr-2" />
-                </div>
-                <div>Uncordon</div>
-              </div>
-            ) : (
-              <div className="flex flex-row items-center">
-                <div>
-                  <CirclePlay className="mr-2" />
-                </div>
-                <div>Cordon</div>
-              </div>
-            )}
-          </DropdownMenuItem>
-        </div>
-      );
-      return (
-        <Actions
-          url={`/yaml/Node/${node.metadata?.name}/${node.metadata?.namespace}?group=`}
-          children={additional}
-          resource={node}
-          name={'Node'}
-          drain={true}
-          action={'delete_dynamic_resource'}
-          request={{ request: request }}
-        />
-      );
-    },
   },
 ];
 

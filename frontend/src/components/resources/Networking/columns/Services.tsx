@@ -2,10 +2,6 @@ import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import JobName from '@/components/ui/Table/ResourceName';
-import Actions from '@/components/ui/Table/Actions';
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
 import { Badge } from '@/components/ui/badge';
 
 const columns: ColumnDef<any>[] = [
@@ -13,7 +9,9 @@ const columns: ColumnDef<any>[] = [
     accessorKey: 'metadata.name',
     id: 'name',
     header: memo(({ column }) => <HeaderAction column={column} name={'Name'} />),
-    cell: memo(({ row }) => <JobName name={row.original.metadata?.name} />),
+    cell: memo(({ row }) => (
+      <div className="flex flex-row items-center">{row.original.metadata?.name}</div>
+    )),
   },
   {
     accessorKey: 'metadata.namespace',
@@ -65,28 +63,6 @@ const columns: ColumnDef<any>[] = [
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const service = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'Service');
-      return (
-        <Actions
-          url={`/yaml/Service/${service.metadata?.name}/${service.metadata?.namespace}?group=`}
-          resource={service}
-          name={'Service'}
-          action={'delete_dynamic_resource'}
-          request={{
-            request: {
-              name: service.metadata?.name,
-              namespace: service?.metadata?.namespace,
-              ...resource,
-            },
-          }}
-        />
-      );
-    },
   },
 ];
 

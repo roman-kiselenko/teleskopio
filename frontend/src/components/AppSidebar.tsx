@@ -120,8 +120,8 @@ export const items = [
     submenu: [
       { title: 'StorageClasses', icon: HardDriveDownload, url: '/resource/StorageClass' },
       { title: 'VolumeAttachments', icon: HardDrive, url: '/resource/VolumeAttachment' },
-      { title: 'PersistentVolumes', icon: HardDrive, url: '/resource/PersistentVolume' },
-      { title: 'PersistentVolumeClaims', icon: HardDrive, url: '/resource/PersistentVolumeClaim' },
+      { title: 'PV', icon: HardDrive, url: '/resource/PersistentVolume' },
+      { title: 'PVC', icon: HardDrive, url: '/resource/PersistentVolumeClaim' },
     ],
   },
   {
@@ -270,7 +270,7 @@ export function AppSidebar() {
                   href="https://github.com/roman-kiselenko/teleskopio"
                   className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}
                 >
-                  <span>teleskopio v0.1.1</span>
+                  <span>teleskopio v0.1.2</span>
                 </a>
               </div>
             </SidebarMenuButton>

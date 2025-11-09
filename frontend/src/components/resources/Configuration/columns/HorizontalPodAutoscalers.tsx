@@ -2,9 +2,6 @@ import AgeCell from '@/components/ui/Table/AgeCell';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import Actions from '@/components/ui/Table/Actions';
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
 import { NavLink } from 'react-router-dom';
 
 const columns: ColumnDef<any>[] = [
@@ -57,30 +54,6 @@ const columns: ColumnDef<any>[] = [
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const ns = row.original;
-      const resource = apiResourcesState
-        .get()
-        .find((r: ApiResource) => r.kind === 'HorizontalPodAutoscaler');
-      return (
-        <Actions
-          url={`/yaml/HorizontalPodAutoscaler/${ns.metadata?.name}/${ns.metadata?.namespace}?group=${ns.apiVersion.split('/')[0]}`}
-          resource={ns}
-          name={'HorizontalPodAutoscaler'}
-          action={'delete_dynamic_resource'}
-          request={{
-            request: {
-              name: ns.metadata?.name,
-              namespace: ns.metadata?.namespace,
-              ...resource,
-            },
-          }}
-        />
-      );
-    },
   },
 ];
 

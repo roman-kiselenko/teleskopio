@@ -1,12 +1,14 @@
 <h2 align="center">
-    teleskopio is an open-source small and beautiful Kubernetes Web client.
+    <code>teleskopio</code> is an open-source small and beautiful Kubernetes web client.
 </h2>
 <p align="center">
-    <img width="300" src="./assets/icon.png"/>
+  <img src="./assets/readme-one.png" width="45%" />
+  <img src="./assets/readme-two.png" width="45%" />
 </p>
 
-[![Lint](https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml/badge.svg)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml)
-[![Create and publish a Docker image](https://github.com/roman-kiselenko/teleskopio/actions/workflows/docker.yaml/badge.svg?branch=master)](https://github.com/roman-kiselenko/teleskopio/actions/workflows/docker.yaml)
+<p align="center">
+    <img width="90" src="https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml/badge.svg"/>
+</p>
 
 - [Features](#features)
 - [Planned Features](#planned-features)
@@ -14,6 +16,7 @@
 - [Install](#install)
 - [Keymaps](#keymaps)
 - [Screenshots](#screenshots)
+- [Disclaimer](#disclaimer)
 
 ## Features
 
@@ -31,19 +34,20 @@
 - Scale resources (`Deployments`, `ReplicaSets`)
 - Filter `CTRL + F` any resource.
 - Jump to section `CTRL + J` any menu.
+- Objects multi-select operations (delete, drain, cordon, e.t.c.)
 - Kubernetes [resource schemas](https://github.com/yannh/kubernetes-json-schema?tab=readme-ov-file#kubernetes-json-schemas) per API version.
 - Light and dark themes.
 
----
-
 ## Planned Features
 
-- Helm integration.
+- Helm integration. [issue](https://github.com/roman-kiselenko/teleskopio/issues/11)
 - Resource metrics - CPU, memory, and other usage statistics.
 
 ---
 
 ## Stack
+
+<details>
 
 - **Golang** - Kubernetes golang client.
 - **React** - responsive and modern frontend.
@@ -52,9 +56,13 @@
 - **Dynamic resources** - auto-loading resources for flexible navigation.
 - **Kubernetes watchers** - instant updates from the cluster.
 
+</details>
+
 ---
 
 ## Install
+
+<details>
 
 ### Linux
 
@@ -155,14 +163,21 @@ kube:
 1. Generate config `teleskopio config > config.yaml`
 1. `teleskopio`
 
+</details>
+
 ---
 
 ## Keymaps
 
+<details>
+
 1. Hide/Show sidebar `CTRL+B`
 1. Get back `ESC`
 1. In editor `CTRL+S` save
+1. Left mouse click - open resource, right mouse click dropdown menu
 1. `CTRL+J` Jump to some section (Pod, Deployments, Configuration e.t.c.)
+
+</details>
 
 ## Development
 
@@ -177,15 +192,18 @@ kube:
 
 ## Screenshots
 
+<details>
+
 <p align="center">
-    <img width="900" src="./assets/login.png"/>
+    <img width="900" src="./assets/cluster.png"/>
+    <img width="900" src="./assets/cordon.png"/>
     <img width="900" src="./assets/pods.png"/>
-    <img width="900" src="./assets/logs.png"/>
-    <img width="900" src="./assets/jump.png"/>
-    <img width="900" src="./assets/fonts.png"/>
+    <img width="900" src="./assets/delete-action.png"/>
     <img width="900" src="./assets/editor.png"/>
-    <img width="900" src="./assets/drain.png"/>
-    <img width="900" src="./assets/scale.png"/>
-    <img width="900" src="./assets/jsonschema.png"/>
-    <img width="900" src="./assets/crd-viewer.png"/>
 </p>
+
+</details>
+
+## Disclaimer
+
+This is a beta version. Information may be inaccurate or incomplete, and the software is provided "as is." We assume no liability for any issues arising from its use.

@@ -3,9 +3,6 @@ import HeaderAction from '@/components/ui/Table/HeaderAction';
 import { Badge } from '@/components/ui/badge';
 import { memo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import Actions from '@/components/ui/Table/Actions';
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
 
 const columns: ColumnDef<any>[] = [
   {
@@ -34,27 +31,6 @@ const columns: ColumnDef<any>[] = [
     accessorFn: (row) => row?.metadata?.creationTimestamp,
     header: memo(({ column }) => <HeaderAction column={column} name={'Age'} />),
     cell: memo(({ getValue }) => <AgeCell age={getValue<string>()} />),
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const ingress = row.original;
-      const resource = apiResourcesState.get().find((r: ApiResource) => r.kind === 'IngressClass');
-      return (
-        <Actions
-          url={`/yaml/IngressClass/${ingress.metadata?.name}/${ingress.metadata?.namespace}?group=${ingress.apiVersion.split('/')[0]}`}
-          resource={ingress}
-          name={'IngressClass'}
-          action={'delete_dynamic_resource'}
-          request={{
-            request: {
-              name: ingress.metadata?.name,
-              ...resource,
-            },
-          }}
-        />
-      );
-    },
   },
 ];
 
