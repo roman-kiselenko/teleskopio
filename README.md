@@ -32,10 +32,6 @@
 - Kubernetes [resource schemas](https://github.com/yannh/kubernetes-json-schema?tab=readme-ov-file#kubernetes-json-schemas) per API version.
 - Light and dark themes.
 
-## Documentation
-
-[teleskopio.github.io](https://teleskopio.github.io)
-
 ## Planned Features
 
 - Helm integration. [issue](https://github.com/roman-kiselenko/teleskopio/issues/11)
@@ -188,19 +184,13 @@ kube:
 
 **teleskopio** is an open-source project, and contributions are welcome.
 
-## Screenshots
+## Documentation
 
-<details>
+[teleskopio.github.io](https://teleskopio.github.io)
 
-<p align="center">
-    <img width="900" src="./assets/cluster.png"/>
-    <img width="900" src="./assets/cordon.png"/>
-    <img width="900" src="./assets/pods.png"/>
-    <img width="900" src="./assets/delete-action.png"/>
-    <img width="900" src="./assets/editor.png"/>
-</p>
+This project uses [https://www.11ty.dev/](https://www.11ty.dev/)
 
-</details>
+1. Switch to blog branch, add changes, push it.
 
 ## Disclaimer
 
