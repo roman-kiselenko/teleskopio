@@ -2,11 +2,6 @@
     <code>teleskopio</code> is an open-source small and beautiful Kubernetes web client.
 </h2>
 <p align="center">
-  <img src="./assets/readme-one.png" width="45%" />
-  <img src="./assets/readme-two.png" width="45%" />
-</p>
-
-<p align="center">
     <img width="90" src="https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml/badge.svg"/>
 </p>
 
@@ -15,7 +10,6 @@
 - [Stack](#stack)
 - [Install](#install)
 - [Keymaps](#keymaps)
-- [Screenshots](#screenshots)
 - [Disclaimer](#disclaimer)
 
 ## Features
@@ -37,6 +31,10 @@
 - Objects multi-select operations (delete, drain, cordon, e.t.c.)
 - Kubernetes [resource schemas](https://github.com/yannh/kubernetes-json-schema?tab=readme-ov-file#kubernetes-json-schemas) per API version.
 - Light and dark themes.
+
+## Documentation
+
+[teleskopio.github.io](https://teleskopio.github.io)
 
 ## Planned Features
 
