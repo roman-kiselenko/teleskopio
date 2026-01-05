@@ -34,7 +34,7 @@
 
 ## Documentation
 
-[teleskopio.github.io](https://teleskopio.github.io)
+[roman-kiselenko.github.io/teleskopio](https://roman-kiselenko.github.io/teleskopio)
 
 ## Planned Features
 
