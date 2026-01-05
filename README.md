@@ -190,7 +190,7 @@ kube:
 
 This project uses [https://www.11ty.dev/](https://www.11ty.dev/)
 
-1. Switch to blog branch, add changes, push it.
+1. Switch to `blog` branch, add changes, push it, Github Actions will deploy it to `gh-pages` branch.
 
 ## Disclaimer
 
