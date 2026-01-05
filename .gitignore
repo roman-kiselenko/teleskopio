@@ -29,3 +29,4 @@ config.yaml
 examples
 pages/node_modules
 pages/.cache
+pages/_site
