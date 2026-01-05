@@ -9,6 +9,7 @@ frontend/lerna-debug.log*
 
 frontend/node_modules
 
+_site
 frontend/dist
 frontend/dist-ssr
 dist
