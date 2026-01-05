@@ -49,7 +49,7 @@ run-frontend: ## Run
 
 ## Run pages:
 run-pages: ## Run
-	cd pages && pnpm start
+	cd docs && pnpm start
 
 ## Run backend:
 run-backend: build ## Run

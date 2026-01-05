@@ -28,6 +28,6 @@ config.yaml
 *.sln
 *.sw?
 examples
-pages/node_modules
-pages/.cache
-pages/_site
+blog/node_modules
+blog/.cache
+blog/_site
