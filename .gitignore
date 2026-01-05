@@ -27,3 +27,5 @@ config.yaml
 *.sln
 *.sw?
 examples
+pages/node_modules
+pages/.cache

@@ -47,6 +47,10 @@ run-docker: ## Run docker container
 run-frontend: ## Run
 	cd frontend && pnpm dev
 
+## Run pages:
+run-pages: ## Run
+	cd pages && pnpm start
+
 ## Run backend:
 run-backend: build ## Run
 	./bin/$(PROJECT_NAME)
