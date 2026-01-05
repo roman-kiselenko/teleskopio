@@ -267,7 +267,7 @@ export function AppSidebar() {
                 <Telescope size={18} className="mr-1" />
                 <a
                   target="_blank"
-                  href="https://github.com/roman-kiselenko/teleskopio"
+                  href="https://github.com/teleskopio/teleskopio"
                   className={cn('text-xs', state === 'collapsed' ? 'hidden' : '')}
                 >
                   <span>teleskopio v0.1.2</span>

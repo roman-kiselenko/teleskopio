@@ -2,7 +2,7 @@
     <code>teleskopio</code> is an open-source small and beautiful Kubernetes web client.
 </h2>
 <p align="center">
-    <img width="90" src="https://github.com/roman-kiselenko/teleskopio/actions/workflows/ci.yaml/badge.svg"/>
+    <img width="90" src="https://github.com/teleskopio/teleskopio/actions/workflows/ci.yaml/badge.svg"/>
 </p>
 
 - [Features](#features)
@@ -13,6 +13,8 @@
 - [Disclaimer](#disclaimer)
 
 ## Features
+
+[Checkout features overview](https://teleskopio.github.io/blog/releasepost/)
 
 - Multiple configs support - switch between clusters effortlessly. teleskopio reads `$KUBECONFIG` variable and check `config.yaml` file.
 - Simple JWT token authorization.
@@ -34,7 +36,7 @@
 
 ## Planned Features
 
-- Helm integration. [issue](https://github.com/roman-kiselenko/teleskopio/issues/11)
+- Helm integration. [issue](https://github.com/teleskopio/teleskopio/issues/11)
 - Resource metrics - CPU, memory, and other usage statistics.
 
 ---
@@ -46,6 +48,7 @@
 - **Golang** - Kubernetes golang client.
 - **React** - responsive and modern frontend.
 - **[shadcn/ui](https://ui.shadcn.com/)** + **Tailwind CSS** - clean and flexible UI components.
+- **[lucide.dev](https://lucide.dev/)** - Beautiful & consistent icons.
 - **[Monaco Editor](https://microsoft.github.io/monaco-editor/)** - powerful code editor with syntax highlighting.
 - **Dynamic resources** - auto-loading resources for flexible navigation.
 - **Kubernetes watchers** - instant updates from the cluster.
@@ -60,7 +63,7 @@
 
 ### Linux
 
-Download [release](https://github.com/roman-kiselenko/teleskopio/releases).
+Download [release](https://github.com/teleskopio/teleskopio/releases).
 
 ### MacOS
 
@@ -71,16 +74,16 @@ Use brew (ARM and Intel):
 
 ### Docker
 
-1. Pull docker image from [Packages](https://github.com/roman-kiselenko/teleskopio/pkgs/container/teleskopio)
+1. Pull docker image from [Packages](https://github.com/teleskopio/teleskopio/pkgs/container/teleskopio)
 
 ```sh
-docker pull ghcr.io/roman-kiselenko/teleskopio:latest
+docker pull ghcr.io/teleskopio/teleskopio:latest
 ```
 
 2. Generate config
 
 ```sh
-docker run -it --rm ghcr.io/roman-kiselenko/teleskopio:latest config > config.yaml
+docker run -it --rm ghcr.io/teleskopio/teleskopio:latest config > config.yaml
 ```
 
 3. Edit config
@@ -98,13 +101,13 @@ vim config.yaml # edit confAig and add admin user
 Run with `--network=host` if you're using kind cluster
 
 ```bash
-docker run -it --rm --network=host -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:latest --config=/usr/bin/config.yaml
+docker run -it --rm --network=host -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/teleskopio/teleskopio:latest --config=/usr/bin/config.yaml
 ```
 
 Or run with docker network
 
 ```bash
-docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/roman-kiselenko/teleskopio:latest --config=/usr/bin/config.yaml
+docker run -it --rm -p 3080:3080 -v $(pwd)/config.yaml:/usr/bin/config.yaml ghcr.io/teleskopio/teleskopio:latest --config=/usr/bin/config.yaml
 5:47AM INF set loglevel level=DEBUG
 5:47AM INF version version=""
 5:47AM INF initialize web server addr=:3080
@@ -188,9 +191,7 @@ kube:
 
 [teleskopio.github.io](https://teleskopio.github.io)
 
-This project uses [https://www.11ty.dev/](https://www.11ty.dev/)
-
-1. Switch to `blog` branch, add changes, push it, Github Actions will deploy it to `gh-pages` branch.
+This project uses [https://www.11ty.dev/](https://www.11ty.dev/), sources code is [here](https://github.com/teleskopio/teleskopio.github.io).
 
 ## Disclaimer
 

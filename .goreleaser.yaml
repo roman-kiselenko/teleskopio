@@ -27,7 +27,7 @@ homebrew_casks:
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
     directory: Casks
     caveats: "teleskopio --config=config.yaml"
-    homepage: "https://github.com/roman-kiselenko/teleskopio"
+    homepage: "https://teleskopio.github.io/"
     description: "teleskopio is an open-source small and beautiful Web Kubernetes client."
     skip_upload: false
     commit_author:
