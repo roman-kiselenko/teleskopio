@@ -1001,9 +1001,8 @@ func (r *Route) ListHelmCharts(c *gin.Context) {
 		return
 	}
 	client := action.NewList(r.GetCluster(req.Server).Helm)
-	client.AllNamespaces = true
-
-	slog.Debug("helm releases", "client", client)
+	client.All = true
+	client.SetStateMask()
 
 	releases, err := client.Run()
 	if err != nil {

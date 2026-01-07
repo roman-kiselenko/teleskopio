@@ -147,7 +147,8 @@ export const items = [
   {
     title: 'Helm',
     icon: Rocket,
-    submenu: [{ title: 'Charts', icon: HandHelping, url: '/helm' }],
+    url: '/helm',
+    submenu: [],
   },
 
   {

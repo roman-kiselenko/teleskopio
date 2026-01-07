@@ -24,7 +24,20 @@ const columns: ColumnDef<HelmChart>[] = [
     id: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      return <div>{(row.original as HelmChart).info.status}</div>;
+      let color = '';
+      if (row.original.info.status === 'deployed') {
+        color = 'text-green-500';
+      }
+      if (row.original.info.status === 'uninstalled') {
+        color = 'text-red-500';
+      }
+      if (row.original.info.status === 'superseded') {
+        color = 'text-yellow-500';
+      }
+      if (row.original.info.status === 'failed') {
+        color = 'text-red-500';
+      }
+      return <div className={`${color}`}>{(row.original as HelmChart).info.status}</div>;
     },
   },
   {
