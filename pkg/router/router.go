@@ -17,6 +17,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"helm.sh/helm/v3/pkg/action"
 
 	"golang.org/x/crypto/bcrypt"
 	batchv1 "k8s.io/api/batch/v1"
@@ -33,154 +34,6 @@ import (
 
 	webSocket "teleskopio/pkg/socket"
 )
-
-type Cluster struct {
-	Server string `json:"server"`
-}
-
-type Payload struct {
-	Server string `json:"server"`
-}
-
-// TODO move types and refactor
-type APIResourceInfo struct {
-	Group      string `json:"group"`
-	Version    string `json:"version"`
-	Kind       string `json:"kind"`
-	Namespaced bool   `json:"namespaced"`
-}
-
-type ListRequest struct {
-	UID      string `json:"uid"`
-	Continue string `json:"continue"`
-	Limit    int64  `json:"limit"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Namespace  string `json:"namespace"`
-		Group      string `json:"group"`
-		Version    string `json:"version"`
-		Kind       string `json:"kind"`
-		Namespaced bool   `json:"namespaced"`
-	} `json:"request"`
-}
-
-type WatchRequest struct {
-	UID      string `json:"uid"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Namespace       string `json:"namespace"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-}
-
-type GetRequest struct {
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Name       string `json:"name"`
-		Namespace  string `json:"namespace"`
-		Group      string `json:"group"`
-		Version    string `json:"version"`
-		Kind       string `json:"kind"`
-		Namespaced bool   `json:"namespaced"`
-	} `json:"request"`
-}
-
-type PodLogRequest struct {
-	Server    string `json:"server"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Container string `json:"container"`
-	TailLines *int64 `json:"tail_lines"`
-}
-
-type DeleteRequest struct {
-	Server    string `json:"server"`
-	Resource  string `json:"resource"`
-	Resources []struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
-	} `json:"resources"`
-	Request struct {
-		Name            string `json:"name"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-}
-
-type CreateRequest struct {
-	Server    string `json:"server"`
-	Namespace string `json:"namespace"`
-	Yaml      string `json:"yaml"`
-}
-
-type NodeOperation struct {
-	Name         string `json:"name"`
-	Group        string `json:"group"`
-	Version      string `json:"version"`
-	Kind         string `json:"kind"`
-	Namespaced   bool   `json:"namespaced"`
-	ResourceName string `json:"resourceName"`
-	Server       string `json:"server"`
-	Resource     string `json:"resource"`
-	Cordon       bool   `json:"cordon"`
-}
-
-type NodeDrain struct {
-	ResourceName        string `json:"resourceName"`
-	ResourceUID         string `json:"resourceUid"`
-	Server              string `json:"server"`
-	DrainForce          bool   `json:"drainForce"`
-	IgnoreAllDaemonSets bool   `json:"IgnoreAllDaemonSets"`
-	DeleteEmptyDirData  bool   `json:"DeleteEmptyDirData"`
-	DrainTimeout        int64  `json:"drainTimeout"`
-}
-
-type TriggerCronjob struct {
-	Group        string `json:"group"`
-	Version      string `json:"version"`
-	Kind         string `json:"kind"`
-	Namespaced   bool   `json:"namespaced"`
-	Namespace    string `json:"namespace"`
-	ResourceName string `json:"resourceName"`
-	Server       string `json:"server"`
-	Resource     string
-}
-
-type ResourceOperation struct {
-	Request struct {
-		Name            string `json:"name"`
-		Namespace       string `json:"namespace"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Replicas int64  `json:"replicas"`
-}
-
-type Route struct {
-	cfg      *config.Config
-	clusters []*config.Cluster
-	users    *config.Users
-	hub      *webSocket.Hub
-	// TODO
-	// Add mutex
-	watchers        map[string]w.Interface
-	podLogsWatchers map[string]chan (bool)
-}
 
 func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*config.Cluster, users *config.Users) (Route, error) {
 	r := Route{
@@ -1109,11 +962,6 @@ func (r *Route) TriggerCronjob(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": jobName})
 }
 
-type creds struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func (r *Route) Login(c *gin.Context) {
 	var req creds
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -1143,4 +991,26 @@ func (r *Route) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": t})
+}
+
+func (r *Route) ListHelmCharts(c *gin.Context) {
+	var req HelmChart
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	client := action.NewList(r.GetCluster(req.Server).Helm)
+	client.AllNamespaces = true
+
+	slog.Debug("helm releases", "client", client)
+
+	releases, err := client.Run()
+	if err != nil {
+		slog.Error("fetching", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"charts": releases})
 }
