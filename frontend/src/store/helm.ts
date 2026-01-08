@@ -6,9 +6,9 @@ export const helmState = hookstate<{ charts: object[] }>({
   charts: [],
 });
 
-export async function getCharts(query: string) {
+export async function getCharts(query: string, namespaces: string[]) {
   try {
-    let { charts } = await call<any[]>('helm_charts', {});
+    let { charts } = await call<any[]>('helm_charts', { namespaces: namespaces });
     if (query !== '') {
       charts = charts.filter((c) => {
         return String(c.name || '')

@@ -4,6 +4,7 @@ import { useloadingState } from '@/store/loader';
 import { DataTable } from '@/components/ui/DataTable';
 import columns from '@/components/pages/Helm/Table/ColumnDef';
 import { useHelmState, getCharts } from '@/store/helm';
+import { useNamespacesState } from '@/store/resources';
 import { Input } from '@/components/ui/input';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
@@ -11,6 +12,13 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthProvider';
 
 export function HelmPage() {
+  const namespaces = useNamespacesState();
+  const namespacesArray = Array.from(
+    namespaces
+      .get()
+      .values()
+      .map((n: any) => n.metadata.name),
+  );
   const helmCharts = useHelmState();
   const [searchQuery, setSearchQuery] = useState('');
   const loading = useloadingState();
@@ -19,7 +27,7 @@ export function HelmPage() {
   const fetchData = useCallback(async () => {
     try {
       await call<any[]>('ping');
-      await getCharts(searchQuery);
+      await getCharts(searchQuery, namespacesArray);
     } catch (error: any) {
       toast.error('Error! Cant ping server\n' + error.message);
     }

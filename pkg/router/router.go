@@ -18,18 +18,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/release"
 
 	"golang.org/x/crypto/bcrypt"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
 	w "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/drain"
 
 	webSocket "teleskopio/pkg/socket"
@@ -1000,16 +1003,31 @@ func (r *Route) ListHelmCharts(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	client := action.NewList(r.GetCluster(req.Server).Helm)
-	client.All = true
-	client.SetStateMask()
+	flags := genericclioptions.NewConfigFlags(false)
+	// Spoof kube config on the fly
+	flags.WrapConfigFn = func(_ *rest.Config) *rest.Config {
+		return r.GetCluster(req.Server).RestConfig
+	}
+	var result []*release.Release
+	for _, ns := range req.Namespaces {
+		actionConfig := new(action.Configuration)
+		if err := actionConfig.Init(flags, ns, "secret", slog.Debug); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		slog.Info("get releases", "ns", ns)
 
-	releases, err := client.Run()
-	if err != nil {
-		slog.Error("fetching", "err", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
+		list := action.NewList(actionConfig)
+		list.All = true
+
+		rels, err := list.Run()
+		if err != nil {
+			slog.Error("cant get releases", "ns", ns, "err", err.Error())
+			continue
+		}
+
+		result = append(result, rels...)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"charts": releases})
+	c.JSON(http.StatusOK, gin.H{"charts": result})
 }

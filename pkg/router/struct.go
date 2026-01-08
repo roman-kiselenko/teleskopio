@@ -124,9 +124,8 @@ type NodeDrain struct {
 }
 
 type HelmChart struct {
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	Server    string `json:"server,omitempty"`
+	Namespaces []string `json:"namespaces,omitempty"`
+	Server     string   `json:"server,omitempty"`
 }
 
 type TriggerCronjob struct {
