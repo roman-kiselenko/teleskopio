@@ -6,9 +6,19 @@ export const helmState = hookstate<{ charts: object[] }>({
   charts: [],
 });
 
-export async function getCharts(query: string, namespaces: string[]) {
+export async function getCharts(query: string, namespaces: string[], selectedNs: string | null) {
   try {
-    let { charts } = await call<any[]>('helm_charts', { namespaces: namespaces });
+    let { charts } = await call<any[]>('helm_charts', {
+      namespaces: namespaces,
+    });
+    if (selectedNs && selectedNs !== '' && selectedNs !== 'all') {
+      charts = charts.filter((c) => {
+        return String(c.namespace || '')
+          .toLowerCase()
+          .includes(selectedNs.toLowerCase());
+      });
+    }
+
     if (query !== '') {
       charts = charts.filter((c) => {
         return String(c.name || '')

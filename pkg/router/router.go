@@ -1009,13 +1009,13 @@ func (r *Route) ListHelmCharts(c *gin.Context) {
 		return r.GetCluster(req.Server).RestConfig
 	}
 	var result []*release.Release
+	slog.Debug("get releases", "ns", len(req.Namespaces))
 	for _, ns := range req.Namespaces {
 		actionConfig := new(action.Configuration)
-		if err := actionConfig.Init(flags, ns, "secret", slog.Debug); err != nil {
+		if err := actionConfig.Init(flags, ns, "secret", slog.Default().Info); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
-		slog.Info("get releases", "ns", ns)
 
 		list := action.NewList(actionConfig)
 		list.All = true
