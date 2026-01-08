@@ -3,6 +3,7 @@ import {
   PackageCheck,
   ChartNoAxesGantt,
   Cable,
+  Rocket,
   Box,
   ShieldAlert,
   User,
@@ -33,6 +34,7 @@ import {
   PersonStanding,
   Waypoints,
   Package,
+  HandHelping,
   CalendarSync,
   Settings,
   ChevronDown,
@@ -141,6 +143,12 @@ export const items = [
       { title: 'ClusterRoles', icon: User, url: '/resource/ClusterRole' },
       { title: 'RoleBindings', icon: Merge, url: '/resource/RoleBinding' },
     ],
+  },
+  {
+    title: 'Helm',
+    icon: Rocket,
+    url: '/helm',
+    submenu: [],
   },
 
   {

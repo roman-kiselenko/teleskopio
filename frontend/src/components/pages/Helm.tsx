@@ -1,25 +1,32 @@
 import { useEffect, useCallback, useState } from 'react';
-import { Loader2, LogOut } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useloadingState } from '@/store/loader';
 import { DataTable } from '@/components/ui/DataTable';
-import columns from '@/components/pages/Start/Table/ColumnDef';
-import { useConfigsState, getConfigs } from '@/store/kubeconfigs';
-import { Input } from '@/components/ui/input';
+import columns from '@/components/pages/Helm/Table/ColumnDef';
+import { useHelmState, getCharts } from '@/store/helm';
+import { useNamespacesState } from '@/store/resources';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthProvider';
+import { Header } from '@/components/Header';
+import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 
-export function StartPage() {
-  const configs = useConfigsState();
+export function HelmPage() {
+  const selectedNamespace = useSelectedNamespacesState();
+  const namespaces = useNamespacesState();
+  const namespacesArray = Array.from(
+    namespaces
+      .get()
+      .values()
+      .map((n: any) => n.metadata.name),
+  );
+  const helmCharts = useHelmState();
   const [searchQuery, setSearchQuery] = useState('');
   const loading = useloadingState();
-  const { logout, AuthDisabled } = useAuth();
 
   const fetchData = useCallback(async () => {
     try {
       await call<any[]>('ping');
-      await getConfigs(searchQuery);
+      await getCharts(searchQuery, namespacesArray, selectedNamespace.get());
     } catch (error: any) {
       toast.error('Error! Cant ping server\n' + error.message);
     }
@@ -27,22 +34,19 @@ export function StartPage() {
 
   useEffect(() => {
     fetchData();
+
+    const interval = setInterval(() => {
+      if (!loading.get()) {
+        fetchData();
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, [fetchData]);
 
   return (
     <div className="flex-grow overflow-auto">
-      <div className="flex flex-row py-2 px-2 items-center justify-between">
-        <Input
-          placeholder="Filter by name..."
-          className="placeholder:text-muted-foreground flex h-6 w-full rounded-md bg-transparent py-2 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {!AuthDisabled && (
-          <Button onClick={logout} className="ml-2 text-xs">
-            <LogOut size={12} />
-          </Button>
-        )}
-      </div>
+      {<Header setSearchQuery={setSearchQuery} withNsSelector={true} />}
 
       <div className="grid grid-cols-1">
         <div className="h-24 col-span-2">
@@ -53,10 +57,10 @@ export function StartPage() {
           )}
           <DataTable
             menuDisabled={true}
-            kind={'configs'}
+            kind={'helm'}
             noResult={true}
             columns={columns as any}
-            data={configs.configs.get() as any}
+            data={helmCharts.charts.get() as any}
           />
         </div>
       </div>
