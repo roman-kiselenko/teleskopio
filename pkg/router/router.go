@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log/slog"
 	"net/http"
 	"os"
@@ -1041,10 +1040,10 @@ func (r *Route) ListHelmReleases(c *gin.Context) {
 		r.helmWathers[req.Server] = icache.NewCacheInformers(c.Request.Context(), make(chan struct{}), r.GetCluster(req.Server).Typed, cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				sec := obj.(*v1.Secret)
-				slog.Debug("add", "sec", sec.ObjectMeta.Labels)
+				slog.Debug("add", "sec", sec.Labels)
 				rel, err := decodeHelmRelease(sec.Data["release"])
 				if err != nil {
-					slog.Error("cant add releases", "ns", sec.ObjectMeta.Namespace, "err", err.Error())
+					slog.Error("cant add releases", "ns", sec.Namespace, "err", err.Error())
 					return
 				}
 				payload, _ := json.Marshal(map[string]interface{}{
@@ -1053,12 +1052,12 @@ func (r *Route) ListHelmReleases(c *gin.Context) {
 				})
 				r.hub.Broadcast(payload)
 			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
+			UpdateFunc: func(_, newObj interface{}) {
 				sec := newObj.(*v1.Secret)
-				slog.Debug("update", "sec", sec.ObjectMeta.Labels)
+				slog.Debug("update", "sec", sec.Labels)
 				rel, err := decodeHelmRelease(sec.Data["release"])
 				if err != nil {
-					slog.Error("cant update releases", "ns", sec.ObjectMeta.Namespace, "err", err.Error())
+					slog.Error("cant update releases", "ns", sec.Namespace, "err", err.Error())
 					return
 				}
 				payload, _ := json.Marshal(map[string]interface{}{
@@ -1069,10 +1068,10 @@ func (r *Route) ListHelmReleases(c *gin.Context) {
 			},
 			DeleteFunc: func(obj interface{}) {
 				sec := obj.(*v1.Secret)
-				slog.Debug("delete", "sec", sec.ObjectMeta.Labels)
+				slog.Debug("delete", "sec", sec.Labels)
 				rel, err := decodeHelmRelease(sec.Data["release"])
 				if err != nil {
-					slog.Error("cant delete releases", "ns", sec.ObjectMeta.Namespace, "err", err.Error())
+					slog.Error("cant delete releases", "ns", sec.Namespace, "err", err.Error())
 					return
 				}
 				payload, _ := json.Marshal(map[string]interface{}{
@@ -1087,25 +1086,54 @@ func (r *Route) ListHelmReleases(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"charts": result})
 }
 
+func (r *Route) GetHelmRelease(c *gin.Context) {
+	var req HelmRelease
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	flags := genericclioptions.NewConfigFlags(false)
+	// Spoof kube config on the fly
+	flags.WrapConfigFn = func(_ *rest.Config) *rest.Config {
+		return r.GetCluster(req.Server).RestConfig
+	}
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(flags, req.Namespace, "secret", slog.Default().Info); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	list := action.NewGet(actionConfig)
+
+	rel, err := list.Run(req.Name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": rel})
+}
+
 func decodeHelmRelease(data []byte) (release.Release, error) {
 	var release release.Release
 	decodedBytes, err := base64.StdEncoding.DecodeString(string(data))
 	if err != nil {
-		return release, fmt.Errorf("Error decoding string: %s", err.Error())
+		return release, fmt.Errorf("decoding string: %w", err)
 	}
 	gz, err := gzip.NewReader(bytes.NewReader(decodedBytes))
 	if err != nil {
-		return release, fmt.Errorf("Error creating gzip reader: %s", err.Error())
+		return release, fmt.Errorf("creating gzip reader: %w", err)
 	}
 	defer gz.Close()
 
-	decoded, err := ioutil.ReadAll(gz) // TODO
+	decoded, err := io.ReadAll(gz)
 	if err != nil {
-		return release, fmt.Errorf("Error decompressing data: %s", err.Error())
+		return release, fmt.Errorf("decompressing data: %w", err)
 	}
 
 	if err := json.Unmarshal(decoded, &release); err != nil {
-		return release, fmt.Errorf("Error unmarshalling JSON: %s", err.Error())
+		return release, fmt.Errorf("unmarshalling JSON: %w", err)
 	}
 	return release, nil
 }

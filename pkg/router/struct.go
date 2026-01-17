@@ -124,6 +124,12 @@ type NodeDrain struct {
 	DrainTimeout        int64  `json:"drainTimeout"`
 }
 
+type HelmRelease struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Server    string `json:"server,omitempty"`
+}
+
 type HelmChart struct {
 	Namespaces []string `json:"namespaces,omitempty"`
 	Server     string   `json:"server,omitempty"`

@@ -63,7 +63,7 @@ export function HelmPage() {
   const fetchData = useCallback(async () => {
     try {
       await call<any[]>('ping');
-      await getCharts(searchQuery, namespacesArray, selectedNamespace.get());
+      await getCharts(searchQuery, namespacesArray);
     } catch (error: any) {
       toast.error('Error! Cant ping server\n' + error.message);
     }
@@ -72,8 +72,13 @@ export function HelmPage() {
   useEffect(() => {
     fetchData();
     listenEvents();
-  }, [fetchData, selectedNamespace]);
-
+  }, [fetchData]);
+  const data = Array.from(helmCharts.get().values()).filter(
+    (x: any) =>
+      !selectedNamespace.get() ||
+      selectedNamespace.get() === 'all' ||
+      x.namespace === selectedNamespace.get(),
+  );
   return (
     <div className="flex-grow overflow-auto">
       {<Header setSearchQuery={setSearchQuery} withNsSelector={true} />}
@@ -90,7 +95,7 @@ export function HelmPage() {
             kind={'helm'}
             noResult={true}
             columns={columns as any}
-            data={Array.from(helmCharts.get().values())}
+            data={data}
           />
         </div>
       </div>

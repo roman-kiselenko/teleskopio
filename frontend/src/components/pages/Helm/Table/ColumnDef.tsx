@@ -9,6 +9,7 @@ const columns: ColumnDef<HelmRelease>[] = [
   {
     accessorKey: 'name',
     id: 'name',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     header: 'Name',
     cell: ({ row }) => {
       const info = (row.original as HelmRelease).info.notes.split('\n');
@@ -41,6 +42,7 @@ const columns: ColumnDef<HelmRelease>[] = [
     accessorKey: 'namespace',
     id: 'namespace',
     header: 'Namespace',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     cell: ({ row }) => {
       return <div>{row.original.namespace}</div>;
     },
@@ -49,6 +51,7 @@ const columns: ColumnDef<HelmRelease>[] = [
     accessorKey: 'info.status',
     id: 'status',
     header: 'Status',
+    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
     cell: ({ row }) => {
       let color = '';
       if (row.original.info.status === 'deployed') {

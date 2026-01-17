@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"log/slog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -10,7 +11,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func NewCacheInformers(ctx context.Context, stopCh chan struct{}, client *kubernetes.Clientset, funcs cache.ResourceEventHandlerFuncs) informers.SharedInformerFactory {
+func NewCacheInformers(_ context.Context, stopCh chan struct{}, client *kubernetes.Clientset, funcs cache.ResourceEventHandlerFuncs) informers.SharedInformerFactory {
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
 		0,
@@ -20,7 +21,9 @@ func NewCacheInformers(ctx context.Context, stopCh chan struct{}, client *kubern
 		}),
 	)
 	secretInformer := factory.Core().V1().Secrets().Informer()
-	secretInformer.AddEventHandler(funcs)
+	if _, err := secretInformer.AddEventHandler(funcs); err != nil {
+		slog.Error("add event handler", "err", err.Error())
+	}
 	factory.Start(stopCh)
 	go factory.WaitForCacheSync(stopCh)
 	return factory

@@ -36,8 +36,9 @@ import ClusterRoles from '@/components/resources/Access/ClusterRoles';
 import RoleBindings from '@/components/resources/Access/RoleBindings';
 import ServiceAccounts from '@/components/resources/Access/ServiceAccounts';
 import ResourceEditor from '@/components/resources/ResourceEditor';
+import ResourceViewer from '@/components/resources/ResourceViewer';
 import ResourceSubmit from '@/components/resources/ResourceSubmit';
-import { Load } from '@/loaders';
+import { Load, LoadHelmRelease } from '@/loaders';
 import { StartPage } from './components/pages/Start';
 import { HelmPage } from './components/pages/Helm';
 import { SettingsPage } from '@/components/pages/Settings';
@@ -280,6 +281,23 @@ export const router = createBrowserRouter([
       {
         path: '/helm',
         element: <HelmPage />,
+      },
+      {
+        path: '/helm/:name/:namespace',
+        loader: async ({ params }: { params: any; request: Request }) => {
+          const data = await LoadHelmRelease(params.name, params.namespace);
+          console.log(data);
+          if (!data) {
+            return redirect(location.pathname);
+          }
+          return {
+            name: params.name,
+            namespace: params.namespace,
+            data: data.data,
+          };
+        },
+        element: <ResourceViewer />,
+        errorElement: <ErrorPage />,
       },
     ],
   },

@@ -5,19 +5,11 @@ import { HelmRelease } from '@/types';
 
 export const helmState = hookstate<Map<string, HelmRelease>>(new Map());
 
-export async function getCharts(query: string, namespaces: string[], selectedNs: string | null) {
+export async function getCharts(query: string, namespaces: string[]) {
   try {
-    let { charts } = await call<any[]>('helm_charts', {
+    let { charts } = await call<any[]>('helm_releases', {
       namespaces: namespaces,
     });
-    if (selectedNs && selectedNs !== '' && selectedNs !== 'all') {
-      charts = charts.filter((c) => {
-        return String(c.namespace || '')
-          .toLowerCase()
-          .includes(selectedNs.toLowerCase());
-      });
-    }
-
     if (query !== '') {
       charts = charts.filter((c) => {
         return String(c.name || '')

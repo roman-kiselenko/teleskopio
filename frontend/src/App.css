@@ -15,6 +15,8 @@ body {
   font-weight: 400;
   font-style: normal;
   overflow: hidden;
+  min-width: 600px;
+  min-height: 900px;
 }
 
 .source-code {
