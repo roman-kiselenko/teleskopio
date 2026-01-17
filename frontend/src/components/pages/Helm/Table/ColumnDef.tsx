@@ -9,7 +9,7 @@ const columns: ColumnDef<HelmRelease>[] = [
   {
     accessorKey: 'name',
     id: 'name',
-    meta: { className: 'min-w-[10ch] max-w-[10ch]' },
+    meta: { className: 'min-w-[20ch] max-w-[20ch]' },
     header: 'Name',
     cell: ({ row }) => {
       const info = (row.original as HelmRelease).info.notes.split('\n');
