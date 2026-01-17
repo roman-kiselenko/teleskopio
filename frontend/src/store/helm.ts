@@ -17,11 +17,11 @@ export async function getCharts(query: string, namespaces: string[]) {
           .includes(query.toLowerCase());
       });
     }
-    charts.forEach((chart: HelmRelease)=> {
+    charts.forEach((chart: HelmRelease) => {
       const newMap = new Map(helmState.value);
-      newMap.set(`${chart.namespace}-${chart.name}`, chart)
-      helmState.set(newMap)
-    })
+      newMap.set(`${chart.namespace}-${chart.name}`, chart);
+      helmState.set(newMap);
+    });
   } catch (error: any) {
     toast.error('Error! Cant load helm charts\n' + error.message);
     console.error('Error! Cant load helm charts\n' + error.message);

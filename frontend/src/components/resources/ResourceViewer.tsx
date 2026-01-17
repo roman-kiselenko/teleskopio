@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/components/ThemeProvider';
 import { Fonts, FONT_KEY, EDITOR_FONT_SIZE_KEY, EDITOR_FONT_SIZE } from '@/settings';
 import { useLoaderData } from 'react-router';
-import { useVersionState } from '@/store/version';
 
 window.MonacoEnvironment = {
   getWorker(moduleId, label) {
@@ -119,7 +118,7 @@ export default function ResourceViewer() {
           readOnly: true,
           automaticLayout: true,
         }}
-        onChange={(value) => {}}
+        onChange={() => {}}
         value={data.manifest}
         theme={theme === 'dark' ? 'vs-dark' : 'light'}
         onMount={handleEditorMount}

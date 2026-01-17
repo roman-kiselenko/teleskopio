@@ -34,7 +34,6 @@ import {
   PersonStanding,
   Waypoints,
   Package,
-  HandHelping,
   CalendarSync,
   Settings,
   ChevronDown,
