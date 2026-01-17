@@ -2,7 +2,9 @@ package router
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,175 +14,34 @@ import (
 	"strings"
 	"time"
 
+	icache "teleskopio/pkg/cache"
 	"teleskopio/pkg/config"
 	"teleskopio/pkg/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/release"
 
 	"golang.org/x/crypto/bcrypt"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
 	w "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubectl/pkg/drain"
 
 	webSocket "teleskopio/pkg/socket"
 )
-
-type Cluster struct {
-	Server string `json:"server"`
-}
-
-type Payload struct {
-	Server string `json:"server"`
-}
-
-// TODO move types and refactor
-type APIResourceInfo struct {
-	Group      string `json:"group"`
-	Version    string `json:"version"`
-	Kind       string `json:"kind"`
-	Namespaced bool   `json:"namespaced"`
-}
-
-type ListRequest struct {
-	UID      string `json:"uid"`
-	Continue string `json:"continue"`
-	Limit    int64  `json:"limit"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Namespace  string `json:"namespace"`
-		Group      string `json:"group"`
-		Version    string `json:"version"`
-		Kind       string `json:"kind"`
-		Namespaced bool   `json:"namespaced"`
-	} `json:"request"`
-}
-
-type WatchRequest struct {
-	UID      string `json:"uid"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Namespace       string `json:"namespace"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-}
-
-type GetRequest struct {
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Name       string `json:"name"`
-		Namespace  string `json:"namespace"`
-		Group      string `json:"group"`
-		Version    string `json:"version"`
-		Kind       string `json:"kind"`
-		Namespaced bool   `json:"namespaced"`
-	} `json:"request"`
-}
-
-type PodLogRequest struct {
-	Server    string `json:"server"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Container string `json:"container"`
-	TailLines *int64 `json:"tail_lines"`
-}
-
-type DeleteRequest struct {
-	Server    string `json:"server"`
-	Resource  string `json:"resource"`
-	Resources []struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
-	} `json:"resources"`
-	Request struct {
-		Name            string `json:"name"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-}
-
-type CreateRequest struct {
-	Server    string `json:"server"`
-	Namespace string `json:"namespace"`
-	Yaml      string `json:"yaml"`
-}
-
-type NodeOperation struct {
-	Name         string `json:"name"`
-	Group        string `json:"group"`
-	Version      string `json:"version"`
-	Kind         string `json:"kind"`
-	Namespaced   bool   `json:"namespaced"`
-	ResourceName string `json:"resourceName"`
-	Server       string `json:"server"`
-	Resource     string `json:"resource"`
-	Cordon       bool   `json:"cordon"`
-}
-
-type NodeDrain struct {
-	ResourceName        string `json:"resourceName"`
-	ResourceUID         string `json:"resourceUid"`
-	Server              string `json:"server"`
-	DrainForce          bool   `json:"drainForce"`
-	IgnoreAllDaemonSets bool   `json:"IgnoreAllDaemonSets"`
-	DeleteEmptyDirData  bool   `json:"DeleteEmptyDirData"`
-	DrainTimeout        int64  `json:"drainTimeout"`
-}
-
-type TriggerCronjob struct {
-	Group        string `json:"group"`
-	Version      string `json:"version"`
-	Kind         string `json:"kind"`
-	Namespaced   bool   `json:"namespaced"`
-	Namespace    string `json:"namespace"`
-	ResourceName string `json:"resourceName"`
-	Server       string `json:"server"`
-	Resource     string
-}
-
-type ResourceOperation struct {
-	Request struct {
-		Name            string `json:"name"`
-		Namespace       string `json:"namespace"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Replicas int64  `json:"replicas"`
-}
-
-type Route struct {
-	cfg      *config.Config
-	clusters []*config.Cluster
-	users    *config.Users
-	hub      *webSocket.Hub
-	// TODO
-	// Add mutex
-	watchers        map[string]w.Interface
-	podLogsWatchers map[string]chan (bool)
-}
 
 func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*config.Cluster, users *config.Users) (Route, error) {
 	r := Route{
@@ -189,6 +50,7 @@ func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*conf
 		users:           users,
 		hub:             hub,
 		watchers:        make(map[string]w.Interface),
+		helmWathers:     make(map[string]informers.SharedInformerFactory),
 		podLogsWatchers: make(map[string]chan bool),
 	}
 	return r, nil
@@ -1109,11 +971,6 @@ func (r *Route) TriggerCronjob(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": jobName})
 }
 
-type creds struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func (r *Route) Login(c *gin.Context) {
 	var req creds
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -1143,4 +1000,140 @@ func (r *Route) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": t})
+}
+
+func (r *Route) ListHelmReleases(c *gin.Context) {
+	var req HelmChart
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	flags := genericclioptions.NewConfigFlags(false)
+	// Spoof kube config on the fly
+	flags.WrapConfigFn = func(_ *rest.Config) *rest.Config {
+		return r.GetCluster(req.Server).RestConfig
+	}
+	var result []*release.Release
+	slog.Debug("get releases", "ns", len(req.Namespaces))
+	for _, ns := range req.Namespaces {
+		actionConfig := new(action.Configuration)
+		if err := actionConfig.Init(flags, ns, "secret", slog.Default().Info); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+
+		list := action.NewList(actionConfig)
+		list.All = true
+
+		rels, err := list.Run()
+		if err != nil {
+			slog.Error("cant get releases", "ns", ns, "err", err.Error())
+			continue
+		}
+
+		result = append(result, rels...)
+	}
+
+	// TODO stop all watchers
+	if _, ok := r.helmWathers[req.Server]; !ok {
+		r.helmWathers[req.Server] = icache.NewCacheInformers(c.Request.Context(), make(chan struct{}), r.GetCluster(req.Server).Typed, cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				sec := obj.(*v1.Secret)
+				slog.Debug("add", "sec", sec.Labels)
+				rel, err := decodeHelmRelease(sec.Data["release"])
+				if err != nil {
+					slog.Error("cant add releases", "ns", sec.Namespace, "err", err.Error())
+					return
+				}
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   fmt.Sprintf("helm-release-%s-added", req.Server),
+					"payload": rel,
+				})
+				r.hub.Broadcast(payload)
+			},
+			UpdateFunc: func(_, newObj interface{}) {
+				sec := newObj.(*v1.Secret)
+				slog.Debug("update", "sec", sec.Labels)
+				rel, err := decodeHelmRelease(sec.Data["release"])
+				if err != nil {
+					slog.Error("cant update releases", "ns", sec.Namespace, "err", err.Error())
+					return
+				}
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   fmt.Sprintf("helm-release-%s-updated", req.Server),
+					"payload": rel,
+				})
+				r.hub.Broadcast(payload)
+			},
+			DeleteFunc: func(obj interface{}) {
+				sec := obj.(*v1.Secret)
+				slog.Debug("delete", "sec", sec.Labels)
+				rel, err := decodeHelmRelease(sec.Data["release"])
+				if err != nil {
+					slog.Error("cant delete releases", "ns", sec.Namespace, "err", err.Error())
+					return
+				}
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   fmt.Sprintf("helm-release-%s-deleted", req.Server),
+					"payload": rel,
+				})
+				r.hub.Broadcast(payload)
+			},
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"charts": result})
+}
+
+func (r *Route) GetHelmRelease(c *gin.Context) {
+	var req HelmRelease
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	flags := genericclioptions.NewConfigFlags(false)
+	// Spoof kube config on the fly
+	flags.WrapConfigFn = func(_ *rest.Config) *rest.Config {
+		return r.GetCluster(req.Server).RestConfig
+	}
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(flags, req.Namespace, "secret", slog.Default().Info); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	list := action.NewGet(actionConfig)
+
+	rel, err := list.Run(req.Name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": rel})
+}
+
+func decodeHelmRelease(data []byte) (release.Release, error) {
+	var release release.Release
+	decodedBytes, err := base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		return release, fmt.Errorf("decoding string: %w", err)
+	}
+	gz, err := gzip.NewReader(bytes.NewReader(decodedBytes))
+	if err != nil {
+		return release, fmt.Errorf("creating gzip reader: %w", err)
+	}
+	defer gz.Close()
+
+	decoded, err := io.ReadAll(gz)
+	if err != nil {
+		return release, fmt.Errorf("decompressing data: %w", err)
+	}
+
+	if err := json.Unmarshal(decoded, &release); err != nil {
+		return release, fmt.Errorf("unmarshalling JSON: %w", err)
+	}
+	return release, nil
 }

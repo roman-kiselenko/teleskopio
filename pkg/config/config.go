@@ -11,6 +11,7 @@ import (
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -41,6 +42,7 @@ type Cluster struct {
 	Address      string
 	Typed        *kubernetes.Clientset
 	Dynamic      dynamic.Interface
+	RestConfig   *rest.Config
 	APIExtension *apiextensionsclientset.Clientset
 }
 
@@ -94,7 +96,14 @@ func Parse(configPath string) (Config, []*Cluster, Users, error) {
 		if err != nil {
 			return cfg, clusters, users, err
 		}
-		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn, APIExtension: apiExtension})
+
+		clusters = append(clusters, &Cluster{
+			RestConfig:   restCfg,
+			Address:      restCfg.Host,
+			Typed:        clientset,
+			Dynamic:      dyn,
+			APIExtension: apiExtension,
+		})
 	}
 
 	kubeconfig := os.Getenv("KUBECONFIG")
@@ -123,7 +132,13 @@ func Parse(configPath string) (Config, []*Cluster, Users, error) {
 			return cfg, clusters, users, err
 		}
 
-		clusters = append(clusters, &Cluster{Address: restCfg.Host, Typed: clientset, Dynamic: dyn, APIExtension: apiExtension})
+		clusters = append(clusters, &Cluster{
+			RestConfig:   restCfg,
+			Address:      restCfg.Host,
+			Typed:        clientset,
+			Dynamic:      dyn,
+			APIExtension: apiExtension,
+		})
 	}
 
 	for _, u := range cfg.Users {

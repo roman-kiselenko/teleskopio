@@ -22,3 +22,16 @@ export async function Load(kind: string, group: string, name: string, namespace:
   }
   return response;
 }
+
+export async function LoadHelmRelease(name: string, namespace: string) {
+  let request = {
+    name: name,
+    namespace: namespace,
+  };
+  const response = await call('helm_release', request);
+  if (response.message) {
+    toast.error(`Error: ${response.message}`);
+    return;
+  }
+  return response;
+}

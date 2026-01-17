@@ -27,14 +27,6 @@ export function StartPage() {
 
   useEffect(() => {
     fetchData();
-
-    const interval = setInterval(() => {
-      if (!loading.get()) {
-        fetchData();
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
   }, [fetchData]);
 
   return (

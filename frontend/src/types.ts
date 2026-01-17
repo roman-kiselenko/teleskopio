@@ -4,6 +4,23 @@ type Cluster = {
   server?: string;
 };
 
+type HelmRelease = {
+  name: string;
+  namespace: string;
+  chart: {
+    metadata: {
+      icon: string;
+      version: string;
+    };
+  };
+  info: {
+    last_deployed: string;
+    notes: string;
+    status: string;
+  };
+  version: number;
+};
+
 type ApiResource = {
   group: string;
   version: string;
@@ -11,4 +28,4 @@ type ApiResource = {
   namespaced: boolean;
 };
 
-export type { Cluster, ApiResource };
+export type { Cluster, ApiResource, HelmRelease };
