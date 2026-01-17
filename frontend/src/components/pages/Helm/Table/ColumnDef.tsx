@@ -1,14 +1,40 @@
 import { ColumnDef } from '@tanstack/react-table';
 import AgeCell from '@/components/ui/Table/AgeCell';
-import { HelmChart } from '@/types';
+import { HelmRelease } from '@/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
+import { Fragment } from 'react';
 
-const columns: ColumnDef<HelmChart>[] = [
+const columns: ColumnDef<HelmRelease>[] = [
   {
     accessorKey: 'name',
     id: 'name',
     header: 'Name',
     cell: ({ row }) => {
-      return <div>{(row.original as HelmChart).name}</div>;
+      const info = (row.original as HelmRelease).info.notes.split('\n');
+
+      return (
+        <div className="flex flex-row items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex flex-row items-center p-1">
+                <Info size={16} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span className="ml-1">
+                {info.map((str, index) => (
+                  <Fragment key={index}>
+                    {str}
+                    {index < info.length - 1 && <br />}
+                  </Fragment>
+                ))}
+              </span>
+            </TooltipContent>
+          </Tooltip>
+          <div className="flex flex-row items-center">{(row.original as HelmRelease).name}</div>
+        </div>
+      );
     },
   },
   {
@@ -37,7 +63,7 @@ const columns: ColumnDef<HelmChart>[] = [
       if (row.original.info.status === 'failed') {
         color = 'text-red-500';
       }
-      return <div className={`${color}`}>{(row.original as HelmChart).info.status}</div>;
+      return <div className={`${color}`}>{(row.original as HelmRelease).info.status}</div>;
     },
   },
   {
@@ -45,7 +71,7 @@ const columns: ColumnDef<HelmChart>[] = [
     id: 'version',
     header: 'App Version',
     cell: ({ row }) => {
-      return <div>{(row.original as HelmChart).chart.metadata.version}</div>;
+      return <div>{(row.original as HelmRelease).chart.metadata.version}</div>;
     },
   },
   {
@@ -53,7 +79,7 @@ const columns: ColumnDef<HelmChart>[] = [
     id: 'revison',
     header: 'Revision',
     cell: ({ row }) => {
-      return <div>{(row.original as HelmChart).version}</div>;
+      return <div>{(row.original as HelmRelease).version}</div>;
     },
   },
   {
@@ -61,7 +87,7 @@ const columns: ColumnDef<HelmChart>[] = [
     id: 'last_deployed',
     header: 'Last Deployed',
     cell: ({ row }) => {
-      return <AgeCell age={(row.original as HelmChart).info.last_deployed} />;
+      return <AgeCell age={(row.original as HelmRelease).info.last_deployed} />;
     },
   },
 ];

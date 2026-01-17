@@ -4,7 +4,7 @@ type Cluster = {
   server?: string;
 };
 
-type HelmChart = {
+type HelmRelease = {
   name: string;
   namespace: string;
   chart: {
@@ -15,6 +15,7 @@ type HelmChart = {
   };
   info: {
     last_deployed: string;
+    notes: string;
     status: string;
   };
   version: number;
@@ -27,4 +28,4 @@ type ApiResource = {
   namespaced: boolean;
 };
 
-export type { Cluster, ApiResource, HelmChart };
+export type { Cluster, ApiResource, HelmRelease };

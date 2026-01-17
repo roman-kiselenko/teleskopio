@@ -2,16 +2,20 @@ package router
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	icache "teleskopio/pkg/cache"
 	"teleskopio/pkg/config"
 	"teleskopio/pkg/model"
 
@@ -32,7 +36,9 @@ import (
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
 	w "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubectl/pkg/drain"
 
 	webSocket "teleskopio/pkg/socket"
@@ -45,6 +51,7 @@ func New(hub *webSocket.Hub, _ *gin.Engine, cfg *config.Config, clusters []*conf
 		users:           users,
 		hub:             hub,
 		watchers:        make(map[string]w.Interface),
+		helmWathers:     make(map[string]informers.SharedInformerFactory),
 		podLogsWatchers: make(map[string]chan bool),
 	}
 	return r, nil
@@ -996,7 +1003,7 @@ func (r *Route) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": t})
 }
 
-func (r *Route) ListHelmCharts(c *gin.Context) {
+func (r *Route) ListHelmReleases(c *gin.Context) {
 	var req HelmChart
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
@@ -1029,5 +1036,76 @@ func (r *Route) ListHelmCharts(c *gin.Context) {
 		result = append(result, rels...)
 	}
 
+	// TODO stop all watchers
+	if _, ok := r.helmWathers[req.Server]; !ok {
+		r.helmWathers[req.Server] = icache.NewCacheInformers(c.Request.Context(), make(chan struct{}), r.GetCluster(req.Server).Typed, cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				sec := obj.(*v1.Secret)
+				slog.Debug("add", "sec", sec.ObjectMeta.Labels)
+				rel, err := decodeHelmRelease(sec.Data["release"])
+				if err != nil {
+					slog.Error("cant add releases", "ns", sec.ObjectMeta.Namespace, "err", err.Error())
+					return
+				}
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   fmt.Sprintf("helm-release-%s-added", req.Server),
+					"payload": rel,
+				})
+				r.hub.Broadcast(payload)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				sec := newObj.(*v1.Secret)
+				slog.Debug("update", "sec", sec.ObjectMeta.Labels)
+				rel, err := decodeHelmRelease(sec.Data["release"])
+				if err != nil {
+					slog.Error("cant update releases", "ns", sec.ObjectMeta.Namespace, "err", err.Error())
+					return
+				}
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   fmt.Sprintf("helm-release-%s-updated", req.Server),
+					"payload": rel,
+				})
+				r.hub.Broadcast(payload)
+			},
+			DeleteFunc: func(obj interface{}) {
+				sec := obj.(*v1.Secret)
+				slog.Debug("delete", "sec", sec.ObjectMeta.Labels)
+				rel, err := decodeHelmRelease(sec.Data["release"])
+				if err != nil {
+					slog.Error("cant delete releases", "ns", sec.ObjectMeta.Namespace, "err", err.Error())
+					return
+				}
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   fmt.Sprintf("helm-release-%s-deleted", req.Server),
+					"payload": rel,
+				})
+				r.hub.Broadcast(payload)
+			},
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{"charts": result})
+}
+
+func decodeHelmRelease(data []byte) (release.Release, error) {
+	var release release.Release
+	decodedBytes, err := base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		return release, fmt.Errorf("Error decoding string: %s", err.Error())
+	}
+	gz, err := gzip.NewReader(bytes.NewReader(decodedBytes))
+	if err != nil {
+		return release, fmt.Errorf("Error creating gzip reader: %s", err.Error())
+	}
+	defer gz.Close()
+
+	decoded, err := ioutil.ReadAll(gz) // TODO
+	if err != nil {
+		return release, fmt.Errorf("Error decompressing data: %s", err.Error())
+	}
+
+	if err := json.Unmarshal(decoded, &release); err != nil {
+		return release, fmt.Errorf("Error unmarshalling JSON: %s", err.Error())
+	}
+	return release, nil
 }

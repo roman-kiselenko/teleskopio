@@ -5,6 +5,7 @@ import (
 	webSocket "teleskopio/pkg/socket"
 
 	w "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/informers"
 )
 
 type Cluster struct {
@@ -162,5 +163,6 @@ type Route struct {
 	// TODO
 	// Add mutex
 	watchers        map[string]w.Interface
+	helmWathers     map[string]informers.SharedInformerFactory
 	podLogsWatchers map[string]chan (bool)
 }

@@ -9,6 +9,9 @@ import { call } from '@/lib/api';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
+import { useWS } from '@/context/WsContext';
+import { addSubscription } from '@/lib/subscriptionManager';
+import { currentClusterState } from '@/store/cluster';
 
 export function HelmPage() {
   const selectedNamespace = useSelectedNamespacesState();
@@ -22,6 +25,40 @@ export function HelmPage() {
   const helmCharts = useHelmState();
   const [searchQuery, setSearchQuery] = useState('');
   const loading = useloadingState();
+  const { listen } = useWS();
+
+  const listenEvents = async () => {
+    const server = currentClusterState.server.get();
+    addSubscription(
+      await listen(`helm-release-${server}-added`, (payload: any) => {
+        helmCharts.set((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(`${payload.namespace}-${payload.name}` as string, payload);
+          return newMap;
+        });
+      }),
+    );
+
+    addSubscription(
+      await listen(`helm-release-${server}-deleted`, (payload: any) => {
+        helmCharts.set((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(`${payload.namespace}-${payload.name}` as string);
+          return newMap;
+        });
+      }),
+    );
+
+    addSubscription(
+      await listen(`helm-release-${server}-updated`, (payload: any) => {
+        helmCharts.set((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(`${payload.namespace}-${payload.name}` as string, payload);
+          return newMap;
+        });
+      }),
+    );
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -34,15 +71,8 @@ export function HelmPage() {
 
   useEffect(() => {
     fetchData();
-
-    const interval = setInterval(() => {
-      if (!loading.get()) {
-        fetchData();
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    listenEvents();
+  }, [fetchData, selectedNamespace]);
 
   return (
     <div className="flex-grow overflow-auto">
@@ -60,7 +90,7 @@ export function HelmPage() {
             kind={'helm'}
             noResult={true}
             columns={columns as any}
-            data={helmCharts.charts.get() as any}
+            data={Array.from(helmCharts.get().values())}
           />
         </div>
       </div>
