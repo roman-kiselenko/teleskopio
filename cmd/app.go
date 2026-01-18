@@ -112,6 +112,11 @@ func (a *App) initServer(staticFiles embed.FS) error {
 			"message": "pong",
 		})
 	})
+
+	// Liveness probe for Kubernetes
+	router.GET("/healthz", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 	router.GET("/api/auth_disabled", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": a.Config.AuthDisabled,
