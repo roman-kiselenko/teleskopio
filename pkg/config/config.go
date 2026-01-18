@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	_ "embed"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"gopkg.in/yaml.v3"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
