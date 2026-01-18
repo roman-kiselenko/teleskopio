@@ -2,20 +2,37 @@ package config
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
+	"strings"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"gopkg.in/yaml.v3"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
+
+func GetConfigPath(configPathString string) string {
+	if strings.Contains(configPathString, "~") {
+		return strings.Replace(configPathString, "~", os.Getenv("HOME"), 1)
+	}
+	if configPathString != "" {
+		return configPathString
+	}
+	if _, err := os.Stat("./config.yaml"); err == nil {
+		return "./config.yaml"
+	}
+	defaultConfigPath := filepath.Join(os.Getenv("HOME"), ".config/teleskopio/config.yaml")
+	if _, err := os.Stat(defaultConfigPath); err == nil {
+		return defaultConfigPath
+	}
+	return ""
+}
 
 type User struct {
 	Username string `yaml:"username"`
