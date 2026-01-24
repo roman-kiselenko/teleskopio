@@ -58,7 +58,7 @@ import {
 import { cn } from '@/util';
 import { useCrdResourcesState } from '@/store/crdResources';
 import { useConfig } from '@/context/ConfigContext';
-import { compareVersions } from 'compare-versions';
+// import { compareVersions } from 'compare-versions';
 
 export const items = [
   {
@@ -148,7 +148,6 @@ export const items = [
     url: '/helm',
     submenu: [],
   },
-
   {
     title: 'Settings',
     icon: Settings,
@@ -201,7 +200,7 @@ export function AppSidebar() {
           ...submenu,
         ],
       };
-      const insertIndex = Math.max(0, items.length - 1);
+      const insertIndex = Math.max(0, items.length - 2);
       newSidebar = [...items.slice(0, insertIndex), newItem, ...items.slice(insertIndex)];
     }
     setSidebarItems(newSidebar);
