@@ -301,7 +301,7 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 	gvr := schema.GroupVersionResource{
 		Group:    req.APIResource.Group,
 		Version:  req.APIResource.Version,
-		Resource: req.Resource,
+		Resource: req.APIResource.Resource,
 	}
 	var ri dynamic.ResourceInterface
 	if req.Namespace != "" {
@@ -372,7 +372,7 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 
 	for _, r := range apiResourceList.APIResources {
 		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
-			req.Resource = r.Name
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
@@ -619,13 +619,13 @@ func (r *Route) DeleteDynamicResources(c *gin.Context) {
 
 	for _, r := range apiResourceList.APIResources {
 		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
-			req.Resource = r.Name
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
 		Group:    req.APIResource.Group,
 		Version:  req.APIResource.Version,
-		Resource: req.Resource,
+		Resource: req.APIResource.Resource,
 	}
 	if req.APIResource.Namespaced {
 		for _, res := range req.Resources {
@@ -764,6 +764,7 @@ func (r *Route) StreamPodLogs(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+	// TODO might be a collision with another server
 	podLogsKey := fmt.Sprintf("pod_log_line_%s_%s", req.Name, req.Namespace)
 	if _, ok := r.podLogsWatchers[podLogsKey]; ok {
 		slog.Info("pod logs exist", "key", podLogsKey)
@@ -943,7 +944,7 @@ func (r *Route) TriggerCronjob(c *gin.Context) {
 
 	for _, r := range apiResourceList.APIResources {
 		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
-			req.Resource = r.Name
+			req.APIResource.Resource = r.Name
 		}
 	}
 	cronJob, err := r.GetCluster(req.Server).Typed.BatchV1().CronJobs(req.Namespace).Get(context.TODO(), req.Name, metav1.GetOptions{})

@@ -93,7 +93,7 @@ async function fetchAndWatchCRDs(
   server: string,
   apiResources: ApiResource[],
 ): Promise<Promise<Promise<void>>> {
-  const [resources, rv] = await call('list_crd_resource', { server: server});
+  const [resources, rv] = await call('list_crd_resource', { server });
   if (!resources) {
     return;
   }

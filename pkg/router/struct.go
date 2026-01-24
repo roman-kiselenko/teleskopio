@@ -38,7 +38,7 @@ type ListRequest struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 
-	APIResource `json:"apiResource"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type WatchRequest struct {
@@ -47,7 +47,7 @@ type WatchRequest struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 
-	APIResource `json:"apiResource"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type GetRequest struct {
@@ -55,7 +55,7 @@ type GetRequest struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 
-	APIResource `json:"apiResource"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type PodLogRequest struct {
@@ -73,7 +73,7 @@ type DeleteRequest struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`
 	} `json:"resources"`
-	APIResource `json:"apiResource"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type CreateRequest struct {
@@ -88,8 +88,8 @@ type NodeOperation struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 
-	Cordon      bool `json:"cordon"`
-	APIResource `json:"apiResource"`
+	Cordon      bool        `json:"cordon"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type NodeDrain struct {
@@ -118,7 +118,7 @@ type TriggerCronjob struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 
-	APIResource `json:"apiResource"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type ResourceOperation struct {
@@ -127,7 +127,7 @@ type ResourceOperation struct {
 	Namespace string `json:"namespace"`
 	Replicas  int64  `json:"replicas"`
 
-	APIResource `json:"apiResource"`
+	APIResource APIResource `json:"apiResource"`
 }
 
 type Route struct {

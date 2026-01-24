@@ -66,6 +66,7 @@ func TestGetConfigPath(t *testing.T) {
 			expect: filepath.Join(tempHome, ".config/teleskopio/config.yaml"),
 			setupFunc: func() {
 				dir := filepath.Join(tempHome, ".config/teleskopio")
+				//nolint
 				os.MkdirAll(dir, 0o755)
 				f, err := os.Create(filepath.Join(dir, "config.yaml"))
 				if err != nil {
