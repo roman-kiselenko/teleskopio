@@ -108,7 +108,7 @@ export function ResourceEvents() {
     });
     await call('watch_events_dynamic_resource', {
       uid: uid,
-      request: {
+      apiResource: {
         ...resource,
         resource_version: rv,
       },
@@ -128,7 +128,7 @@ export function ResourceEvents() {
       limit: limit,
       continueToken,
       uid: uid,
-      request: {
+      apiResource: {
         ...resource,
       },
     });

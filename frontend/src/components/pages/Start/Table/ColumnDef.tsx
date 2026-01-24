@@ -143,7 +143,7 @@ async function fetchAndWatchCRs(
     return;
   }
   const [resources, rv] = await call('list_dynamic_resource', {
-    request: { ...customResource },
+    apiResource: { ...customResource },
   });
   crsState.set((prev) => {
     const newMap = new Map(prev);
@@ -152,14 +152,12 @@ async function fetchAndWatchCRs(
     });
     return newMap;
   });
-  const request = {
-    ...customResource,
-    resource_version: rv,
-  };
   if (kind === 'ComponentStatus') {
     return;
   }
-  await call('watch_dynamic_resource', { request });
+  await call('watch_dynamic_resource', {
+    apiResource: { ...customResource, resource_version: rv },
+  });
   addSubscription(
     listen(`${kind}-${server}-deleted`, (ev: any) => {
       crsState.set((prev) => {
@@ -186,7 +184,7 @@ async function fetchAndWatchNamespaces(listen: any, server: any): Promise<void> 
     .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const [ns, _token, rv] = await call('list_dynamic_resource', {
-    request: { ...nsResource },
+    apiResource: { ...nsResource },
   });
   ns.forEach((x) => {
     namespacesState.set((prev) => {
@@ -196,7 +194,7 @@ async function fetchAndWatchNamespaces(listen: any, server: any): Promise<void> 
     });
   });
   await call('watch_dynamic_resource', {
-    request: {
+    apiResource: {
       ...nsResource,
       resource_version: rv,
     },

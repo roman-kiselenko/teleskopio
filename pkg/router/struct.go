@@ -21,54 +21,41 @@ type creds struct {
 	Password string `json:"password"`
 }
 
-// TODO move types and refactor
-type APIResourceInfo struct {
-	Group      string `json:"group"`
-	Version    string `json:"version"`
-	Kind       string `json:"kind"`
-	Namespaced bool   `json:"namespaced"`
+type APIResource struct {
+	Group           string `json:"group"`
+	Version         string `json:"version"`
+	Kind            string `json:"kind"`
+	Namespaced      bool   `json:"namespaced"`
+	Resource        string `json:"resource"`
+	ResourceVersion string `json:"resource_version"`
 }
 
 type ListRequest struct {
-	UID      string `json:"uid"`
-	Continue string `json:"continue"`
-	Limit    int64  `json:"limit"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Namespace  string `json:"namespace"`
-		Group      string `json:"group"`
-		Version    string `json:"version"`
-		Kind       string `json:"kind"`
-		Namespaced bool   `json:"namespaced"`
-	} `json:"request"`
+	UID       string `json:"uid"`
+	Continue  string `json:"continue"`
+	Limit     int64  `json:"limit"`
+	Server    string `json:"server"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	APIResource `json:"apiResource"`
 }
 
 type WatchRequest struct {
-	UID      string `json:"uid"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Namespace       string `json:"namespace"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
+	UID       string `json:"uid"`
+	Server    string `json:"server"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	APIResource `json:"apiResource"`
 }
 
 type GetRequest struct {
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Request  struct {
-		Name       string `json:"name"`
-		Namespace  string `json:"namespace"`
-		Group      string `json:"group"`
-		Version    string `json:"version"`
-		Kind       string `json:"kind"`
-		Namespaced bool   `json:"namespaced"`
-	} `json:"request"`
+	Server    string `json:"server"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	APIResource `json:"apiResource"`
 }
 
 type PodLogRequest struct {
@@ -81,37 +68,28 @@ type PodLogRequest struct {
 
 type DeleteRequest struct {
 	Server    string `json:"server"`
-	Resource  string `json:"resource"`
+	Name      string `json:"name"`
 	Resources []struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`
 	} `json:"resources"`
-	Request struct {
-		Name            string `json:"name"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
+	APIResource `json:"apiResource"`
 }
 
 type CreateRequest struct {
 	Server    string `json:"server"`
 	Namespace string `json:"namespace"`
-	Yaml      string `json:"yaml"`
+
+	Yaml string `json:"yaml"`
 }
 
 type NodeOperation struct {
-	Name         string `json:"name"`
-	Group        string `json:"group"`
-	Version      string `json:"version"`
-	Kind         string `json:"kind"`
-	Namespaced   bool   `json:"namespaced"`
-	ResourceName string `json:"resourceName"`
-	Server       string `json:"server"`
-	Resource     string `json:"resource"`
-	Cordon       bool   `json:"cordon"`
+	Server    string `json:"server"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	Cordon      bool `json:"cordon"`
+	APIResource `json:"apiResource"`
 }
 
 type NodeDrain struct {
@@ -136,29 +114,20 @@ type HelmChart struct {
 }
 
 type TriggerCronjob struct {
-	Group        string `json:"group"`
-	Version      string `json:"version"`
-	Kind         string `json:"kind"`
-	Namespaced   bool   `json:"namespaced"`
-	Namespace    string `json:"namespace"`
-	ResourceName string `json:"resourceName"`
-	Server       string `json:"server"`
-	Resource     string
+	Server    string `json:"server"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	APIResource `json:"apiResource"`
 }
 
 type ResourceOperation struct {
-	Request struct {
-		Name            string `json:"name"`
-		Namespace       string `json:"namespace"`
-		Group           string `json:"group"`
-		Version         string `json:"version"`
-		Kind            string `json:"kind"`
-		Namespaced      bool   `json:"namespaced"`
-		ResourceVersion string `json:"resource_version"`
-	} `json:"request"`
-	Server   string `json:"server"`
-	Resource string `json:"resource"`
-	Replicas int64  `json:"replicas"`
+	Server    string `json:"server"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Replicas  int64  `json:"replicas"`
+
+	APIResource `json:"apiResource"`
 }
 
 type Route struct {

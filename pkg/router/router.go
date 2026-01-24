@@ -123,7 +123,7 @@ func (r *Route) ListResources(c *gin.Context) {
 		return
 	}
 
-	result := []APIResourceInfo{}
+	result := []APIResource{}
 	for _, list := range apiGroupResources {
 		gv, err := schema.ParseGroupVersion(list.GroupVersion)
 		if err != nil {
@@ -132,10 +132,11 @@ func (r *Route) ListResources(c *gin.Context) {
 			return
 		}
 		for _, res := range list.APIResources {
-			result = append(result, APIResourceInfo{
+			result = append(result, APIResource{
 				Group:      gv.Group,
 				Version:    gv.Version,
 				Kind:       res.Kind,
+				Resource:   res.Name,
 				Namespaced: res.Namespaced,
 			})
 		}
@@ -151,8 +152,8 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -161,18 +162,18 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
-			req.Resource = r.Name
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
-		Resource: req.Resource,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
+		Resource: req.APIResource.Resource,
 	}
 	var ri dynamic.ResourceInterface
-	if req.Request.Namespace != "" {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
+	if req.Namespace != "" {
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Namespace)
 	} else {
 		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
@@ -188,11 +189,11 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	}
 
 	for i := range list.Items {
-		list.Items[i].SetAPIVersion(req.Request.Version)
-		if req.Request.Group != "" {
-			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.Request.Group, req.Request.Version))
+		list.Items[i].SetAPIVersion(req.APIResource.Version)
+		if req.APIResource.Group != "" {
+			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.APIResource.Group, req.APIResource.Version))
 		}
-		list.Items[i].SetKind(req.Request.Kind)
+		list.Items[i].SetKind(req.APIResource.Kind)
 	}
 	continueToken, resourceVersion := "", ""
 	metadata := list.Object["metadata"].(map[string]interface{})
@@ -213,8 +214,8 @@ func (r *Route) ListEventsDynamicResource(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -223,23 +224,23 @@ func (r *Route) ListEventsDynamicResource(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
-			req.Resource = r.Name
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
-		Resource: req.Resource,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
+		Resource: req.APIResource.Resource,
 	}
 	var ri dynamic.ResourceInterface
-	if req.Request.Namespace != "" {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
+	if req.Namespace != "" {
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Namespace)
 	} else {
 		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 	fieldSelector := ""
-	if req.Request.Group == "" {
+	if req.APIResource.Group == "" {
 		fieldSelector = fmt.Sprintf("involvedObject.uid=%s", req.UID)
 	} else {
 		fieldSelector = fmt.Sprintf("regarding.uid=%s", req.UID)
@@ -259,10 +260,10 @@ func (r *Route) ListEventsDynamicResource(c *gin.Context) {
 
 	for i := range list.Items {
 		list.Items[i].SetAPIVersion("%s")
-		if req.Request.Group != "" {
-			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.Request.Group, req.Request.Version))
+		if req.APIResource.Group != "" {
+			list.Items[i].SetAPIVersion(fmt.Sprintf("%s/%s", req.APIResource.Group, req.APIResource.Version))
 		}
-		list.Items[i].SetKind(req.Request.Kind)
+		list.Items[i].SetKind(req.APIResource.Kind)
 	}
 	continueToken, resourceVersion := "", ""
 	metadata := list.Object["metadata"].(map[string]interface{})
@@ -283,8 +284,8 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -293,18 +294,18 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
-			req.Resource = r.Name
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
 		Resource: req.Resource,
 	}
 	var ri dynamic.ResourceInterface
-	if req.Request.Namespace != "" {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
+	if req.Namespace != "" {
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Namespace)
 	} else {
 		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
@@ -315,9 +316,9 @@ func (r *Route) WatchEventsDynamicResource(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": ""})
 		return
 	}
-	watchOptions := metav1.ListOptions{ResourceVersion: req.Request.ResourceVersion}
+	watchOptions := metav1.ListOptions{ResourceVersion: req.APIResource.ResourceVersion}
 	fieldSelector := ""
-	if req.Request.Group == "" {
+	if req.APIResource.Group == "" {
 		fieldSelector = fmt.Sprintf("involvedObject.uid=%s", req.UID)
 	} else {
 		fieldSelector = fmt.Sprintf("regarding.uid=%s", req.UID)
@@ -360,8 +361,8 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -370,23 +371,23 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
 			req.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
-		Resource: req.Resource,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
+		Resource: req.APIResource.Resource,
 	}
 	var ri dynamic.ResourceInterface
-	if req.Request.Namespace != "" {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
+	if req.Namespace != "" {
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Namespace)
 	} else {
 		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
-	watcherKey := fmt.Sprintf("%s-%s", req.Request.Kind, req.Server)
-	watch, err := ri.Watch(context.TODO(), metav1.ListOptions{ResourceVersion: req.Request.ResourceVersion})
+	watcherKey := fmt.Sprintf("%s-%s", req.APIResource.Kind, req.Server)
+	watch, err := ri.Watch(context.TODO(), metav1.ListOptions{ResourceVersion: req.APIResource.ResourceVersion})
 	if err != nil {
 		slog.Error("watcher", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -401,14 +402,14 @@ func (r *Route) WatchDynamicResource(c *gin.Context) {
 			case w.Added, w.Modified:
 				slog.Debug("message received", "gvr", gvr.String(), "watchKey", watcherKey, "type", event.Type)
 				payload, _ := json.Marshal(map[string]interface{}{
-					"event":   fmt.Sprintf("%s-%s-updated", req.Request.Kind, req.Server),
+					"event":   fmt.Sprintf("%s-%s-updated", req.APIResource.Kind, req.Server),
 					"payload": event.Object,
 				})
 				r.hub.Broadcast(payload)
 			case w.Deleted:
 				slog.Debug("message received", "gvr", gvr.String(), "watchKey", watcherKey, "type", event.Type)
 				payload, _ := json.Marshal(map[string]interface{}{
-					"event":   fmt.Sprintf("%s-%s-deleted", req.Request.Kind, req.Server),
+					"event":   fmt.Sprintf("%s-%s-deleted", req.APIResource.Kind, req.Server),
 					"payload": event.Object,
 				})
 				r.hub.Broadcast(payload)
@@ -430,8 +431,8 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -440,23 +441,23 @@ func (r *Route) GetDynamicResource(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
-			req.Resource = r.Name
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
-		Resource: req.Resource,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
+		Resource: req.APIResource.Resource,
 	}
 	var ri dynamic.ResourceInterface
-	if req.Request.Namespace != "" {
-		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Request.Namespace)
+	if req.Namespace != "" {
+		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(req.Namespace)
 	} else {
 		ri = r.GetCluster(req.Server).Dynamic.Resource(gvr)
 	}
 
-	res, err := ri.Get(context.TODO(), req.Request.Name, metav1.GetOptions{})
+	res, err := ri.Get(context.TODO(), req.Name, metav1.GetOptions{})
 	if err != nil {
 		slog.Error("get", "err", err.Error(), "req", req)
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -607,8 +608,8 @@ func (r *Route) DeleteDynamicResources(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -617,16 +618,16 @@ func (r *Route) DeleteDynamicResources(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
 			req.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
 		Resource: req.Resource,
 	}
-	if req.Request.Namespaced {
+	if req.APIResource.Namespaced {
 		for _, res := range req.Resources {
 			if err := r.GetCluster(req.Server).Dynamic.Resource(gvr).Namespace(res.Namespace).Delete(context.TODO(), res.Name, metav1.DeleteOptions{}); err != nil {
 				slog.Error("delete", "err", err.Error(), "ns", true, "res", res)
@@ -654,8 +655,8 @@ func (r *Route) NodeOperation(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Group,
-		Version: req.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -664,14 +665,14 @@ func (r *Route) NodeOperation(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Kind && r.SingularName == strings.ToLower(req.Kind) {
-			req.Resource = r.Name
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Group,
-		Version:  req.Version,
-		Resource: req.Resource,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
+		Resource: req.APIResource.Resource,
 	}
 	ri := r.GetCluster(req.Server).Dynamic.Resource(gvr)
 
@@ -879,8 +880,8 @@ func (r *Route) ScaleResource(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Request.Group,
-		Version: req.Request.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -889,18 +890,18 @@ func (r *Route) ScaleResource(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Request.Kind && r.SingularName == strings.ToLower(req.Request.Kind) {
-			req.Resource = r.Name
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
+			req.APIResource.Resource = r.Name
 		}
 	}
 	gvr := schema.GroupVersionResource{
-		Group:    req.Request.Group,
-		Version:  req.Request.Version,
-		Resource: req.Resource,
+		Group:    req.APIResource.Group,
+		Version:  req.APIResource.Version,
+		Resource: req.APIResource.Resource,
 	}
 	resource, err := r.GetCluster(req.Server).Dynamic.Resource(gvr).
-		Namespace(req.Request.Namespace).
-		Get(context.Background(), req.Request.Name, metav1.GetOptions{})
+		Namespace(req.Namespace).
+		Get(context.Background(), req.Name, metav1.GetOptions{})
 	if err != nil {
 		slog.Error("get", "err", err.Error(), "req", req)
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -913,7 +914,7 @@ func (r *Route) ScaleResource(c *gin.Context) {
 		return
 	}
 	if _, err := r.GetCluster(req.Server).Dynamic.Resource(gvr).
-		Namespace(req.Request.Namespace).
+		Namespace(req.Namespace).
 		Update(context.Background(), unstr, metav1.UpdateOptions{}); err != nil {
 		slog.Error("update", "err", err.Error(), "req", req)
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -931,8 +932,8 @@ func (r *Route) TriggerCronjob(c *gin.Context) {
 		return
 	}
 	apiResourceList, err := r.GetCluster(req.Server).Typed.ServerResourcesForGroupVersion(schema.GroupVersion{
-		Group:   req.Group,
-		Version: req.Version,
+		Group:   req.APIResource.Group,
+		Version: req.APIResource.Version,
 	}.String())
 	if err != nil {
 		slog.Error("api list", "err", err.Error(), "req", req)
@@ -941,11 +942,11 @@ func (r *Route) TriggerCronjob(c *gin.Context) {
 	}
 
 	for _, r := range apiResourceList.APIResources {
-		if r.Kind == req.Kind && r.SingularName == strings.ToLower(req.Kind) {
+		if r.Kind == req.APIResource.Kind && r.SingularName == strings.ToLower(req.APIResource.Kind) {
 			req.Resource = r.Name
 		}
 	}
-	cronJob, err := r.GetCluster(req.Server).Typed.BatchV1().CronJobs(req.Namespace).Get(context.TODO(), req.ResourceName, metav1.GetOptions{})
+	cronJob, err := r.GetCluster(req.Server).Typed.BatchV1().CronJobs(req.Namespace).Get(context.TODO(), req.Name, metav1.GetOptions{})
 	if err != nil {
 		slog.Error("get cronjob", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -953,7 +954,7 @@ func (r *Route) TriggerCronjob(c *gin.Context) {
 	}
 
 	jobSpec := cronJob.Spec.JobTemplate.Spec
-	jobName := fmt.Sprintf("%s-manual-%d", req.ResourceName, metav1.Now().Unix())
+	jobName := fmt.Sprintf("%s-manual-%d", req.Name, metav1.Now().Unix())
 
 	_, err = r.GetCluster(req.Server).Typed.BatchV1().Jobs(req.Namespace).Create(context.TODO(), &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{

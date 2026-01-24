@@ -34,7 +34,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
 }: DynamicResourceTableProps<T>) => {
   const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
     await call('watch_dynamic_resource', {
-      request: {
+      apiResource: {
         ...apiResource,
         resource_version: rv,
       },
@@ -77,7 +77,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     return await call('list_dynamic_resource', {
       limit: limit,
       continue: continueToken,
-      request: {
+      apiResource: {
         ...apiResource,
       },
     });

@@ -22,6 +22,7 @@ type HelmRelease = {
 };
 
 type ApiResource = {
+  resource: string;
   group: string;
   version: string;
   kind: string;
