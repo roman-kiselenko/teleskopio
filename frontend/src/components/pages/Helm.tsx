@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 import { useWS } from '@/context/WsContext';
+import { useConfig } from '@/context/ConfigContext';
 import { addSubscription } from '@/lib/subscriptionManager';
-import { currentClusterState } from '@/store/cluster';
 
 export function HelmPage() {
   const selectedNamespace = useSelectedNamespacesState();
@@ -26,11 +26,11 @@ export function HelmPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const loading = useloadingState();
   const { listen } = useWS();
+  const { serverInfo } = useConfig();
 
   const listenEvents = async () => {
-    const server = currentClusterState.server.get();
     addSubscription(
-      await listen(`helm-release-${server}-added`, (payload: any) => {
+      await listen(`helm-release-${serverInfo?.server}-added`, (payload: any) => {
         helmCharts.set((prev) => {
           const newMap = new Map(prev);
           newMap.set(`${payload.namespace}-${payload.name}` as string, payload);
@@ -40,7 +40,7 @@ export function HelmPage() {
     );
 
     addSubscription(
-      await listen(`helm-release-${server}-deleted`, (payload: any) => {
+      await listen(`helm-release-${serverInfo?.server}-deleted`, (payload: any) => {
         helmCharts.set((prev) => {
           const newMap = new Map(prev);
           newMap.delete(`${payload.namespace}-${payload.name}` as string);
@@ -50,7 +50,7 @@ export function HelmPage() {
     );
 
     addSubscription(
-      await listen(`helm-release-${server}-updated`, (payload: any) => {
+      await listen(`helm-release-${serverInfo?.server}-updated`, (payload: any) => {
         helmCharts.set((prev) => {
           const newMap = new Map(prev);
           newMap.set(`${payload.namespace}-${payload.name}` as string, payload);

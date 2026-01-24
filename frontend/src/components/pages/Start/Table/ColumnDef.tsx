@@ -1,22 +1,20 @@
 import { Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
-import { Cluster } from '@/types';
+import { ServerInfo } from '@/types';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
-import { setVersion } from '@/store/version';
-import { setCurrentCluster } from '@/store/cluster';
-import { apiResourcesState } from '@/store/apiResources';
 import { namespacesState } from '@/store/resources';
 import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { useWS } from '@/context/WsContext';
+import { useConfig } from '@/context/ConfigContext';
 import { addSubscription } from '@/lib/subscriptionManager';
 import { crdsState, useCrdResourcesState } from '@/store/crdResources';
 import { crsState } from '@/store/resources';
 
-const columns: ColumnDef<Cluster>[] = [
+const columns: ColumnDef<ServerInfo>[] = [
   {
     accessorKey: 'server',
     id: 'server',
@@ -34,6 +32,7 @@ const columns: ColumnDef<Cluster>[] = [
       const loading = useloadingState();
       const crdResources = useCrdResourcesState();
       const { listen } = useWS();
+      const { setConfig } = useConfig();
       const get_version = async (server: any) => {
         return await call('get_version', { server: server });
       };
@@ -56,20 +55,18 @@ const columns: ColumnDef<Cluster>[] = [
               );
               return;
             }
-            setVersion(clusterVersion.gitVersion);
-            setCurrentCluster(row.original.server);
-            toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
-            apiResourcesState.set(await call('list_apiresources', { server: row.original.server }));
-            await fetchAndWatchCRDs(listen, row.original.server as string);
+            const si: ServerInfo = {
+              server: row.original.server,
+              version: clusterVersion.gitVersion,
+              apiResources: [],
+            };
+            setConfig(si);
+            toast.info(<div>Cluster version: {si.version}</div>);
+            await fetchAndWatchCRDs(listen, si.server as string);
             Array.from(crdResources.get().values()).forEach((x) => {
-              fetchAndWatchCRs(
-                listen,
-                row.original.server as string,
-                x.spec.names.kind,
-                x.spec.group,
-              );
+              fetchAndWatchCRs(listen, si.server as string, x.spec.names.kind, x.spec.group);
             });
-            fetchAndWatchNamespaces(listen, row.original.server);
+            fetchAndWatchNamespaces(listen, si.server as string);
             navigate('/resource/Node');
             loading.set(false);
             return;
@@ -86,16 +83,18 @@ const columns: ColumnDef<Cluster>[] = [
 export default columns;
 
 async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<Promise<void>>> {
-  const resource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
   const [resources, rv] = await call('list_crd_resource', {});
   if (!resources) {
     return;
   }
-  if (resources.length > 0) {
-    toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+  if (resources.length === 0) {
+    toast.error(<div>CRD Resources not loaded!</div>);
+    return;
   }
+  toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+  const resource = apiResourcesState
+    .get()
+    .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
   await call('watch_dynamic_resource', { request: { ...resource, resource_version: rv } });
   resources
     .filter((x) => x.kind !== 'SelfSubjectReview')
@@ -108,7 +107,7 @@ async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<P
     });
   addSubscription(
     listen(`CustomResourceDefinition-${server}-deleted`, async (ev: any) => {
-      apiResourcesState.set(await call('list_apiresources', {}));
+      // TODO load api resources
       fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group);
       crdsState.set((prev) => {
         const newMap = new Map(prev);
@@ -119,7 +118,7 @@ async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<P
   );
   addSubscription(
     listen(`CustomResourceDefinition-${server}-updated`, async (ev: any) => {
-      apiResourcesState.set(await call('list_apiresources', {}));
+      // TODO load api resources
       fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group);
       crdsState.set((prev) => {
         const newMap = new Map(prev);

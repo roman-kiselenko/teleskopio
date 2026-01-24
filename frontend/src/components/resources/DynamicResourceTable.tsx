@@ -3,8 +3,8 @@ import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { call } from '@/lib/api';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
-import { currentClusterState } from '@/store/cluster';
 import { useWS } from '@/context/WsContext';
+import { useConfig } from '@/context/ConfigContext';
 import { addSubscription } from '@/lib/subscriptionManager';
 
 interface DynamicResourceTableProps<T> {
@@ -41,11 +41,11 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     });
   };
   const { listen } = useWS();
+  const { serverInfo } = useConfig();
 
   const listenEvents = async () => {
-    const server = currentClusterState.server.get();
     addSubscription(
-      await listen(`${kind}-${server}-deleted`, (payload: any) => {
+      await listen(`${kind}-${serverInfo?.server}-deleted`, (payload: any) => {
         setState((prev) => {
           const newMap = new Map(prev);
           newMap.delete(payload.metadata?.uid as string);
@@ -55,7 +55,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     );
 
     addSubscription(
-      await listen(`${kind}-${server}-updated`, (payload: any) => {
+      await listen(`${kind}-${serverInfo?.server}-updated`, (payload: any) => {
         setState((prev) => {
           const newMap = new Map(prev);
           newMap.set(payload.metadata?.uid as string, payload);

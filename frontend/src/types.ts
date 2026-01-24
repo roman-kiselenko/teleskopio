@@ -1,7 +1,7 @@
-type Cluster = {
-  name: string;
-  path: string;
+type ServerInfo = {
+  version: string;
   server?: string;
+  apiResources: ApiResource[];
 };
 
 type HelmRelease = {
@@ -29,4 +29,4 @@ type ApiResource = {
   namespaced: boolean;
 };
 
-export type { Cluster, ApiResource, HelmRelease };
+export type { ServerInfo, ApiResource, HelmRelease };

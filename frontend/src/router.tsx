@@ -286,7 +286,6 @@ export const router = createBrowserRouter([
         path: '/helm/:name/:namespace',
         loader: async ({ params }: { params: any; request: Request }) => {
           const data = await LoadHelmRelease(params.name, params.namespace);
-          console.log(data);
           if (!data) {
             return redirect(location.pathname);
           }

@@ -1,11 +1,14 @@
-import { currentClusterState } from '@/store/cluster';
+import { getLocalKey } from '@/lib/localStorage';
+import type { ServerInfo } from '@/types';
 
 type InvokePayload = Record<string, unknown>;
 
 export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T | any> {
   let request = { ...payload };
-  if (currentClusterState.server.get() !== '') {
-    request.server = currentClusterState.server.get();
+  const config = getLocalKey('currentServer');
+  const configInfo = JSON.parse(config) as ServerInfo;
+  if (configInfo.hasOwnProperty('server')) {
+    request.server = configInfo.server;
   }
   const token = localStorage.getItem('token');
   if (payload) {

@@ -1,12 +1,14 @@
-import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
+import type { ApiResource, ServerInfo } from '@/types';
+import { getLocalKey } from '@/lib/localStorage';
 import { call } from '@/lib/api';
 import { toast } from 'sonner';
 
 export async function Load(kind: string, group: string, name: string, namespace: string) {
-  const resource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === kind && r.group === group);
+  const config = getLocalKey('currentServer');
+  let parsedConfig = JSON.parse(config) as ServerInfo;
+  const resource = parsedConfig.apiResources.find(
+    (r: ApiResource) => r.kind === kind && r.group === group,
+  );
   if (!resource) throw new Error(`API resource for kind ${kind} not found`);
   const response = await call('get_dynamic_resource', {
     name: name,

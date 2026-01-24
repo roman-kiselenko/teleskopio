@@ -38,7 +38,6 @@ import {
   Settings,
   ChevronDown,
 } from 'lucide-react';
-import { useCurrentClusterState } from '@/store/cluster';
 import { useloadingState } from '@/store/loader';
 import { useLocation } from 'react-router';
 import { NavLink } from 'react-router-dom';
@@ -58,7 +57,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/util';
 import { useCrdResourcesState } from '@/store/crdResources';
-import { useVersionState } from '@/store/version';
+import { useConfig } from '@/context/ConfigContext';
 import { compareVersions } from 'compare-versions';
 
 export const items = [
@@ -159,12 +158,11 @@ export const items = [
 ];
 
 export function AppSidebar() {
-  const cc = useCurrentClusterState();
   const { state } = useSidebar();
   const crds = useCrdResourcesState();
   const [sidebarItems, setSidebarItems] = useState<any>([]);
   const loading = useloadingState();
-  const version = useVersionState();
+  const { serverInfo } = useConfig();
 
   useEffect(() => {
     let newSidebar = items;
@@ -221,9 +219,9 @@ export function AppSidebar() {
                     state === 'collapsed' ? 'hidden' : '',
                     (item.title !== 'Main' &&
                       item.title !== 'Settings' &&
-                      cc.server.get() === '') ||
+                      serverInfo?.server === '') ||
                       loading.get() ||
-                      (item.title === 'Main' && cc.server.get() !== '')
+                      (item.title === 'Main' && serverInfo?.server !== '')
                       ? 'pointer-events-none opacity-50'
                       : '',
                   )}
@@ -249,11 +247,7 @@ export function AppSidebar() {
                     <SidebarMenuSub className="gap-0 mx-0 px-0 border-none">
                       {item.submenu
                         .filter((x) => {
-                          return !(
-                            version.version.get() !== '' &&
-                            x.title === 'CronJobs' &&
-                            compareVersions(version.version.get(), '1.21') === -1
-                          );
+                          return !(serverInfo?.version !== '' && x.title === 'CronJobs');
                         })
                         .map((i, index) => (
                           <SubmenuItem key={index} item={i} />

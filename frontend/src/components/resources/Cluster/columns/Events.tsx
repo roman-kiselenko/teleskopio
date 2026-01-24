@@ -3,7 +3,7 @@ import { memo } from 'react';
 import HeaderAction from '@/components/ui/Table/HeaderAction';
 import AgeCell from '@/components/ui/Table/AgeCell';
 import { compareVersions } from 'compare-versions';
-import { useVersionState } from '@/store/version';
+import { useConfig } from '@/context/ConfigContext';
 import { NavLink } from 'react-router-dom';
 
 const columns: ColumnDef<any>[] = [
@@ -13,12 +13,13 @@ const columns: ColumnDef<any>[] = [
     header: 'Message',
     meta: { className: 'min-w-[50ch] max-w-[50ch]' },
     cell: memo(({ row }) => {
-      const version = useVersionState();
+      const { serverInfo } = useConfig();
       return (
         <span>
-          {compareVersions(version.version.get(), '1.20') === 1
-            ? row.original.note
-            : row.original.message}
+          {serverInfo?.version &&
+            (compareVersions(serverInfo?.version, '1.20') === 1
+              ? row.original.note
+              : row.original.message)}
         </span>
       );
     }),
@@ -60,11 +61,11 @@ const columns: ColumnDef<any>[] = [
     header: 'Regarding',
     meta: { className: 'min-w-[20ch] max-w-[20ch] truncate' },
     cell: memo(({ row }) => {
-      const version = useVersionState();
+      const { serverInfo } = useConfig();
       let group = '';
       let url = '';
       let kind = '';
-      if (compareVersions(version.version.get(), '1.20') === 1) {
+      if (serverInfo?.version && compareVersions(serverInfo?.version, '1.20') === 1) {
         if (row.original?.regarding?.apiVersion?.includes('/')) {
           group = row.original?.regarding.apiVersion.split('/')[0];
         }

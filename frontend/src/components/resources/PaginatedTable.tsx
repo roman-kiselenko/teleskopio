@@ -6,9 +6,8 @@ import moment from 'moment';
 import { Header } from '@/components/Header';
 import { useSelectedNamespacesState } from '@/store/selectedNamespace';
 import type { ApiResource } from '@/types';
-import { apiResourcesState } from '@/store/apiResources';
-import { getVersion } from '@/store/version';
 import { compareVersions } from 'compare-versions';
+import { useConfig } from '@/context/ConfigContext';
 
 interface PaginatedTableProps<T> {
   kind: string;
@@ -49,6 +48,7 @@ export function PaginatedTable<T>({
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const selectedNamespace = useSelectedNamespacesState();
   const [searchQuery, setSearchQuery] = useState('');
+  const { serverInfo } = useConfig();
 
   const getApiResource = ({
     kind,
@@ -57,7 +57,7 @@ export function PaginatedTable<T>({
     kind: string;
     group: string;
   }): ApiResource | undefined => {
-    return apiResourcesState.get().find((r: ApiResource) => r.kind === kind && r.group === group);
+    return serverInfo?.apiResources.find((r: ApiResource) => r.kind === kind && r.group === group);
   };
 
   const loadPage = async () => {
@@ -117,7 +117,7 @@ export function PaginatedTable<T>({
     .filter((x: any) => {
       let attribute: string;
       if (kind === 'Event') {
-        if (compareVersions(getVersion(), '1.20') === 1) {
+        if (serverInfo?.version && compareVersions(serverInfo?.version, '1.20') === 1) {
           attribute = x.note;
         } else {
           attribute = x.message;
