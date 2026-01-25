@@ -80,6 +80,11 @@ func (r *Route) GetVersion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+	if err := req.Validate(); err != nil {
+		slog.Error("validate", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 	ver, err := r.GetCluster(req.Server).Typed.Discovery().ServerVersion()
 	if err != nil {
 		slog.Error("client", "err", err.Error(), "req", req)
@@ -96,7 +101,11 @@ func (r *Route) ListCustomResourceDefinitions(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-
+	if err := req.Validate(); err != nil {
+		slog.Error("validate", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 	crdList, err := r.GetCluster(req.Server).APIExtension.ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		slog.Error("api extension", "err", err.Error(), "req", req)
@@ -111,6 +120,11 @@ func (r *Route) ListResources(c *gin.Context) {
 	var req Payload
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := req.Validate(); err != nil {
+		slog.Error("validate", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -132,13 +146,18 @@ func (r *Route) ListResources(c *gin.Context) {
 			return
 		}
 		for _, res := range list.APIResources {
-			result = append(result, APIResource{
+			apiResource := APIResource{
 				Group:      gv.Group,
 				Version:    gv.Version,
 				Kind:       res.Kind,
 				Resource:   res.Name,
 				Namespaced: res.Namespaced,
-			})
+			}
+			apiResource.APIVersion = fmt.Sprintf("%s/%s", gv.Group, gv.Version)
+			if gv.Group == "" {
+				apiResource.APIVersion = gv.Version
+			}
+			result = append(result, apiResource)
 		}
 	}
 	c.JSON(http.StatusOK, result)
@@ -148,6 +167,11 @@ func (r *Route) ListDynamicResource(c *gin.Context) {
 	var req ListRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := req.Validate(); err != nil {
+		slog.Error("validate", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -977,6 +1001,11 @@ func (r *Route) Login(c *gin.Context) {
 	var req creds
 	if err := c.ShouldBindJSON(&req); err != nil {
 		slog.Error("parsing", "err", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := req.Validate(); err != nil {
+		slog.Error("validate", "err", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

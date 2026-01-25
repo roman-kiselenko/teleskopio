@@ -13,22 +13,25 @@ import { toast } from 'sonner';
 
 const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
   const request = {
-    ...apiResource,
+    apiResource: { ...apiResource },
     resource_version: rv,
   };
-  await call('watch_dynamic_resource', { request });
+  await call('watch_dynamic_resource', request);
 };
 
 const getPage = async ({
+  server,
   limit,
   continueToken,
   apiResource,
 }: {
+  server: string | undefined;
   limit: number;
   continueToken?: string;
   apiResource: ApiResource | undefined;
 }) => {
   return await call('list_dynamic_resource', {
+    server,
     limit: limit,
     continue: continueToken,
     apiResource: {
@@ -70,6 +73,7 @@ const CustomResources = () => {
     try {
       const apiResource = getApiResource({ kind, group, apiResources: serverInfo?.apiResources });
       const [items, next, rv] = await getPage({
+        server: serverInfo?.server,
         apiResource: apiResource,
         limit: 50,
         continueToken: nextToken ?? undefined,

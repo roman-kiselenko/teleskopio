@@ -75,6 +75,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     apiResource: ApiResource | undefined;
   }) => {
     return await call('list_dynamic_resource', {
+      server: serverInfo?.server,
       limit: limit,
       continue: continueToken,
       apiResource: {

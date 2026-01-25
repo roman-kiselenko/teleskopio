@@ -4,9 +4,9 @@ import { call } from '@/lib/api';
 import { toast } from 'sonner';
 
 export async function Load(kind: string, group: string, name: string, namespace: string) {
-  const config = getLocalKey('currentServer');
+  const config = getLocalKey('currentCluster');
   let parsedConfig = JSON.parse(config) as ServerInfo;
-  const resource = parsedConfig.apiResources.find(
+  const resource = parsedConfig.apiResources?.find(
     (r: ApiResource) => r.kind === kind && r.group === group,
   );
   if (!resource) throw new Error(`API resource for kind ${kind} not found`);

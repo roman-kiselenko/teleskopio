@@ -4,6 +4,7 @@ import (
 	"teleskopio/pkg/config"
 	webSocket "teleskopio/pkg/socket"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	w "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
 )
@@ -16,18 +17,40 @@ type Payload struct {
 	Server string `json:"server"`
 }
 
+func (p *Payload) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.Server, validation.Required),
+	)
+}
+
 type creds struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
+func (c *creds) Validate() error {
+	return validation.ValidateStruct(c,
+		validation.Field(&c.Username, validation.Required),
+		validation.Field(&c.Password, validation.Required),
+	)
+}
+
 type APIResource struct {
+	APIVersion      string `json:"apiVersion"`
 	Group           string `json:"group"`
 	Version         string `json:"version"`
 	Kind            string `json:"kind"`
 	Namespaced      bool   `json:"namespaced"`
 	Resource        string `json:"resource"`
 	ResourceVersion string `json:"resource_version"`
+}
+
+func (a *APIResource) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Kind, validation.Required),
+		validation.Field(&a.Version, validation.Required),
+		validation.Field(&a.Resource, validation.Required),
+	)
 }
 
 type ListRequest struct {
@@ -39,6 +62,18 @@ type ListRequest struct {
 	Namespace string `json:"namespace"`
 
 	APIResource APIResource `json:"apiResource"`
+}
+
+func (l *ListRequest) Validate() error {
+	if err := validation.ValidateStruct(l,
+		validation.Field(&l.Server, validation.Required),
+	); err != nil {
+		return err
+	}
+	if err := l.APIResource.Validate(); err != nil {
+		return err
+	}
+	return nil
 }
 
 type WatchRequest struct {

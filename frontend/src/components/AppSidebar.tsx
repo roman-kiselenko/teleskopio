@@ -65,12 +65,14 @@ export const items = [
     title: 'Main',
     url: '/',
     icon: Box,
+    enabled: false,
     submenu: [],
   },
   {
     title: 'Cluster',
     icon: Waypoints,
     url: '',
+    enabled: false,
     submenu: [
       { title: 'Nodes', icon: PcCase, url: '/resource/Node' },
       { title: 'Events', icon: CalendarSync, url: '/resource/Event' },
@@ -80,6 +82,7 @@ export const items = [
   {
     title: 'Workloads',
     icon: PackageCheck,
+    enabled: false,
     submenu: [
       { title: 'Pods', icon: Package, url: '/resource/Pod' },
       { title: 'Deployments', icon: Package, url: '/resource/Deployment' },
@@ -93,6 +96,7 @@ export const items = [
   {
     title: 'Configuration',
     icon: FileSliders,
+    enabled: false,
     submenu: [
       { title: 'ConfigMaps', icon: MapIcon, url: '/resource/ConfigMap' },
       { title: 'Secrets', icon: VenetianMask, url: '/resource/Secret' },
@@ -106,6 +110,7 @@ export const items = [
   {
     title: 'Networking',
     icon: Network,
+    enabled: false,
     submenu: [
       { title: 'Services', icon: Share2, url: '/resource/Service' },
       { title: 'Ingresses', icon: EthernetPort, url: '/resource/Ingress' },
@@ -117,6 +122,7 @@ export const items = [
   {
     title: 'Storage',
     icon: HardDrive,
+    enabled: false,
     submenu: [
       { title: 'StorageClasses', icon: HardDriveDownload, url: '/resource/StorageClass' },
       { title: 'VolumeAttachments', icon: HardDrive, url: '/resource/VolumeAttachment' },
@@ -127,6 +133,7 @@ export const items = [
   {
     title: 'Administration',
     icon: ShieldUser,
+    enabled: false,
     submenu: [
       { title: 'MutatingWebhooks', icon: Vote, url: '/resource/MutatingWebhook' },
       { title: 'ValidatingWebhooks', icon: MessageCircleX, url: '/resource/ValidatingWebhook' },
@@ -135,6 +142,7 @@ export const items = [
   {
     title: 'Access Control',
     icon: GlobeLock,
+    enabled: false,
     submenu: [
       { title: 'ServiceAccounts', icon: GlobeLock, url: '/resource/ServiceAccount' },
       { title: 'Roles', icon: PersonStanding, url: '/resource/Role' },
@@ -143,15 +151,24 @@ export const items = [
     ],
   },
   {
+    title: 'CRD',
+    icon: Columns3Cog,
+    url: '',
+    enabled: false,
+    submenu: [{ title: 'Definitions', icon: Layers, url: '/resource/CustomResourceDefinition' }],
+  },
+  {
     title: 'Helm',
     icon: Rocket,
     url: '/helm',
+    enabled: false,
     submenu: [],
   },
   {
     title: 'Settings',
     icon: Settings,
     url: '/settings',
+    enabled: false,
     submenu: [],
   },
 ];
@@ -166,43 +183,51 @@ export function AppSidebar() {
   useEffect(() => {
     let newSidebar = items;
     const crdArray = Array.from(crds.get().values());
-    if (crdArray.length > 0) {
-      const crdMap = new Map<string, any[]>();
-      crdArray.forEach((crd: any) => {
-        const data = crdMap.get(crd.spec.group);
-        if (data) {
-          crdMap.set(crd.spec.group, [...data, crd]);
-        } else {
-          crdMap.set(crd.spec.group, [crd]);
-        }
-      });
-      const submenu = [...crdMap.keys()].map((k) => {
-        const submenuItems = (crdMap.get(k) || []).map((v: any) => {
-          const version = v.spec.versions?.find((x) => x.storage);
-          return {
-            title: v.spec.names.kind,
-            url: `/customresources/${v.spec.names.kind}/${v.spec.group}/${version.name}`,
-          };
-        });
+    const crdMap = new Map<string, any[]>();
+    crdArray.forEach((crd: any) => {
+      const data = crdMap.get(crd.spec.group);
+      if (data) {
+        crdMap.set(crd.spec.group, [...data, crd]);
+      } else {
+        crdMap.set(crd.spec.group, [crd]);
+      }
+    });
+    const submenu = [...crdMap.keys()].map((k) => {
+      const submenuItems = (crdMap.get(k) || []).map((v: any) => {
+        const version = v.spec.versions?.find((x) => x.storage);
         return {
-          title: k,
-          icon: LayoutDashboard,
-          url: '',
-          submenu: submenuItems,
+          title: v.spec.names.kind,
+          url: `/customresources/${v.spec.names.kind}/${v.spec.group}/${version.name}`,
         };
       });
-      const newItem = {
-        title: 'CRD',
-        icon: Columns3Cog,
+      return {
+        title: k,
+        icon: LayoutDashboard,
         url: '',
-        submenu: [
+        submenu: submenuItems,
+      };
+    });
+    newSidebar = items.map((x: any) => {
+      if (x.title === 'CRD') {
+        x.submenu = [
           { title: 'Definitions', icon: Layers, url: '/resource/CustomResourceDefinition' },
           ...submenu,
-        ],
-      };
-      const insertIndex = Math.max(0, items.length - 2);
-      newSidebar = [...items.slice(0, insertIndex), newItem, ...items.slice(insertIndex)];
-    }
+        ];
+      }
+      if (serverInfo?.server === '') {
+        if (x.title === 'Main' || x.title === 'Settings') {
+          x.enabled = true;
+        }
+        return x;
+      } else if (serverInfo?.server !== '') {
+        if (x.title === 'Main' || x.title === 'Settings') {
+          x.enabled = false;
+        } else {
+          x.enabled = true;
+        }
+      }
+      return x;
+    });
     setSidebarItems(newSidebar);
   }, [crds, loading]);
   return (
@@ -216,13 +241,7 @@ export function AppSidebar() {
                   className={cn(
                     'text-xs',
                     state === 'collapsed' ? 'hidden' : '',
-                    (item.title !== 'Main' &&
-                      item.title !== 'Settings' &&
-                      serverInfo?.server === '') ||
-                      loading.get() ||
-                      (item.title === 'Main' && serverInfo?.server !== '')
-                      ? 'pointer-events-none opacity-50'
-                      : '',
+                    item.enabled ? '' : 'pointer-events-none opacity-50',
                   )}
                   key={item.title}
                 >
@@ -244,13 +263,9 @@ export function AppSidebar() {
                   )}
                   <CollapsibleContent>
                     <SidebarMenuSub className="gap-0 mx-0 px-0 border-none">
-                      {item.submenu
-                        .filter((x) => {
-                          return !(serverInfo?.version !== '' && x.title === 'CronJobs');
-                        })
-                        .map((i, index) => (
-                          <SubmenuItem key={index} item={i} />
-                        ))}
+                      {item.submenu.map((i, index) => (
+                        <SubmenuItem key={index} item={i} />
+                      ))}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

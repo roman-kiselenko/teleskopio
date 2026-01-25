@@ -1,7 +1,7 @@
 type ServerInfo = {
   version: string;
   server?: string;
-  apiResources: ApiResource[];
+  apiResources?: ApiResource[];
 };
 
 type HelmRelease = {
@@ -22,6 +22,7 @@ type HelmRelease = {
 };
 
 type ApiResource = {
+  apiVersion: string;
   resource: string;
   group: string;
   version: string;

@@ -33,9 +33,6 @@ const columns: ColumnDef<ServerInfo>[] = [
       const crdResources = useCrdResourcesState();
       const { listen } = useWS();
       const { setConfig } = useConfig();
-      const get_version = async (server: any) => {
-        return await call('get_version', { server: server });
-      };
       return (
         <Button
           className="text-xs"
@@ -43,7 +40,7 @@ const columns: ColumnDef<ServerInfo>[] = [
           size="sm"
           onClick={async () => {
             loading.set(true);
-            const clusterVersion = await get_version(row.original.server);
+            const clusterVersion = await call('get_version', { server: row.original.server });
             if (!clusterVersion.gitVersion) {
               loading.set(false);
               toast.error(
@@ -55,14 +52,15 @@ const columns: ColumnDef<ServerInfo>[] = [
               );
               return;
             }
+            const apiResource = await call('list_apiresources', { server: row.original.server });
             const si: ServerInfo = {
               server: row.original.server,
               version: clusterVersion.gitVersion,
-              apiResources: [],
+              apiResources: apiResource,
             };
             setConfig(si);
             toast.info(<div>Cluster version: {si.version}</div>);
-            await fetchAndWatchCRDs(listen, si.server as string, si.apiResources);
+            await fetchAndWatchCRDs(listen, si?.server as string, apiResource);
             Array.from(crdResources.get().values()).forEach((x) => {
               fetchAndWatchCRs(
                 listen,
@@ -72,7 +70,7 @@ const columns: ColumnDef<ServerInfo>[] = [
                 si.apiResources,
               );
             });
-            fetchAndWatchNamespaces(listen, si.server as string, si.apiResources);
+            fetchAndWatchNamespaces(listen, si?.server as string, si?.apiResources);
             navigate('/resource/Node');
             loading.set(false);
             return;
@@ -91,7 +89,7 @@ export default columns;
 async function fetchAndWatchCRDs(
   listen: any,
   server: string,
-  apiResources: ApiResource[],
+  apiResources: ApiResource[] | undefined,
 ): Promise<Promise<Promise<void>>> {
   const [resources, rv] = await call('list_crd_resource', { server });
   if (!resources) {
@@ -102,8 +100,10 @@ async function fetchAndWatchCRDs(
     return;
   }
   toast.info(<div>CRD Resources loaded: {resources.length}</div>);
-  const resource = apiResources.find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
-  await call('watch_dynamic_resource', { request: { ...resource, resource_version: rv } });
+  const resource = (apiResources || []).find(
+    (r: ApiResource) => r.kind === 'CustomResourceDefinition',
+  );
+  await call('watch_dynamic_resource', { server, request: { ...resource, resource_version: rv } });
   resources
     .filter((x) => x.kind !== 'SelfSubjectReview')
     .forEach((x) => {
@@ -140,15 +140,16 @@ async function fetchAndWatchCRs(
   server: string,
   kind: string,
   group: string,
-  apiResources: ApiResource[],
+  apiResources: ApiResource[] | undefined,
 ): Promise<Promise<Promise<void>>> {
-  const customResource = apiResources.find(
+  const customResource = (apiResources || []).find(
     (r: ApiResource) => r.kind === kind && r.group === group,
   );
   if (!customResource) {
     return;
   }
   const [resources, rv] = await call('list_dynamic_resource', {
+    server,
     apiResource: { ...customResource },
   });
   crsState.set((prev) => {
@@ -162,6 +163,7 @@ async function fetchAndWatchCRs(
     return;
   }
   await call('watch_dynamic_resource', {
+    server,
     apiResource: { ...customResource, resource_version: rv },
   });
   addSubscription(
@@ -187,13 +189,14 @@ async function fetchAndWatchCRs(
 async function fetchAndWatchNamespaces(
   listen: any,
   server: any,
-  apiResources: ApiResource[],
+  apiResources: ApiResource[] | undefined,
 ): Promise<void> {
-  const nsResource = apiResources.find(
+  const nsResource = (apiResources || []).find(
     (r: ApiResource) => r.kind === 'Namespace' && r.group === '',
   );
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const [ns, _token, rv] = await call('list_dynamic_resource', {
+    server,
     apiResource: { ...nsResource },
   });
   if (!ns) {
@@ -207,6 +210,7 @@ async function fetchAndWatchNamespaces(
     });
   });
   await call('watch_dynamic_resource', {
+    server,
     apiResource: {
       ...nsResource,
       resource_version: rv,

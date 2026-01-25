@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getLocalKey, setLocalKey, delLocalKey } from '@/lib/localStorage';
 import type { ServerInfo } from '@/types';
-import { call } from '@/lib/api';
 
 type ConfigContextType = {
   serverInfo: ServerInfo | null;
@@ -21,7 +20,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const getConfig = () => {
-    const config = getLocalKey('currentServer');
+    const config = getLocalKey('currentCluster');
     if (config === '') {
       const si: ServerInfo = {
         server: '',
@@ -38,13 +37,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       throw new Error('cant load server config');
     }
     setServerInfo(value);
-    const apiResource = await call('list_apiresources', { server: value.server });
-    value.apiResources = apiResource;
-    setLocalKey('currentServer', JSON.stringify(value));
+    setLocalKey('currentCluster', JSON.stringify(value));
   };
 
   const deleteConfig = () => {
-    delLocalKey('currentServer');
+    delLocalKey('currentCluster');
     const si: ServerInfo = {
       server: '',
       version: '',

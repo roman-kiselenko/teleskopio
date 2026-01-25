@@ -5,15 +5,15 @@ type InvokePayload = Record<string, unknown>;
 
 export async function call<T = any>(action: string, payload?: InvokePayload): Promise<T | any> {
   let request = { ...payload };
-  const config = getLocalKey('currentServer');
+  const config = getLocalKey('currentCluster');
   const configInfo = JSON.parse(config) as ServerInfo;
-  if (configInfo.hasOwnProperty('server')) {
+  if (configInfo.hasOwnProperty('server') && configInfo.server !== '') {
     request.server = configInfo.server;
   }
   const token = localStorage.getItem('token');
   if (payload) {
     if (action !== 'lookup_configs' && action !== 'ping') {
-      console.log(`[${action}] hit payload [${JSON.stringify(request)}]`);
+      console.debug(`[${action}] hit payload [${JSON.stringify(request)}]`);
     }
     const res = await fetch(`/api/${action}`, {
       method: 'POST',
@@ -34,7 +34,7 @@ export async function call<T = any>(action: string, payload?: InvokePayload): Pr
     return res.text();
   }
   if (action !== 'lookup_configs' && action !== 'ping') {
-    console.log(`[${action}] hit`);
+    console.debug(`[${action}] hit`);
   }
   const res = await fetch(`/api/${action}`, {
     headers: {

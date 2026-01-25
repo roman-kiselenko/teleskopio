@@ -69,13 +69,21 @@ const columns: ColumnDef<any>[] = [
         if (row.original?.regarding?.apiVersion?.includes('/')) {
           group = row.original?.regarding.apiVersion.split('/')[0];
         }
-        url = `/yaml/${row.original?.regarding?.kind}/${row.original?.regarding?.name}/${row.original?.regarding?.namespace}?group=${group}`;
+        let ns = row.original?.regarding?.namespace;
+        if (ns == undefined) {
+          ns = 'empty';
+        }
+        url = `/yaml/${row.original?.regarding?.kind}/${row.original?.regarding?.name}/${ns}?group=${group}`;
         kind = row.original?.regarding?.kind;
       } else {
         if (row.original?.involvedObject?.apiVersion?.includes('/')) {
           group = row.original?.involvedObject.apiVersion.split('/')[0];
         }
-        url = `/yaml/${row.original?.involvedObject?.kind}/${row.original?.involvedObject?.name}/${row.original?.involvedObject?.namespace}?group=${group}`;
+        let ns = row.original?.involvedObject?.namespace;
+        if (ns == undefined) {
+          ns = 'empty';
+        }
+        url = `/yaml/${row.original?.involvedObject?.kind}/${row.original?.involvedObject?.name}/${ns}?group=${group}`;
         kind = row.original?.involvedObject?.kind;
       }
       return (

@@ -39,7 +39,7 @@ import {
 
 export function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const config = getLocalKey('currentServer');
+  const config = getLocalKey('currentCluster');
   let parsedConfig = JSON.parse(config) as ServerInfo;
 
   const [managedFields, setManagedFields] = useState<boolean>(() => {
