@@ -3,8 +3,8 @@ import { PaginatedTable } from '@/components/resources/PaginatedTable';
 import { call } from '@/lib/api';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ApiResource } from '@/types';
-import { currentClusterState } from '@/store/cluster';
 import { useWS } from '@/context/WsContext';
+import { useConfig } from '@/context/ConfigContext';
 import { addSubscription } from '@/lib/subscriptionManager';
 
 interface DynamicResourceTableProps<T> {
@@ -34,18 +34,18 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
 }: DynamicResourceTableProps<T>) => {
   const subscribeEvents = async (rv: string, apiResource: ApiResource | undefined) => {
     await call('watch_dynamic_resource', {
-      request: {
+      apiResource: {
         ...apiResource,
         resource_version: rv,
       },
     });
   };
   const { listen } = useWS();
+  const { serverInfo } = useConfig();
 
   const listenEvents = async () => {
-    const server = currentClusterState.server.get();
     addSubscription(
-      await listen(`${kind}-${server}-deleted`, (payload: any) => {
+      await listen(`${kind}-${serverInfo?.server}-deleted`, (payload: any) => {
         setState((prev) => {
           const newMap = new Map(prev);
           newMap.delete(payload.metadata?.uid as string);
@@ -55,7 +55,7 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     );
 
     addSubscription(
-      await listen(`${kind}-${server}-updated`, (payload: any) => {
+      await listen(`${kind}-${serverInfo?.server}-updated`, (payload: any) => {
         setState((prev) => {
           const newMap = new Map(prev);
           newMap.set(payload.metadata?.uid as string, payload);
@@ -75,9 +75,10 @@ export const DynamicResourceTable = <T extends { metadata: { uid?: string } }>({
     apiResource: ApiResource | undefined;
   }) => {
     return await call('list_dynamic_resource', {
+      server: serverInfo?.server,
       limit: limit,
       continue: continueToken,
-      request: {
+      apiResource: {
         ...apiResource,
       },
     });

@@ -1,22 +1,20 @@
 import { Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
-import { Cluster } from '@/types';
+import { ServerInfo } from '@/types';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { call } from '@/lib/api';
-import { setVersion } from '@/store/version';
-import { setCurrentCluster } from '@/store/cluster';
-import { apiResourcesState } from '@/store/apiResources';
 import { namespacesState } from '@/store/resources';
 import { useloadingState } from '@/store/loader';
 import type { ApiResource } from '@/types';
 import { useWS } from '@/context/WsContext';
+import { useConfig } from '@/context/ConfigContext';
 import { addSubscription } from '@/lib/subscriptionManager';
 import { crdsState, useCrdResourcesState } from '@/store/crdResources';
 import { crsState } from '@/store/resources';
 
-const columns: ColumnDef<Cluster>[] = [
+const columns: ColumnDef<ServerInfo>[] = [
   {
     accessorKey: 'server',
     id: 'server',
@@ -34,9 +32,7 @@ const columns: ColumnDef<Cluster>[] = [
       const loading = useloadingState();
       const crdResources = useCrdResourcesState();
       const { listen } = useWS();
-      const get_version = async (server: any) => {
-        return await call('get_version', { server: server });
-      };
+      const { setConfig } = useConfig();
       return (
         <Button
           className="text-xs"
@@ -44,7 +40,7 @@ const columns: ColumnDef<Cluster>[] = [
           size="sm"
           onClick={async () => {
             loading.set(true);
-            const clusterVersion = await get_version(row.original.server);
+            const clusterVersion = await call('get_version', { server: row.original.server });
             if (!clusterVersion.gitVersion) {
               loading.set(false);
               toast.error(
@@ -56,20 +52,25 @@ const columns: ColumnDef<Cluster>[] = [
               );
               return;
             }
-            setVersion(clusterVersion.gitVersion);
-            setCurrentCluster(row.original.server);
-            toast.info(<div>Cluster version: {clusterVersion.gitVersion}</div>);
-            apiResourcesState.set(await call('list_apiresources', { server: row.original.server }));
-            await fetchAndWatchCRDs(listen, row.original.server as string);
+            const apiResource = await call('list_apiresources', { server: row.original.server });
+            const si: ServerInfo = {
+              server: row.original.server,
+              version: clusterVersion.gitVersion,
+              apiResources: apiResource,
+            };
+            setConfig(si);
+            toast.info(<div>Cluster version: {si.version}</div>);
+            await fetchAndWatchCRDs(listen, si?.server as string, apiResource);
             Array.from(crdResources.get().values()).forEach((x) => {
               fetchAndWatchCRs(
                 listen,
-                row.original.server as string,
+                si.server as string,
                 x.spec.names.kind,
                 x.spec.group,
+                si.apiResources,
               );
             });
-            fetchAndWatchNamespaces(listen, row.original.server);
+            fetchAndWatchNamespaces(listen, si?.server as string, si?.apiResources);
             navigate('/resource/Node');
             loading.set(false);
             return;
@@ -85,18 +86,24 @@ const columns: ColumnDef<Cluster>[] = [
 
 export default columns;
 
-async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<Promise<void>>> {
-  const resource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === 'CustomResourceDefinition');
-  const [resources, rv] = await call('list_crd_resource', {});
+async function fetchAndWatchCRDs(
+  listen: any,
+  server: string,
+  apiResources: ApiResource[] | undefined,
+): Promise<Promise<Promise<void>>> {
+  const [resources, rv] = await call('list_crd_resource', { server });
   if (!resources) {
     return;
   }
-  if (resources.length > 0) {
-    toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+  if (resources.length === 0) {
+    toast.error(<div>CRD Resources not loaded!</div>);
+    return;
   }
-  await call('watch_dynamic_resource', { request: { ...resource, resource_version: rv } });
+  toast.info(<div>CRD Resources loaded: {resources.length}</div>);
+  const resource = (apiResources || []).find(
+    (r: ApiResource) => r.kind === 'CustomResourceDefinition',
+  );
+  await call('watch_dynamic_resource', { server, request: { ...resource, resource_version: rv } });
   resources
     .filter((x) => x.kind !== 'SelfSubjectReview')
     .forEach((x) => {
@@ -108,8 +115,7 @@ async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<P
     });
   addSubscription(
     listen(`CustomResourceDefinition-${server}-deleted`, async (ev: any) => {
-      apiResourcesState.set(await call('list_apiresources', {}));
-      fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group);
+      fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group, apiResources);
       crdsState.set((prev) => {
         const newMap = new Map(prev);
         newMap.delete(ev.metadata?.uid as string);
@@ -119,8 +125,7 @@ async function fetchAndWatchCRDs(listen: any, server: string): Promise<Promise<P
   );
   addSubscription(
     listen(`CustomResourceDefinition-${server}-updated`, async (ev: any) => {
-      apiResourcesState.set(await call('list_apiresources', {}));
-      fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group);
+      fetchAndWatchCRs(listen, server, ev.spec.names.kind, ev.spec.group, apiResources);
       crdsState.set((prev) => {
         const newMap = new Map(prev);
         newMap.set(ev.metadata?.uid as string, ev);
@@ -135,15 +140,17 @@ async function fetchAndWatchCRs(
   server: string,
   kind: string,
   group: string,
+  apiResources: ApiResource[] | undefined,
 ): Promise<Promise<Promise<void>>> {
-  const customResource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === kind && r.group === group);
+  const customResource = (apiResources || []).find(
+    (r: ApiResource) => r.kind === kind && r.group === group,
+  );
   if (!customResource) {
     return;
   }
   const [resources, rv] = await call('list_dynamic_resource', {
-    request: { ...customResource },
+    server,
+    apiResource: { ...customResource },
   });
   crsState.set((prev) => {
     const newMap = new Map(prev);
@@ -152,14 +159,13 @@ async function fetchAndWatchCRs(
     });
     return newMap;
   });
-  const request = {
-    ...customResource,
-    resource_version: rv,
-  };
   if (kind === 'ComponentStatus') {
     return;
   }
-  await call('watch_dynamic_resource', { request });
+  await call('watch_dynamic_resource', {
+    server,
+    apiResource: { ...customResource, resource_version: rv },
+  });
   addSubscription(
     listen(`${kind}-${server}-deleted`, (ev: any) => {
       crsState.set((prev) => {
@@ -180,14 +186,22 @@ async function fetchAndWatchCRs(
   );
 }
 
-async function fetchAndWatchNamespaces(listen: any, server: any): Promise<void> {
-  const nsResource = apiResourcesState
-    .get()
-    .find((r: ApiResource) => r.kind === 'Namespace' && r.group === '');
+async function fetchAndWatchNamespaces(
+  listen: any,
+  server: any,
+  apiResources: ApiResource[] | undefined,
+): Promise<void> {
+  const nsResource = (apiResources || []).find(
+    (r: ApiResource) => r.kind === 'Namespace' && r.group === '',
+  );
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const [ns, _token, rv] = await call('list_dynamic_resource', {
-    request: { ...nsResource },
+    server,
+    apiResource: { ...nsResource },
   });
+  if (!ns) {
+    return;
+  }
   ns.forEach((x) => {
     namespacesState.set((prev) => {
       const newMap = new Map(prev);
@@ -196,7 +210,8 @@ async function fetchAndWatchNamespaces(listen: any, server: any): Promise<void> 
     });
   });
   await call('watch_dynamic_resource', {
-    request: {
+    server,
+    apiResource: {
       ...nsResource,
       resource_version: rv,
     },

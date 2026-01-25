@@ -112,6 +112,11 @@ func (a *App) initServer(staticFiles embed.FS) error {
 			"message": "pong",
 		})
 	})
+
+	// Liveness probe for Kubernetes
+	router.GET("/healthz", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 	router.GET("/api/auth_disabled", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": a.Config.AuthDisabled,
@@ -140,6 +145,8 @@ func (a *App) initServer(staticFiles embed.FS) error {
 	auth.POST("/drain_node", mdlwr.CheckRole(), r.NodeDrain)
 	auth.POST("/scale_resource", mdlwr.CheckRole(), r.ScaleResource)
 	auth.POST("/trigger_cronjob", mdlwr.CheckRole(), r.TriggerCronjob)
+	auth.POST("/helm_releases", mdlwr.CheckRole(), r.ListHelmReleases)
+	auth.POST("/helm_release", mdlwr.CheckRole(), r.GetHelmRelease)
 	webSocket.SetupWebsocket(hub, router)
 
 	go func() {
